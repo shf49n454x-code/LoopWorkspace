@@ -365,7 +365,7 @@ index 0000000..152dfa1
 +}
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockBericht.swift b/Loop/Loop/Zuckerschock/ZuckerschockBericht.swift
 new file mode 100644
-index 0000000..c66faae
+index 0000000..83a9e8a
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockBericht.swift
 @@ -0,0 +1,312 @@
@@ -455,7 +455,7 @@ index 0000000..c66faae
 +            }
 +            gruppe.leave()
 +        }
-+        HKHealthStore().execute(abfrage)
++        deviceManager.healthStore.execute(abfrage)
 +
 +        // Insulin und KH je Tag aus Loops lokalem Speicher (höchstens 7 Tage).
 +        let lokaleTage = Double(min(tage, 7))
@@ -1130,7 +1130,7 @@ index 0000000..562cde0
 +    }
 +}
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift b/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
-index 54a4921..5b61a2c 100644
+index ef334c1..1341f16 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
 @@ -74,6 +74,9 @@ final class ZSHypoBegleiter: ObservableObject {
@@ -1143,7 +1143,7 @@ index 54a4921..5b61a2c 100644
  
      init(speicher: ZSSpeicher,
           ordner: URL? = nil,
-@@ -163,6 +166,7 @@ final class ZSHypoBegleiter: ObservableObject {
+@@ -168,6 +171,7 @@ final class ZSHypoBegleiter: ObservableObject {
          aktualisieren(jetzt: jetzt)
          liveActivityStarten()
          mitteilen()
@@ -1151,7 +1151,7 @@ index 54a4921..5b61a2c 100644
      }
  
      /// Erstes Eintragen per Tipp; weiteres Eintragen nur durch Halten (in der App).
-@@ -176,6 +180,7 @@ final class ZSHypoBegleiter: ObservableObject {
+@@ -181,6 +185,7 @@ final class ZSHypoBegleiter: ObservableObject {
  
      func beenden(jetzt: Date = Date(), wiederImZiel: Bool = false) {
          guard var episode = aktiv else { return }
