@@ -91,10 +91,10 @@ index 7d072c5..b9dd628 100644
          deviceDataManager.refreshDeviceData()
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockEssenDaten.swift b/Loop/Loop/Zuckerschock/ZuckerschockEssenDaten.swift
 new file mode 100644
-index 0000000..a0adb58
+index 0000000..ba27004
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockEssenDaten.swift
-@@ -0,0 +1,351 @@
+@@ -0,0 +1,352 @@
 +//
 +//  ZuckerschockEssenDaten.swift
 +//  Loop
@@ -339,7 +339,8 @@ index 0000000..a0adb58
 +        let aktivitaet = NSUserActivity.forNewCarbEntry()
 +        let eintrag = NewCarbEntry(
 +            date: datum,
-+            quantity: HKQuantity(unit: .gram(), doubleValue: gramm.rounded()),
++            // Nie mehr als Loops eigene Obergrenze vorschlagen; Loop prüft und bestätigt danach selbst.
++            quantity: HKQuantity(unit: .gram(), doubleValue: min(max(0, gramm), LoopConstants.maxCarbEntryQuantity.doubleValue(for: .gram())).rounded()),
 +            startDate: datum,
 +            foodType: name,
 +            absorptionTime: wirkdauer)
@@ -1750,10 +1751,10 @@ index 0000000..afa9cb3
 +}
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockFotoKH.swift b/Loop/Loop/Zuckerschock/ZuckerschockFotoKH.swift
 new file mode 100644
-index 0000000..35726eb
+index 0000000..74d8916
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockFotoKH.swift
-@@ -0,0 +1,159 @@
+@@ -0,0 +1,160 @@
 +//
 +//  ZuckerschockFotoKH.swift
 +//  Loop
@@ -1903,10 +1904,11 @@ index 0000000..35726eb
 +        }
 +        do {
 +            var ergebnis = try JSONDecoder().decode(ZSSchaetzung.self, from: textDaten)
-+            // Spanne sauber halten
-+            ergebnis.khGramm = max(0, ergebnis.khGramm)
-+            ergebnis.khMin = min(ergebnis.khMin, ergebnis.khGramm)
-+            ergebnis.khMax = max(ergebnis.khMax, ergebnis.khGramm)
++            // Spanne sauber halten und nie über Loops eigene Obergrenze für einen KH-Eintrag.
++            let obergrenze = LoopConstants.maxCarbEntryQuantity.doubleValue(for: .gram())
++            ergebnis.khGramm = min(max(0, ergebnis.khGramm), obergrenze)
++            ergebnis.khMin = min(max(0, ergebnis.khMin), ergebnis.khGramm)
++            ergebnis.khMax = min(max(ergebnis.khMax, ergebnis.khGramm), obergrenze)
 +            return ergebnis
 +        } catch {
 +            throw ZSFotoKHFehler.antwort(error.localizedDescription)

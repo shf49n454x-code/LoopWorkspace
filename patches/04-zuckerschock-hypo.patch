@@ -120,10 +120,10 @@ index 9ac9c86..b9e1912 100644
              ZSHeroKarte(stand: stand, jetzt: jetzt, gestapelt: dynamicTypeSize.isAccessibilitySize)
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift b/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
 new file mode 100644
-index 0000000..06f6f40
+index 0000000..5f9c44f
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
-@@ -0,0 +1,584 @@
+@@ -0,0 +1,607 @@
 +//
 +//  ZuckerschockHypo.swift
 +//  Loop
@@ -217,7 +217,8 @@ index 0000000..06f6f40
 +        datei = verzeichnis.appendingPathComponent("hypos.json")
 +        laden()
 +
-+        ZSHypoBruecke.gegessen = { [weak self] in self?.gegessen() }
++        // Die Taste in der Live Activity zählt nur das erste Mal; weiteres Eintragen nur in der App.
++        ZSHypoBruecke.gegessen = { [weak self] in self?.gegessenErsterTipp() }
 +
 +        aenderungen
 +            .receive(on: DispatchQueue.main)
@@ -296,6 +297,21 @@ index 0000000..06f6f40
 +        aktualisieren(jetzt: jetzt)
 +        liveActivityStarten()
 +        mitteilen()
++    }
++
++    /// Live Activity: trägt nur ein, wenn in dieser Episode noch nichts eingetragen ist.
++    func gegessenErsterTipp(jetzt: Date = Date()) {
++        guard aktiv?.gegessen.isEmpty == true else { return }
++        gegessen(jetzt: jetzt)
++    }
++
++    /// Nimmt den letzten Eintrag zurück (z. B. versehentlich auf dem Sperrbildschirm getippt).
++    func letztesGegessenZuruecknehmen(jetzt: Date = Date()) {
++        guard var episode = aktiv, !episode.gegessen.isEmpty else { return }
++        episode.gegessen.removeLast()
++        aktiv = episode
++        sichern()
++        aktualisieren(jetzt: jetzt)
 +    }
 +
 +    /// Erstes Eintragen per Tipp; weiteres Eintragen nur durch Halten (in der App).
@@ -554,6 +570,13 @@ index 0000000..06f6f40
 +                Text("\(stand.gegessenAnzahl)× gegessen · \(stand.mengeText)")
 +                    .font(ZSSchrift.subhead)
 +                    .foregroundStyle(ZSHypoFarbe.text2(nachts: nachts))
++                if let um = stand.gegessenUm {
++                    Button("Zuletzt \(ZSHypoRing.uhrzeit(um)) Uhr · Rückgängig") { begleiter.letztesGegessenZuruecknehmen() }
++                        .font(ZSSchrift.subhead)
++                        .foregroundStyle(ZSHypoFarbe.text2(nachts: nachts))
++                        .frame(minHeight: ZSMass.tap)
++                        .accessibilityLabel("Letzten Eintrag um \(ZSHypoRing.uhrzeit(um)) Uhr zurücknehmen")
++                }
 +            }
 +        }
 +
@@ -710,10 +733,10 @@ index 0000000..06f6f40
 +}
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHypoGemeinsam.swift b/Loop/Loop/Zuckerschock/ZuckerschockHypoGemeinsam.swift
 new file mode 100644
-index 0000000..29653b4
+index 0000000..0e613be
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHypoGemeinsam.swift
-@@ -0,0 +1,134 @@
+@@ -0,0 +1,136 @@
 +//
 +//  ZuckerschockHypoGemeinsam.swift
 +//  Loop + Loop Widget Extension
@@ -758,6 +781,8 @@ index 0000000..29653b4
 +struct ZSHypoGegessenIntent: LiveActivityIntent {
 +    static let title: LocalizedStringResource = "Gegessen"
 +    static let description = IntentDescription("Trägt ein, dass du schnelle Kohlenhydrate gegessen hast.")
++    /// Nur als Taste in der Live Activity, nicht in Kurzbefehlen oder Siri.
++    static var isDiscoverable: Bool { false }
 +
 +    init() {}
 +
@@ -995,7 +1020,7 @@ index 0000000..b9c0223
 +    }
 +}
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
-index 5b053a8..e071c07 100644
+index 20f88d0..6c519e2 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
 @@ -176,6 +176,10 @@ private struct ZSTherapieView: View {
