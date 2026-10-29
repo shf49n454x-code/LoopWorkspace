@@ -47,10 +47,8 @@ jobs:
             -workspace LoopWorkspace.xcworkspace \
             -scheme LoopWorkspace \
             -configuration Debug \
-            -sdk iphonesimulator \
             -destination "generic/platform=iOS Simulator" \
             -derivedDataPath build \
-            ONLY_ACTIVE_ARCH=YES ARCHS=arm64 \
             CODE_SIGNING_ALLOWED=NO \
             2>&1 | tee buildlog.txt | grep -E "error:|warning: .*Zuckerschock|\*\* BUILD" || true
           grep -q "\*\* BUILD SUCCEEDED \*\*" buildlog.txt
