@@ -215,7 +215,7 @@ index 66eaaf6..5b053a8 100644
  #endif
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift b/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
 new file mode 100644
-index 0000000..07aa9f3
+index 0000000..672945a
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
 @@ -0,0 +1,419 @@
@@ -557,7 +557,7 @@ index 0000000..07aa9f3
 +            Label("Folgerezept fehlt vielleicht", systemImage: "questionmark.circle")
 +                .font(ZSSchrift.headline)
 +                .foregroundStyle(ZSFarbe.text)
-+            Text(vorrat.stand.rezeptAngefragtAm.map { "Zuletzt angefragt am \(Self.datum.string(from: $0))." } ?? "Noch kein Rezept angefragt.")
++            Text(vorrat.stand.rezeptAngefragtAm.map { "Zuletzt angefragt am \(Self.datum.string(from: $0))" } ?? "Noch kein Rezept angefragt.")
 +                .font(ZSSchrift.subhead)
 +                .foregroundStyle(ZSFarbe.text2)
 +            HStack(spacing: ZSMass.space3) {
