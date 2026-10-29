@@ -624,10 +624,10 @@ index 0000000..db86ace
 +#endif
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 new file mode 100644
-index 0000000..3e0a226
+index 0000000..c6c3c83
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
-@@ -0,0 +1,722 @@
+@@ -0,0 +1,725 @@
 +//
 +//  ZuckerschockHeuteView.swift
 +//  Loop
@@ -720,18 +720,21 @@ index 0000000..3e0a226
 +            }
 +            .buttonStyle(ZSDruckStil(art: .primaer))
 +            .frame(maxWidth: .infinity)
++            .layoutPriority(1)
 +            .accessibilityLabel("Essen eintragen")
 +
 +            Button(action: aktionen.bolus) {
 +                ZSKleineAktion(titel: "Bolus", symbol: "drop")
 +            }
 +            .buttonStyle(ZSDruckStil(art: .sekundaer))
++            .fixedSize(horizontal: true, vertical: false)
 +            .accessibilityLabel("Bolus öffnen")
 +
 +            Button(action: aktionen.zumEssenTab) {
 +                ZSKleineAktion(titel: "KH", symbol: "plus")
 +            }
 +            .buttonStyle(ZSDruckStil(art: .sekundaer))
++            .fixedSize(horizontal: true, vertical: false)
 +            .accessibilityLabel("Kohlenhydrate eintragen")
 +        }
 +        .fixedSize(horizontal: false, vertical: true)
