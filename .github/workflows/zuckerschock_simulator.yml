@@ -40,18 +40,27 @@ jobs:
           git apply ./patches/* --allow-empty -v --whitespace=fix
           fi
 
+      # Zwei Durchläufe: Beim ersten kopiert Loop manchmal Plugins, bevor sie fertig sind
+      # („did not contain an Info.plist“). Der zweite Durchlauf baut nur nach.
       - name: Für den Simulator bauen
         run: |
-          set -o pipefail
-          xcodebuild build \
-            -workspace LoopWorkspace.xcworkspace \
-            -scheme LoopWorkspace \
-            -configuration Debug \
-            -destination "generic/platform=iOS Simulator" \
-            -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO \
-            2>&1 | tee buildlog.txt | grep -E "error:|warning: .*Zuckerschock|\*\* BUILD" || true
-          grep -q "\*\* BUILD SUCCEEDED \*\*" buildlog.txt
+          bauen() {
+            xcodebuild build \
+              -workspace LoopWorkspace.xcworkspace \
+              -scheme LoopWorkspace \
+              -configuration Debug \
+              -destination "generic/platform=iOS Simulator" \
+              -derivedDataPath build \
+              CODE_SIGNING_ALLOWED=NO \
+              2>&1 | tee -a buildlog.txt | grep -E "error:|warning: .*Zuckerschock|\*\* BUILD" || true
+          }
+          : > buildlog.txt
+          bauen
+          if ! tail -n 50 buildlog.txt | grep -q "\*\* BUILD SUCCEEDED \*\*"; then
+            echo "Zweiter Durchlauf"
+            bauen
+          fi
+          tail -n 50 buildlog.txt | grep -q "\*\* BUILD SUCCEEDED \*\*"
 
       - name: Fehler aus dem Build-Log
         if: failure()
