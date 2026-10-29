@@ -67,6 +67,7 @@ jobs:
         run: grep -E "error:" -A3 buildlog.txt | head -200 || true
 
       - name: Screenshots im Simulator
+        id: screenshots
         run: bash .github/zuckerschock/screenshots.sh build/Build/Products/Debug-iphonesimulator screenshots
 
       - name: Screenshots hochladen
@@ -81,7 +82,7 @@ jobs:
 
       # Screenshots zusätzlich auf einen eigenen Branch legen, damit man sie ohne Download ansehen kann.
       - name: Screenshots auf Branch ablegen
-        if: success()
+        if: always() && steps.screenshots.conclusion != 'skipped'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -94,3 +95,10 @@ jobs:
           git commit -q -m "Screenshots für ${GITHUB_SHA::7}"
           git push -f -q "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${ZIEL}"
           echo "Screenshots auf Branch ${ZIEL}"
+
+      - name: Echter Start ohne Absturz
+        run: |
+          if [ -f screenshots/ECHTER-START-FEHLER.txt ]; then
+            head -n 80 screenshots/ECHTER-START-FEHLER.txt
+            exit 1
+          fi

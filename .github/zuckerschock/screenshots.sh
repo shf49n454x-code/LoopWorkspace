@@ -89,7 +89,17 @@ for eintrag in "${GERAETE[@]}"; do
     if xcrun simctl spawn "$udid" launchctl list | grep -q "$BUNDLE"; then
       echo "  echter Start: läuft"
     else
-      echo "  echter Start: App läuft nicht mehr"; exit 1
+      echo "  echter Start: App läuft nicht mehr"
+      # Diagnose sichern; der Workflow meldet den Fehler nach dem Hochladen.
+      {
+        echo "Die App lief 10 Sekunden nach dem normalen Start nicht mehr."
+        echo
+        echo "== Simulator-Log (Prozess Loop)"
+        xcrun simctl spawn "$udid" log show --last 3m --style compact --predicate 'process == "Loop"' 2>/dev/null | tail -n 300
+      } > "$ZIEL/ECHTER-START-FEHLER.txt"
+      for bericht in "$HOME"/Library/Logs/DiagnosticReports/Loop*; do
+        [ -e "$bericht" ] && cp "$bericht" "$ZIEL/" || true
+      done
     fi
     xcrun simctl terminate "$udid" "$BUNDLE" || true
     # Home-Bildschirm mit App-Icon
