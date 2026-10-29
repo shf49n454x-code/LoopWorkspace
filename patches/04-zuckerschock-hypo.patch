@@ -91,7 +91,7 @@ index 0f13afe..158a5cf 100644
          // TODO: Until these notifications are converted to use the new alert system, they shall still show in the foreground
          case LoopNotificationCategory.bolusFailure.rawValue,
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
-index 0ddb989..40de8df 100644
+index 9ac9c86..b9e1912 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 @@ -22,6 +22,10 @@ struct ZSAktionen {
