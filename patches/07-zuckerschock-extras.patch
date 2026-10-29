@@ -682,7 +682,7 @@ index 0000000..83a9e8a
 +    }
 +}
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
-index 64f5c5f..eea1365 100644
+index 46873f9..55edc90 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 @@ -28,12 +28,18 @@ struct ZSAktionen {
@@ -1130,10 +1130,10 @@ index 0000000..562cde0
 +    }
 +}
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift b/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
-index ef334c1..1341f16 100644
+index 06f6f40..eff04a9 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
-@@ -74,6 +74,9 @@ final class ZSHypoBegleiter: ObservableObject {
+@@ -76,6 +76,9 @@ final class ZSHypoBegleiter: ObservableObject {
      /// Liefert den neuesten Wert: mg/dl, Datum, Trend.
      private let neuesterWert: () -> (mgdl: Double, datum: Date, trend: GlucoseTrend?)?
      private let einheit: () -> HKUnit
@@ -1143,7 +1143,7 @@ index ef334c1..1341f16 100644
  
      init(speicher: ZSSpeicher,
           ordner: URL? = nil,
-@@ -168,6 +171,7 @@ final class ZSHypoBegleiter: ObservableObject {
+@@ -170,6 +173,7 @@ final class ZSHypoBegleiter: ObservableObject {
          aktualisieren(jetzt: jetzt)
          liveActivityStarten()
          mitteilen()
@@ -1151,7 +1151,7 @@ index ef334c1..1341f16 100644
      }
  
      /// Erstes Eintragen per Tipp; weiteres Eintragen nur durch Halten (in der App).
-@@ -181,6 +185,7 @@ final class ZSHypoBegleiter: ObservableObject {
+@@ -183,6 +187,7 @@ final class ZSHypoBegleiter: ObservableObject {
  
      func beenden(jetzt: Date = Date(), wiederImZiel: Bool = false) {
          guard var episode = aktiv else { return }
