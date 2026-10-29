@@ -50,7 +50,7 @@ index b9dd628..0f13afe 100644
  
          deviceDataManager.refreshDeviceData()
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
-index c6811ad..c9dedf2 100644
+index d871e33..0ddb989 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 @@ -20,10 +20,13 @@ struct ZSAktionen {

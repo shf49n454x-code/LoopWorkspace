@@ -50,7 +50,7 @@ index 158a5cf..ffb10b9 100644
          rootNavigationController?.setViewControllers([tabController], animated: true)
  
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
-index 582b0c2..64f5c5f 100644
+index 40de8df..46873f9 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 @@ -26,11 +26,14 @@ struct ZSAktionen {
