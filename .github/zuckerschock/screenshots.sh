@@ -77,6 +77,12 @@ for eintrag in "${GERAETE[@]}"; do
     aufnehmen "$udid" "$name-dark-large-heute-hoch" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_SZENARIO=hoch
     aufnehmen "$udid" "$name-dark-large-essen" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_TAB=essen
     aufnehmen "$udid" "$name-dark-large-therapie" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_TAB=therapie
+    for blatt in rezept rueckblick standard manuell einstellungen; do
+      aufnehmen "$udid" "$name-dark-large-essen-$blatt" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_TAB=essen SIMCTL_CHILD_ZS_ESSEN_BLATT=$blatt
+    done
+    xcrun simctl ui "$udid" appearance light
+    aufnehmen "$udid" "$name-light-large-essen" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_TAB=essen
+    xcrun simctl ui "$udid" appearance dark
     # Echter Start ohne Vorschau: Loop startet normal (Einrichtung), darf nicht abstürzen.
     aufnehmen "$udid" "$name-dark-large-echter-start"
     sleep 5
