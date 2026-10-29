@@ -1,0 +1,138 @@
+name: Zuckerschock Simulator-Check
+
+# Baut Zuckerschock für den Simulator, startet die Oberfläche auf mehreren iPhones
+# (Dunkel/Hell, normale und große Schrift) und speichert Screenshots.
+# Kein Signieren, keine Secrets, kein TestFlight.
+
+on:
+  push:
+    branches:
+      - "zuckerschock/**"
+    paths-ignore:
+      - "screenshots/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: zuckerschock-simulator-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  simulator:
+    name: Bauen und Screenshots
+    runs-on: xcode-27
+    timeout-minutes: 90
+    # Schreibrecht nur für diesen Job: er legt die Screenshots auf einem eigenen Branch ab.
+    permissions:
+      contents: write
+    steps:
+      - name: Select Xcode version
+        run: "sudo xcode-select --switch /Applications/Xcode_27.0.app/Contents/Developer"
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      # Wie in build_loop.yml: alle Patches aus patches/ anwenden
+      - name: Patches anwenden
+        run: |
+          if $(ls ./patches/* &> /dev/null); then
+          git apply ./patches/* --allow-empty -v --whitespace=fix
+          fi
+
+      # Zwei Durchläufe: Beim ersten kopiert Loop manchmal Plugins, bevor sie fertig sind
+      # („did not contain an Info.plist“). Der zweite Durchlauf baut nur nach.
+      - name: Für den Simulator bauen
+        run: |
+          bauen() {
+            xcodebuild build \
+              -workspace LoopWorkspace.xcworkspace \
+              -scheme LoopWorkspace \
+              -configuration Debug \
+              -destination "generic/platform=iOS Simulator" \
+              -derivedDataPath build \
+              CODE_SIGNING_ALLOWED=NO \
+              2>&1 | tee -a buildlog.txt | grep -E "error:|warning: .*Zuckerschock|\*\* BUILD" || true
+          }
+          fertig() {
+            tail -n 50 buildlog.txt | grep -q "\*\* BUILD SUCCEEDED \*\*" && bash .github/zuckerschock/vollstaendig.sh build/Build/Products/Debug-iphonesimulator
+          }
+          : > buildlog.txt
+          bauen
+          if ! fertig; then
+            echo "Zweiter Durchlauf"
+            bash .github/zuckerschock/vollstaendig.sh build/Build/Products/Debug-iphonesimulator --entfernen || true
+            bauen
+          fi
+          fertig
+
+      - name: Fehler aus dem Build-Log
+        if: failure()
+        run: grep -E "error:" -A3 buildlog.txt | head -200 || true
+
+      - name: Screenshots im Simulator
+        id: screenshots
+        run: bash .github/zuckerschock/screenshots.sh build/Build/Products/Debug-iphonesimulator screenshots
+
+      # Echter Start (ohne Vorschau): Loop braucht seine App-Gruppe, sonst bricht ein Debug-Build
+      # sofort ab. Dafür ad hoc signieren (ohne Apple-Konto, nur im Simulator gültig).
+      - name: Ad hoc signieren für den echten Start
+        id: signieren
+        continue-on-error: true
+        run: |
+          xcodebuild build \
+            -workspace LoopWorkspace.xcworkspace \
+            -scheme LoopWorkspace \
+            -configuration Debug \
+            -destination "generic/platform=iOS Simulator" \
+            -derivedDataPath build \
+            CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
+            2>&1 | tee signlog.txt | grep -E "error:|\*\* BUILD" || true
+          tail -n 50 signlog.txt | grep -q "\*\* BUILD SUCCEEDED \*\*"
+          bash .github/zuckerschock/vollstaendig.sh build/Build/Products/Debug-iphonesimulator
+
+      - name: Echter Start im Simulator
+        if: steps.signieren.outcome == 'success'
+        run: bash .github/zuckerschock/echter-start.sh build/Build/Products/Debug-iphonesimulator screenshots
+
+      - name: Screenshots hochladen
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: zuckerschock-screenshots
+          path: |
+            screenshots
+            buildlog.txt
+            signlog.txt
+          if-no-files-found: ignore
+
+      # Screenshots zusätzlich auf einen eigenen Branch legen, damit man sie ohne Download ansehen kann.
+      - name: Screenshots auf Branch ablegen
+        if: always() && steps.screenshots.outcome != 'skipped'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ZIEL="screenshots/${GITHUB_REF_NAME//\//-}"
+          cd screenshots
+          git init -q -b screenshots
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Screenshots für ${GITHUB_SHA::7}" || { echo "Keine Screenshots"; exit 0; }
+          git push -f -q "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${ZIEL}"
+          echo "Screenshots auf Branch ${ZIEL}"
+
+      - name: Echter Start ohne Absturz
+        run: |
+          if [ "${{ steps.signieren.outcome }}" != "success" ]; then
+            echo "Ad-hoc-Signatur nicht möglich, echter Start nicht geprüft."
+            grep -E "error:" signlog.txt | head -20 || true
+          fi
+          if [ -f screenshots/ECHTER-START-FEHLER.txt ]; then
+            head -n 120 screenshots/ECHTER-START-FEHLER.txt
+            exit 1
+          fi

@@ -1,0 +1,2195 @@
+diff --git a/Loop/Loop.xcodeproj/project.pbxproj b/Loop/Loop.xcodeproj/project.pbxproj
+index f9e6271..dc32604 100644
+--- a/Loop/Loop.xcodeproj/project.pbxproj
++++ b/Loop/Loop.xcodeproj/project.pbxproj
+@@ -7,6 +7,10 @@
+ 	objects = {
+ 
+ /* Begin PBXBuildFile section */
++		5A5C00000000000000000020 /* ZuckerschockTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C00000000000000000010 /* ZuckerschockTheme.swift */; };
++		5A5C00000000000000000021 /* ZuckerschockHeuteDaten.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C00000000000000000011 /* ZuckerschockHeuteDaten.swift */; };
++		5A5C00000000000000000022 /* ZuckerschockHeuteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C00000000000000000012 /* ZuckerschockHeuteView.swift */; };
++		5A5C00000000000000000023 /* ZuckerschockTabs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C00000000000000000013 /* ZuckerschockTabs.swift */; };
+ 		1419606428D9550400BA86E0 /* LoopKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 437AFEE6203688CF008C4892 /* LoopKitUI.framework */; };
+ 		1419606928D9554E00BA86E0 /* LoopKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 437AFEE6203688CF008C4892 /* LoopKitUI.framework */; };
+ 		1419606A28D955BC00BA86E0 /* MockKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C101947127DD473C004E7EB8 /* MockKitUI.framework */; };
+@@ -759,6 +763,10 @@
+ /* End PBXCopyFilesBuildPhase section */
+ 
+ /* Begin PBXFileReference section */
++		5A5C00000000000000000010 /* ZuckerschockTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockTheme.swift; sourceTree = "<group>"; };
++		5A5C00000000000000000011 /* ZuckerschockHeuteDaten.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockHeuteDaten.swift; sourceTree = "<group>"; };
++		5A5C00000000000000000012 /* ZuckerschockHeuteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockHeuteView.swift; sourceTree = "<group>"; };
++		5A5C00000000000000000013 /* ZuckerschockTabs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockTabs.swift; sourceTree = "<group>"; };
+ 		142CB7582A60BF2E0075748A /* EditMode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditMode.swift; sourceTree = "<group>"; };
+ 		142CB75A2A60BFC30075748A /* FavoriteFoodsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FavoriteFoodsView.swift; sourceTree = "<group>"; };
+ 		1452F4A82A851C9400F8B9E4 /* AddEditFavoriteFoodViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddEditFavoriteFoodViewModel.swift; sourceTree = "<group>"; };
+@@ -1524,6 +1532,17 @@
+ /* End PBXFrameworksBuildPhase section */
+ 
+ /* Begin PBXGroup section */
++		5A5C00000000000000000001 /* Zuckerschock */ = {
++			isa = PBXGroup;
++			children = (
++				5A5C00000000000000000010 /* ZuckerschockTheme.swift */,
++				5A5C00000000000000000011 /* ZuckerschockHeuteDaten.swift */,
++				5A5C00000000000000000012 /* ZuckerschockHeuteView.swift */,
++				5A5C00000000000000000013 /* ZuckerschockTabs.swift */,
++			);
++			path = Zuckerschock;
++			sourceTree = "<group>";
++		};
+ 		14B1736128AED9EC006CCD7C /* Loop Widget Extension */ = {
+ 			isa = PBXGroup;
+ 			children = (
+@@ -1746,6 +1765,7 @@
+ 				43F5C2CF1B92A2ED003EB13D /* Views */,
+ 				897A5A9724C22DCE00C4E71D /* View Models */,
+ 				84AB0A823008A62400A13446 /* SceneDelegate.swift */,
++				5A5C00000000000000000001 /* Zuckerschock */,
+ 			);
+ 			path = Loop;
+ 			sourceTree = "<group>";
+@@ -3382,6 +3402,10 @@
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
++				5A5C00000000000000000020 /* ZuckerschockTheme.swift in Sources */,
++				5A5C00000000000000000021 /* ZuckerschockHeuteDaten.swift in Sources */,
++				5A5C00000000000000000022 /* ZuckerschockHeuteView.swift in Sources */,
++				5A5C00000000000000000023 /* ZuckerschockTabs.swift in Sources */,
+ 				C17824A51E1AD4D100D9D25C /* ManualBolusRecommendation.swift in Sources */,
+ 				897A5A9624C2175B00C4E71D /* BolusEntryView.swift in Sources */,
+ 				4F70C2131DE90339006380B7 /* StatusExtensionContext.swift in Sources */,
+diff --git a/Loop/Loop/Managers/LoopAppManager.swift b/Loop/Loop/Managers/LoopAppManager.swift
+index efe8d2a..7d072c5 100644
+--- a/Loop/Loop/Managers/LoopAppManager.swift
++++ b/Loop/Loop/Managers/LoopAppManager.swift
+@@ -330,7 +330,10 @@ class LoopAppManager: NSObject {
+             rootViewController = rootNavigationController
+         }
+ 
+-        rootNavigationController?.setViewControllers([statusTableViewController], animated: true)
++        // Zuckerschock: Bubble-Menü mit Heute-Screen; Loops Startbildschirm lebt unverändert im Tab „Verlauf“.
++        let heuteQuelle = ZSLoopQuelle(deviceManager: deviceDataManager, automaticDosingStatus: automaticDosingStatus, onboardingManager: onboardingManager)
++        let tabController = ZuckerschockTabController(statusTableViewController: statusTableViewController, heuteQuelle: heuteQuelle)
++        rootNavigationController?.setViewControllers([tabController], animated: true)
+ 
+         deviceDataManager.refreshDeviceData()
+ 
+diff --git a/Loop/Loop/SceneDelegate.swift b/Loop/Loop/SceneDelegate.swift
+index eea0299..e815bc6 100644
+--- a/Loop/Loop/SceneDelegate.swift
++++ b/Loop/Loop/SceneDelegate.swift
+@@ -16,7 +16,11 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, WindowProvider {
+     /// The app manager lives on the app delegate because it also serves app-level callbacks
+     /// (remote notifications, protected data availability).
+     private var loopAppManager: LoopAppManager? {
+-        (UIApplication.shared.delegate as? AppDelegate)?.loopAppManager
++#if targetEnvironment(simulator)
++        // Zuckerschock-Vorschau startet Loop nicht.
++        if ZSVorschau.istAktiv { return nil }
++#endif
++        return (UIApplication.shared.delegate as? AppDelegate)?.loopAppManager
+     }
+ 
+     // MARK: - UIWindowSceneDelegate - Life Cycle
+@@ -34,6 +38,15 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate, WindowProvider {
+             window.makeKeyAndVisible()
+         }
+ 
++#if targetEnvironment(simulator)
++        // Zuckerschock: Oberfläche mit Beispielwerten für Screenshots, nur im Simulator mit ZS_VORSCHAU=1.
++        if ZSVorschau.istAktiv, let window {
++            window.rootViewController = ZSVorschau.wurzel()
++            window.makeKeyAndVisible()
++            return
++        }
++#endif
++
+         guard let loopAppManager else { return }
+ 
+         let launchOptions = (UIApplication.shared.delegate as? AppDelegate)?.launchOptions
+diff --git a/Loop/Loop/View Controllers/RootNavigationController.swift b/Loop/Loop/View Controllers/RootNavigationController.swift
+index 87b04d5..b34d438 100644
+--- a/Loop/Loop/View Controllers/RootNavigationController.swift	
++++ b/Loop/Loop/View Controllers/RootNavigationController.swift	
+@@ -13,7 +13,11 @@ import LoopKitUI
+ class RootNavigationController: UINavigationController {
+ 
+     /// Its root view controller is always StatusTableViewController after loading
++    /// (Zuckerschock: inside the tab container, in the "Verlauf" tab)
+     var statusTableViewController: StatusTableViewController! {
++        if let tabs = viewControllers.first as? ZuckerschockTabController {
++            return tabs.statusTableViewController
++        }
+         return viewControllers.first as? StatusTableViewController
+     }
+     
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteDaten.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteDaten.swift
+new file mode 100644
+index 0000000..db86ace
+--- /dev/null
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteDaten.swift
+@@ -0,0 +1,490 @@
++//
++//  ZuckerschockHeuteDaten.swift
++//  Loop
++//
++//  Zuckerschock: Daten für den Heute-Screen.
++//  Liest ausschließlich aus bestehenden Loop-Quellen (GlucoseStore, LoopDataManager-Zustand,
++//  Pumpen- und CGM-Status). Schreibt nichts, rechnet keine Dosis.
++//
++
++import Combine
++import Foundation
++import HealthKit
++import LoopCore
++import LoopKit
++import LoopKitUI
++import UIKit
++
++// MARK: - Modell
++
++struct ZSMesspunkt: Identifiable, Equatable {
++    let datum: Date
++    /// Immer in mg/dl gespeichert, Anzeige rechnet in die Einheit des Nutzers um.
++    let mgdl: Double
++
++    var id: Date { datum }
++}
++
++enum ZSGlukoseZustand: Equatable {
++    case tief, ziel, hoch
++
++    /// Zielbereich laut CI: 70–180 mg/dl.
++    init(mgdl: Double) {
++        if mgdl < 70 {
++            self = .tief
++        } else if mgdl > 180 {
++            self = .hoch
++        } else {
++            self = .ziel
++        }
++    }
++}
++
++enum ZSTrend: Equatable {
++    case steigtSehrSchnell, steigtSchnell, steigt, stabil, faellt, faelltSchnell, faelltSehrSchnell
++
++    init(_ trend: GlucoseTrend) {
++        switch trend {
++        case .upUpUp: self = .steigtSehrSchnell
++        case .upUp: self = .steigtSchnell
++        case .up: self = .steigt
++        case .flat: self = .stabil
++        case .down: self = .faellt
++        case .downDown: self = .faelltSchnell
++        case .downDownDown: self = .faelltSehrSchnell
++        }
++    }
++
++    /// Trend als klares Zeichen, nie als Blitz.
++    var pfeil: String {
++        switch self {
++        case .steigtSehrSchnell: return "↑↑"
++        case .steigtSchnell: return "↑"
++        case .steigt: return "↗"
++        case .stabil: return "→"
++        case .faellt: return "↘"
++        case .faelltSchnell: return "↓"
++        case .faelltSehrSchnell: return "↓↓"
++        }
++    }
++
++    var wort: String {
++        switch self {
++        case .steigtSehrSchnell: return "steigt sehr schnell"
++        case .steigtSchnell: return "steigt schnell"
++        case .steigt: return "steigt"
++        case .stabil: return "stabil"
++        case .faellt: return "fällt"
++        case .faelltSchnell: return "fällt schnell"
++        case .faelltSehrSchnell: return "fällt sehr schnell"
++        }
++    }
++
++    var faellt: Bool { [.faellt, .faelltSchnell, .faelltSehrSchnell].contains(self) }
++}
++
++enum ZSLoopStatus: Equatable {
++    /// Geschlossener Loop, letzter Durchlauf höchstens 10 Minuten her.
++    case aktiv
++    /// Automatische Dosierung ist aus.
++    case offen
++    /// Letzter Durchlauf liegt länger zurück (oder nie).
++    case alt(seit: Date?)
++}
++
++enum ZSGeraeteZustand: Equatable {
++    case normal, bald, jetzt, ohne
++}
++
++struct ZSGeraet: Equatable {
++    var name: String
++    /// Verbrauchter Anteil der Laufzeit, 0…1, wie vom Gerät gemeldet.
++    var anteil: Double?
++    var zustand: ZSGeraeteZustand
++    var detail: String?
++}
++
++struct ZSHeuteStand: Equatable {
++    var einheit: HKUnit
++    var aktuell: ZSMesspunkt?
++    var trend: ZSTrend?
++    /// Änderung in mg/dl über 15 Minuten, aus der Trendrate des Sensors.
++    var aenderung15Min: Double?
++    var verlauf: [ZSMesspunkt]
++    /// Loops eigene Vorhersage, nur angezeigt.
++    var vorhersage: [ZSMesspunkt]
++    var insulinAktiv: Double?
++    var khAktiv: Double?
++    /// Zeitpunkt, zu dem Loop IOB/COB zuletzt berechnet hat.
++    var loopStand: Date?
++    var in30Min: Double?
++    var loop: ZSLoopStatus
++    var pumpe: ZSGeraet?
++    var sensor: ZSGeraet?
++    /// Wie in Loops Werkzeugleiste: Bolus und KH erst nach Einrichtung der Pumpe.
++    var aktionenMoeglich: Bool
++}
++
++// MARK: - Quelle
++
++protocol ZSHeuteQuelle: AnyObject {
++    /// Meldet, wenn Loop neue Daten hat.
++    var aenderungen: AnyPublisher<Void, Never> { get }
++    /// Lädt den aktuellen Stand; `fertig` läuft auf dem Main-Thread.
++    func laden(_ fertig: @escaping (ZSHeuteStand) -> Void)
++}
++
++final class ZSHeuteModell: ObservableObject {
++    @Published private(set) var stand: ZSHeuteStand?
++    /// Für die Altersanzeige („vor 12 Min“), läuft jede halbe Minute weiter.
++    @Published private(set) var jetzt = Date()
++
++    private let quelle: ZSHeuteQuelle
++    private var abos = Set<AnyCancellable>()
++
++    init(quelle: ZSHeuteQuelle) {
++        self.quelle = quelle
++
++        quelle.aenderungen
++            .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
++            .sink { [weak self] in self?.neuLaden() }
++            .store(in: &abos)
++
++        Timer.publish(every: 30, on: .main, in: .common)
++            .autoconnect()
++            .sink { [weak self] datum in
++                self?.jetzt = datum
++            }
++            .store(in: &abos)
++
++        Timer.publish(every: 120, on: .main, in: .common)
++            .autoconnect()
++            .sink { [weak self] _ in self?.neuLaden() }
++            .store(in: &abos)
++
++        neuLaden()
++    }
++
++    func neuLaden() {
++        quelle.laden { [weak self] neu in
++            guard let self else { return }
++            self.jetzt = Date()
++            if self.stand != neu {
++                self.stand = neu
++            }
++        }
++    }
++}
++
++// MARK: - Live-Quelle aus Loop (nur lesend)
++
++final class ZSLoopQuelle: ZSHeuteQuelle {
++    private let deviceManager: DeviceDataManager
++    private let automaticDosingStatus: AutomaticDosingStatus
++    private let onboardingManager: OnboardingManager?
++
++    init(deviceManager: DeviceDataManager, automaticDosingStatus: AutomaticDosingStatus, onboardingManager: OnboardingManager?) {
++        self.deviceManager = deviceManager
++        self.automaticDosingStatus = automaticDosingStatus
++        self.onboardingManager = onboardingManager
++    }
++
++    var aenderungen: AnyPublisher<Void, Never> {
++        let center = NotificationCenter.default
++        let namen: [(Notification.Name, AnyObject?)] = [
++            (.LoopDataUpdated, deviceManager.loopManager),
++            (.PumpManagerChanged, deviceManager),
++            (.CGMManagerChanged, deviceManager),
++            (.PumpEventsAdded, deviceManager)
++        ]
++        let mitteilungen = namen.map { name, objekt in
++            center.publisher(for: name, object: objekt).map { _ in () }.eraseToAnyPublisher()
++        }
++        let dosierung = automaticDosingStatus.$automaticDosingEnabled
++            .removeDuplicates()
++            .map { _ in () }
++            .eraseToAnyPublisher()
++        let aktiv = center.publisher(for: UIApplication.didBecomeActiveNotification)
++            .map { _ in () }
++            .eraseToAnyPublisher()
++        return Publishers.MergeMany(mitteilungen + [dosierung, aktiv]).eraseToAnyPublisher()
++    }
++
++    func laden(_ fertig: @escaping (ZSHeuteStand) -> Void) {
++        let gruppe = DispatchGroup()
++        let start = Date().addingTimeInterval(-(TimeInterval.hours(3) + TimeInterval.minutes(10)))
++
++        var messwerte: [StoredGlucoseSample] = []
++        var vorhersage: [PredictedGlucoseValue] = []
++        var insulinAktiv: InsulinValue?
++        var khAktiv: CarbValue?
++
++        gruppe.enter()
++        deviceManager.glucoseStore.getGlucoseSamples(start: start, end: nil) { result in
++            if case .success(let werte) = result {
++                messwerte = werte
++            }
++            gruppe.leave()
++        }
++
++        gruppe.enter()
++        deviceManager.loopManager.getLoopState { _, state in
++            vorhersage = state.predictedGlucoseIncludingPendingInsulin ?? []
++            insulinAktiv = state.insulinOnBoard
++            khAktiv = state.carbsOnBoard
++            gruppe.leave()
++        }
++
++        gruppe.notify(queue: .main) { [weak self] in
++            guard let self else { return }
++            fertig(self.stand(messwerte: messwerte, vorhersage: vorhersage, insulinAktiv: insulinAktiv, khAktiv: khAktiv))
++        }
++    }
++
++    private func stand(messwerte: [StoredGlucoseSample], vorhersage: [PredictedGlucoseValue], insulinAktiv: InsulinValue?, khAktiv: CarbValue?) -> ZSHeuteStand {
++        let mgdl = HKUnit.milligramsPerDeciliter
++        let jetzt = Date()
++
++        let verlauf = messwerte
++            .map { ZSMesspunkt(datum: $0.startDate, mgdl: $0.quantity.doubleValue(for: mgdl)) }
++            .sorted { $0.datum < $1.datum }
++
++        let letzter = messwerte.max { $0.startDate < $1.startDate }
++        let aktuell = letzter.map { ZSMesspunkt(datum: $0.startDate, mgdl: $0.quantity.doubleValue(for: mgdl)) }
++
++        var aenderung: Double?
++        if let rate = letzter?.trendRate {
++            aenderung = rate.doubleValue(for: .milligramsPerDeciliterPerMinute) * 15
++        } else if let aktuell, let frueher = verlauf.last(where: { aktuell.datum.timeIntervalSince($0.datum) >= .minutes(14) }),
++                  aktuell.datum.timeIntervalSince(frueher.datum) <= .minutes(20) {
++            aenderung = aktuell.mgdl - frueher.mgdl
++        }
++
++        let zukunft = vorhersage
++            .map { ZSMesspunkt(datum: $0.startDate, mgdl: $0.quantity.doubleValue(for: mgdl)) }
++            .filter { $0.datum >= (aktuell?.datum ?? jetzt) && $0.datum <= jetzt.addingTimeInterval(.minutes(35)) }
++
++        let ziel30 = jetzt.addingTimeInterval(.minutes(30))
++        let in30Min = vorhersage
++            .min { abs($0.startDate.timeIntervalSince(ziel30)) < abs($1.startDate.timeIntervalSince(ziel30)) }
++            .flatMap { abs($0.startDate.timeIntervalSince(ziel30)) <= .minutes(5) ? $0.quantity.doubleValue(for: mgdl) : nil }
++
++        let loop: ZSLoopStatus
++        let letzterLoop = deviceManager.loopManager.lastLoopCompleted
++        if !automaticDosingStatus.automaticDosingEnabled {
++            loop = .offen
++        } else if let letzterLoop, jetzt.timeIntervalSince(letzterLoop) <= .minutes(10) {
++            loop = .aktiv
++        } else {
++            loop = .alt(seit: letzterLoop)
++        }
++
++        let pumpeEingerichtet = onboardingManager?.isComplete == true || deviceManager.pumpManager?.isOnboarded == true
++
++        return ZSHeuteStand(
++            einheit: deviceManager.displayGlucosePreference.unit,
++            aktuell: aktuell,
++            trend: letzter?.trend.map(ZSTrend.init),
++            aenderung15Min: aenderung,
++            verlauf: verlauf,
++            vorhersage: zukunft,
++            insulinAktiv: insulinAktiv?.value,
++            khAktiv: khAktiv?.quantity.doubleValue(for: .gram()),
++            loopStand: insulinAktiv?.startDate ?? khAktiv?.startDate,
++            in30Min: in30Min,
++            loop: loop,
++            pumpe: pumpe(),
++            sensor: sensor(),
++            aktionenMoeglich: pumpeEingerichtet)
++    }
++
++    private func pumpe() -> ZSGeraet? {
++        guard let pumpManager = deviceManager.pumpManager else {
++            return ZSGeraet(name: "Pumpe", anteil: nil, zustand: .ohne, detail: "nicht verbunden")
++        }
++        let titel = pumpManager.localizedTitle
++        let name = titel.localizedCaseInsensitiveContains("pod") ? "Pod" : titel
++        let fortschritt = pumpManager.pumpLifecycleProgress
++
++        var teile: [String] = []
++        if let reservoir = deviceManager.doseStore.lastReservoirValue,
++           Date().timeIntervalSince(reservoir.startDate) <= .hours(1) {
++            teile.append("\(ZSFormat.zahl(reservoir.unitVolume, stellen: 0)) IE übrig")
++        }
++        let zustand = ZSGeraeteZustand(fortschritt?.progressState)
++        if let hinweis = zustand.hinweis {
++            teile.append(hinweis)
++        }
++        return ZSGeraet(name: name, anteil: fortschritt?.percentComplete, zustand: zustand, detail: teile.isEmpty ? nil : teile.joined(separator: " · "))
++    }
++
++    private func sensor() -> ZSGeraet? {
++        guard let cgmManager = deviceManager.cgmManager else {
++            return ZSGeraet(name: "Sensor", anteil: nil, zustand: .ohne, detail: "nicht verbunden")
++        }
++        let titel = cgmManager.localizedTitle
++        let name = titel.contains("G7") ? "G7" : titel
++        let fortschritt = (cgmManager as? CGMManagerUI)?.cgmLifecycleProgress
++        let zustand = ZSGeraeteZustand(fortschritt?.progressState)
++        return ZSGeraet(name: name, anteil: fortschritt?.percentComplete, zustand: zustand, detail: zustand.hinweis)
++    }
++}
++
++private extension ZSGeraeteZustand {
++    init(_ state: DeviceLifecycleProgressState?) {
++        switch state {
++        case .warning?: self = .bald
++        case .critical?: self = .jetzt
++        default: self = .normal
++        }
++    }
++
++    var hinweis: String? {
++        switch self {
++        case .bald: return "bald wechseln"
++        case .jetzt: return "jetzt wechseln"
++        case .normal, .ohne: return nil
++        }
++    }
++}
++
++// MARK: - Formatierung
++
++enum ZSFormat {
++    private static let deutsch = Locale(identifier: "de_DE")
++
++    static func zahl(_ wert: Double, stellen: Int) -> String {
++        let f = NumberFormatter()
++        f.locale = deutsch
++        f.numberStyle = .decimal
++        f.minimumFractionDigits = stellen
++        f.maximumFractionDigits = stellen
++        f.usesGroupingSeparator = false
++        return f.string(from: NSNumber(value: wert)) ?? "–"
++    }
++
++    static func istMmol(_ einheit: HKUnit) -> Bool {
++        einheit == .millimolesPerLiter
++    }
++
++    /// Glukose ohne Einheit in der Einheit des Nutzers.
++    static func glukose(_ mgdl: Double, _ einheit: HKUnit) -> String {
++        if istMmol(einheit) {
++            return zahl(HKQuantity(unit: .milligramsPerDeciliter, doubleValue: mgdl).doubleValue(for: einheit), stellen: 1)
++        }
++        return zahl(mgdl, stellen: 0)
++    }
++
++    /// Änderung mit Vorzeichen („−10“, „+0,6“).
++    static func aenderung(_ mgdl: Double, _ einheit: HKUnit) -> String {
++        let betrag = glukose(abs(mgdl), einheit)
++        if betrag == glukose(0, einheit) {
++            return "±\(betrag)"
++        }
++        return (mgdl < 0 ? "−" : "+") + betrag
++    }
++
++    static func einheit(_ einheit: HKUnit) -> String {
++        istMmol(einheit) ? "mmol/l" : "mg/dl"
++    }
++
++    static func alter(von datum: Date, jetzt: Date) -> String {
++        let minuten = max(0, Int(jetzt.timeIntervalSince(datum) / 60))
++        if minuten < 60 {
++            return "vor \(minuten) Min"
++        }
++        let stunden = minuten / 60
++        return stunden < 24 ? "vor \(stunden) Std" : "vor \(stunden / 24) Tagen"
++    }
++
++    /// Jeder Wert zeigt sein Alter, sobald er älter als 10 Minuten ist.
++    static func istAlt(_ datum: Date?, jetzt: Date) -> Bool {
++        guard let datum else { return true }
++        return jetzt.timeIntervalSince(datum) > .minutes(10)
++    }
++
++    static func uhrzeit(_ datum: Date) -> String {
++        let f = DateFormatter()
++        f.locale = deutsch
++        f.dateFormat = "HH:mm"
++        return f.string(from: datum)
++    }
++
++    static func tagesdatum(_ datum: Date) -> String {
++        let f = DateFormatter()
++        f.locale = deutsch
++        f.dateFormat = "EEEE, d. MMMM"
++        return f.string(from: datum)
++    }
++}
++
++// MARK: - Vorschau (nur Simulator, für Screenshots)
++
++#if targetEnvironment(simulator)
++/// Beispielwerte wie in der Klick-Demo. Wird nur im Simulator mit ZS_VORSCHAU=1 benutzt.
++final class ZSVorschauQuelle: ZSHeuteQuelle {
++    enum Szenario: String {
++        case normal, tief, alt, hoch
++    }
++
++    private let szenario: Szenario
++
++    init(szenario: Szenario) {
++        self.szenario = szenario
++    }
++
++    var aenderungen: AnyPublisher<Void, Never> { Empty().eraseToAnyPublisher() }
++
++    func laden(_ fertig: @escaping (ZSHeuteStand) -> Void) {
++        let jetzt = Date()
++        let alterMin: Double = szenario == .alt ? 14 : 2
++        let letzter = jetzt.addingTimeInterval(-.minutes(alterMin))
++
++        // Frühstücksspitze wie in der Demo, alle 5 Minuten ein Wert über 3 Stunden.
++        let form: [Double] = [
++            104, 106, 107, 107, 108, 115, 128, 142, 156, 168, 177, 181, 180, 176, 166, 150, 137, 130,
++            126, 122, 119, 118, 117, 118, 116, 115, 116, 117, 115, 114, 114, 113, 114, 115, 114, 114, 114
++        ]
++        let verschiebung: Double
++        switch szenario {
++        case .tief: verschiebung = -52
++        case .hoch: verschiebung = 98
++        case .normal, .alt: verschiebung = 0
++        }
++        let verlauf = form.enumerated().map { index, wert -> ZSMesspunkt in
++            let datum = letzter.addingTimeInterval(-.minutes(Double(form.count - 1 - index) * 5))
++            let anteil = Double(index) / Double(form.count - 1)
++            return ZSMesspunkt(datum: datum, mgdl: wert + verschiebung * anteil * anteil)
++        }
++        let aktuell = verlauf.last!
++        let richtung: Double = szenario == .hoch ? 2.5 : (szenario == .tief ? -1.4 : -0.7)
++        let vorhersage = (0...6).map { schritt in
++            ZSMesspunkt(datum: aktuell.datum.addingTimeInterval(.minutes(Double(schritt) * 5)),
++                        mgdl: aktuell.mgdl + richtung * Double(schritt) * 4)
++        }
++
++        let trend: ZSTrend
++        switch szenario {
++        case .tief: trend = .faellt
++        case .hoch: trend = .steigt
++        case .normal, .alt: trend = .faellt
++        }
++
++        fertig(ZSHeuteStand(
++            einheit: .milligramsPerDeciliter,
++            aktuell: aktuell,
++            trend: trend,
++            aenderung15Min: richtung * 12,
++            verlauf: verlauf,
++            vorhersage: vorhersage,
++            insulinAktiv: 1.35,
++            khAktiv: 24,
++            loopStand: szenario == .alt ? letzter : jetzt.addingTimeInterval(-.minutes(1)),
++            in30Min: aktuell.mgdl + richtung * 24,
++            loop: szenario == .alt ? .alt(seit: letzter) : .aktiv,
++            pumpe: ZSGeraet(name: "Pod", anteil: 0.75, zustand: .normal, detail: "38 IE übrig"),
++            sensor: ZSGeraet(name: "G7", anteil: 0.7, zustand: .normal, detail: nil),
++            aktionenMoeglich: true))
++    }
++}
++#endif
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
+new file mode 100644
+index 0000000..c6c3c83
+--- /dev/null
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
+@@ -0,0 +1,725 @@
++//
++//  ZuckerschockHeuteView.swift
++//  Loop
++//
++//  Zuckerschock: der Heute-Screen. Zeigt nur an; Aktionen öffnen Loops bestehende Abläufe.
++//
++
++import HealthKit
++import LoopCore
++import SwiftUI
++
++struct ZSAktionen {
++    /// Öffnet Loops bestehende KH-Eingabe.
++    var essen: () -> Void
++    /// Öffnet Loops bestehenden Bolus-Ablauf.
++    var bolus: () -> Void
++    /// Wechselt in den Essen-Tab.
++    var zumEssenTab: () -> Void
++    /// Öffnet Loops Einstellungen.
++    var einstellungen: () -> Void
++}
++
++struct ZSHeuteView: View {
++    @ObservedObject var modell: ZSHeuteModell
++    var aktionen: ZSAktionen
++
++    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
++
++    var body: some View {
++        ZStack {
++            ZSFarbe.grund.ignoresSafeArea()
++            // Ab AX1 darf der Heute-Screen scrollen, sonst passt alles auf einen Blick.
++            if dynamicTypeSize.isAccessibilitySize {
++                ScrollView {
++                    inhalt(kurveFest: true)
++                }
++            } else {
++                inhalt(kurveFest: false)
++            }
++        }
++    }
++
++    private func inhalt(kurveFest: Bool) -> some View {
++        let stand = modell.stand
++        let jetzt = modell.jetzt
++        return VStack(spacing: ZSMass.space3) {
++            kopf(stand: stand, jetzt: jetzt)
++
++            if let stand, let aktuell = stand.aktuell, ZSGlukoseZustand(mgdl: aktuell.mgdl) == .tief {
++                ZSUnterzuckerWarnung(stand: stand, aktuell: aktuell, jetzt: jetzt)
++            }
++
++            ZSHeroKarte(stand: stand, jetzt: jetzt, gestapelt: dynamicTypeSize.isAccessibilitySize)
++
++            ZSKurvenKarte(stand: stand, jetzt: jetzt)
++                .frame(minHeight: kurveFest ? 260 : 120, maxHeight: kurveFest ? 260 : .infinity)
++
++            ZSGeraeteKarte(pumpe: stand?.pumpe, sensor: stand?.sensor, gestapelt: dynamicTypeSize.isAccessibilitySize)
++
++            aktionsLeiste(moeglich: stand?.aktionenMoeglich ?? false)
++        }
++        .padding(.horizontal, ZSMass.space5)
++        .padding(.top, ZSMass.space2)
++        .padding(.bottom, ZSMass.space3)
++    }
++
++    private func kopf(stand: ZSHeuteStand?, jetzt: Date) -> some View {
++        HStack(alignment: .bottom) {
++            VStack(alignment: .leading, spacing: 0) {
++                Text("Heute")
++                    .font(ZSSchrift.largeTitle)
++                    .foregroundStyle(ZSFarbe.text)
++                    .accessibilityAddTraits(.isHeader)
++                Text(ZSFormat.tagesdatum(jetzt))
++                    .font(ZSSchrift.subhead)
++                    .foregroundStyle(ZSFarbe.text2)
++            }
++            Spacer(minLength: ZSMass.space2)
++            if let stand {
++                ZSLoopPill(status: stand.loop, jetzt: jetzt)
++            }
++        }
++    }
++
++    private func aktionsLeiste(moeglich: Bool) -> some View {
++        HStack(spacing: ZSMass.space3) {
++            Button(action: aktionen.essen) {
++                Label("Essen", systemImage: "fork.knife")
++                    .font(ZSSchrift.headline)
++            }
++            .buttonStyle(ZSDruckStil(art: .primaer))
++            .frame(maxWidth: .infinity)
++            .layoutPriority(1)
++            .accessibilityLabel("Essen eintragen")
++
++            Button(action: aktionen.bolus) {
++                ZSKleineAktion(titel: "Bolus", symbol: "drop")
++            }
++            .buttonStyle(ZSDruckStil(art: .sekundaer))
++            .fixedSize(horizontal: true, vertical: false)
++            .accessibilityLabel("Bolus öffnen")
++
++            Button(action: aktionen.zumEssenTab) {
++                ZSKleineAktion(titel: "KH", symbol: "plus")
++            }
++            .buttonStyle(ZSDruckStil(art: .sekundaer))
++            .fixedSize(horizontal: true, vertical: false)
++            .accessibilityLabel("Kohlenhydrate eintragen")
++        }
++        .fixedSize(horizontal: false, vertical: true)
++        .disabled(!moeglich)
++        .opacity(moeglich ? 1 : 0.5)
++    }
++}
++
++private struct ZSKleineAktion: View {
++    var titel: String
++    var symbol: String
++
++    var body: some View {
++        VStack(spacing: 2) {
++            Image(systemName: symbol)
++                .font(.title3)
++            Text(titel)
++                .font(ZSSchrift.subhead.weight(.semibold))
++                .lineLimit(1)
++        }
++        .padding(.vertical, ZSMass.space2)
++        .padding(.horizontal, ZSMass.space1)
++        // Nie umbrechen: die kleinen Tasten behalten ihre Breite, „Essen“ nimmt den Rest.
++        .fixedSize(horizontal: true, vertical: false)
++        .frame(minWidth: 56)
++    }
++}
++
++// MARK: - Loop-Status
++
++private struct ZSLoopPill: View {
++    var status: ZSLoopStatus
++    var jetzt: Date
++
++    var body: some View {
++        let (text, symbol, farbe): (String, String, Color) = {
++            switch status {
++            case .aktiv:
++                return ("Loop aktiv", "checkmark", ZSFarbe.ziel)
++            case .offen:
++                return ("Loop offen", "pause", ZSFarbe.text2)
++            case .alt(let seit):
++                if let seit {
++                    return ("Loop \(ZSFormat.alter(von: seit, jetzt: jetzt))", "exclamationmark.circle", ZSFarbe.hoch)
++                }
++                return ("Loop wartet", "exclamationmark.circle", ZSFarbe.hoch)
++            }
++        }()
++
++        Label(text, systemImage: symbol)
++            .font(ZSSchrift.subhead.weight(.semibold))
++            .foregroundStyle(farbe)
++            .padding(.horizontal, ZSMass.space3)
++            .padding(.vertical, 6)
++            .background(Capsule().fill(farbe.opacity(0.14)))
++            .accessibilityElement(children: .combine)
++    }
++}
++
++// MARK: - Warnung (ohne Marke: kein Orange, kein Blitz, kein Humor)
++
++private struct ZSUnterzuckerWarnung: View {
++    var stand: ZSHeuteStand
++    var aktuell: ZSMesspunkt
++    var jetzt: Date
++
++    var body: some View {
++        let wert = "\(ZSFormat.glukose(aktuell.mgdl, stand.einheit)) \(ZSFormat.einheit(stand.einheit))"
++        let richtung = stand.trend.map { $0.faellt ? ", fallend" : ($0 == .stabil ? ", stabil" : ", steigend") } ?? ""
++        let alter = ZSFormat.istAlt(aktuell.datum, jetzt: jetzt) ? " (\(ZSFormat.alter(von: aktuell.datum, jetzt: jetzt)))" : ""
++
++        HStack(alignment: .top, spacing: ZSMass.space3) {
++            Image(systemName: "exclamationmark.triangle.fill")
++                .font(.title3)
++                .foregroundStyle(ZSFarbe.tief)
++            VStack(alignment: .leading, spacing: ZSMass.space1) {
++                Text("Unterzucker: \(wert)\(richtung).\(alter)")
++                    .font(ZSSchrift.headline)
++                    .foregroundStyle(ZSFarbe.text)
++                // Menge kommt aus dem Plan des Diabetes-Teams, nie aus der App.
++                Text("Iss jetzt schnelle Kohlenhydrate nach deinem Plan.")
++                    .font(ZSSchrift.subhead)
++                    .foregroundStyle(ZSFarbe.text)
++            }
++            Spacer(minLength: 0)
++        }
++        .padding(ZSMass.space4)
++        .background {
++            RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous)
++                .fill(ZSFarbe.tiefFlaeche)
++            RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous)
++                .strokeBorder(ZSFarbe.tief, lineWidth: 1.5)
++        }
++        .accessibilityElement(children: .combine)
++        .accessibilityAddTraits(.isHeader)
++    }
++}
++
++// MARK: - Hero-Karte mit Wertring
++
++private struct ZSHeroKarte: View {
++    var stand: ZSHeuteStand?
++    var jetzt: Date
++    var gestapelt: Bool
++
++    var body: some View {
++        let einheit = stand?.einheit ?? .milligramsPerDeciliter
++        let alt = ZSFormat.istAlt(stand?.loopStand, jetzt: jetzt)
++
++        let seite = VStack(alignment: .leading, spacing: 0) {
++            if let aktuell = stand?.aktuell, !ZSFormat.istAlt(aktuell.datum, jetzt: jetzt), let aenderung = stand?.aenderung15Min {
++                Label {
++                    Text("\(ZSFormat.aenderung(aenderung, einheit)) in 15 Min.")
++                } icon: {
++                    Text(stand?.trend?.pfeil ?? "→")
++                }
++                .font(ZSSchrift.subhead.weight(.semibold))
++                .foregroundStyle(ZSFarbe.text)
++                .padding(.horizontal, ZSMass.space3)
++                .padding(.vertical, 6)
++                .background(Capsule().fill(ZSFarbe.flaeche2))
++                .padding(.bottom, ZSMass.space2)
++            }
++            ZSMiniZeile(label: "IE aktiv", wert: stand?.insulinAktiv.map { ZSFormat.zahl($0, stellen: 2) }, einheit: nil)
++            ZSMiniZeile(label: "KH aktiv", wert: stand?.khAktiv.map { ZSFormat.zahl($0, stellen: 0) }, einheit: "g")
++            ZSMiniZeile(label: "in 30 Min.", wert: stand?.in30Min.map { ZSFormat.glukose($0, einheit) }, einheit: nil, letzte: true)
++            if alt, let loopStand = stand?.loopStand {
++                Text("Stand \(ZSFormat.alter(von: loopStand, jetzt: jetzt))")
++                    .font(ZSSchrift.caption)
++                    .foregroundStyle(ZSFarbe.text2)
++                    .padding(.top, ZSMass.space1)
++            }
++        }
++
++        Group {
++            if gestapelt {
++                VStack(spacing: ZSMass.space4) {
++                    ZSWertring(stand: stand, jetzt: jetzt)
++                        .frame(maxWidth: 260)
++                    seite
++                }
++            } else {
++                HStack(alignment: .center, spacing: ZSMass.space4) {
++                    ZSWertring(stand: stand, jetzt: jetzt)
++                        .frame(maxWidth: 170)
++                    seite
++                        .frame(maxWidth: .infinity)
++                }
++            }
++        }
++        .zsKarte(hero: true)
++    }
++}
++
++private struct ZSMiniZeile: View {
++    var label: String
++    var wert: String?
++    var einheit: String?
++    var letzte = false
++
++    var body: some View {
++        VStack(spacing: 0) {
++            Divider().overlay(ZSFarbe.haarlinie)
++            HStack(alignment: .firstTextBaseline) {
++                Text(label)
++                    .font(ZSSchrift.subhead)
++                    .foregroundStyle(ZSFarbe.text2)
++                Spacer(minLength: ZSMass.space1)
++                Text(wert ?? "–")
++                    .zsZahl(.wertKlein)
++                    .foregroundStyle(ZSFarbe.text)
++                    .contentTransition(.numericText())
++                if let einheit {
++                    Text(einheit)
++                        .zsZahl(.einheit)
++                        .foregroundStyle(ZSFarbe.text2)
++                }
++            }
++            .padding(.vertical, 6)
++        }
++        .accessibilityElement(children: .combine)
++    }
++}
++
++// MARK: - Wertring
++
++struct ZSWertring: View {
++    var stand: ZSHeuteStand?
++    var jetzt: Date
++
++    @Environment(\.accessibilityReduceMotion) private var reduceMotion
++
++    /// Skala 40–400 mg/dl, der Bogen nimmt drei Viertel des Kreises ein.
++    private static let skala: ClosedRange<Double> = 40...400
++    private static let bogen: Double = 0.75
++
++    private func anteil(_ mgdl: Double) -> Double {
++        let wert = min(max(mgdl, Self.skala.lowerBound), Self.skala.upperBound)
++        return (wert - Self.skala.lowerBound) / (Self.skala.upperBound - Self.skala.lowerBound)
++    }
++
++    var body: some View {
++        let einheit = stand?.einheit ?? .milligramsPerDeciliter
++        let aktuell = stand?.aktuell
++        let alt = ZSFormat.istAlt(aktuell?.datum, jetzt: jetzt)
++        let zustand = aktuell.map { ZSGlukoseZustand(mgdl: $0.mgdl) }
++        let bogenFarbe: Color = {
++            if aktuell == nil || alt { return ZSFarbe.text3 }
++            return zustand == .tief ? ZSFarbe.tief : ZSFarbe.orange
++        }()
++
++        VStack(spacing: ZSMass.space2) {
++            GeometryReader { geo in
++                let d = min(geo.size.width, geo.size.height)
++                let strich = max(10, d * 0.075)
++                ZStack {
++                    // Spur
++                    Circle()
++                        .trim(from: 0, to: Self.bogen)
++                        .stroke(ZSFarbe.flaeche2, style: StrokeStyle(lineWidth: strich, lineCap: .round))
++                        .rotationEffect(.degrees(135))
++                    // Zielband 70–180, leise
++                    Circle()
++                        .trim(from: anteil(70) * Self.bogen, to: anteil(180) * Self.bogen)
++                        .stroke(ZSFarbe.ziel.opacity(0.3), style: StrokeStyle(lineWidth: strich, lineCap: .butt))
++                        .rotationEffect(.degrees(135))
++                    // Wert
++                    Circle()
++                        .trim(from: 0, to: aktuell.map { max(0.005, anteil($0.mgdl)) * Self.bogen } ?? 0)
++                        .stroke(bogenFarbe, style: StrokeStyle(lineWidth: strich, lineCap: .round))
++                        .rotationEffect(.degrees(135))
++                        .animation(reduceMotion ? nil : ZSBewegung.iOS(ZSBewegung.dauerSeite), value: aktuell?.mgdl)
++
++                    VStack(spacing: 0) {
++                        Text(aktuell.map { ZSFormat.glukose($0.mgdl, einheit) } ?? "–")
++                            .zsZahl(.wertHero)
++                            .foregroundStyle(alt ? ZSFarbe.text2 : ZSFarbe.text)
++                            .minimumScaleFactor(0.5)
++                            .lineLimit(1)
++                            // Ziffern rollen, zählen nie hoch
++                            .contentTransition(.numericText(value: aktuell?.mgdl ?? 0))
++                            .animation(reduceMotion ? nil : .default, value: aktuell?.mgdl)
++                        Text(ZSFormat.einheit(einheit))
++                            .zsZahl(.einheit)
++                            .foregroundStyle(ZSFarbe.text2)
++                    }
++                    .padding(strich * 1.6)
++                }
++                .frame(width: d, height: d)
++                .frame(maxWidth: .infinity, maxHeight: .infinity)
++            }
++            .aspectRatio(1, contentMode: .fit)
++
++            status(aktuell: aktuell, zustand: zustand, alt: alt)
++        }
++        .accessibilityElement(children: .ignore)
++        .accessibilityLabel(barrierefreiText(einheit: einheit, aktuell: aktuell, zustand: zustand, alt: alt))
++    }
++
++    @ViewBuilder
++    private func status(aktuell: ZSMesspunkt?, zustand: ZSGlukoseZustand?, alt: Bool) -> some View {
++        if let aktuell, let zustand {
++            HStack(spacing: ZSMass.space1) {
++                Circle()
++                    .fill(farbe(zustand))
++                    .frame(width: 8, height: 8)
++                Text(wort(zustand))
++                    .foregroundStyle(farbe(zustand))
++                if alt {
++                    // Alter statt Trend, sobald der Wert älter als 10 Minuten ist
++                    Text("· \(ZSFormat.alter(von: aktuell.datum, jetzt: jetzt))")
++                        .foregroundStyle(ZSFarbe.text2)
++                } else if let trend = stand?.trend {
++                    Text(trend.pfeil)
++                        .foregroundStyle(ZSFarbe.text)
++                }
++            }
++            .font(ZSSchrift.subhead.weight(.semibold))
++            .lineLimit(1)
++            .minimumScaleFactor(0.8)
++        } else {
++            Text("Kein Wert")
++                .font(ZSSchrift.subhead.weight(.semibold))
++                .foregroundStyle(ZSFarbe.text2)
++        }
++    }
++
++    private func farbe(_ zustand: ZSGlukoseZustand) -> Color {
++        switch zustand {
++        case .tief: return ZSFarbe.tief
++        case .ziel: return ZSFarbe.ziel
++        case .hoch: return ZSFarbe.hoch
++        }
++    }
++
++    private func wort(_ zustand: ZSGlukoseZustand) -> String {
++        switch zustand {
++        case .tief: return "Unter Ziel"
++        case .ziel: return "Im Ziel"
++        case .hoch: return "Über Ziel"
++        }
++    }
++
++    private func barrierefreiText(einheit: HKUnit, aktuell: ZSMesspunkt?, zustand: ZSGlukoseZustand?, alt: Bool) -> String {
++        guard let aktuell, let zustand else { return "Glukose: kein Wert" }
++        var teile = ["Glukose \(ZSFormat.glukose(aktuell.mgdl, einheit)) \(ZSFormat.einheit(einheit))"]
++        if alt {
++            teile.append(ZSFormat.alter(von: aktuell.datum, jetzt: jetzt))
++        } else if let trend = stand?.trend {
++            teile.append(trend.wort)
++        }
++        teile.append(wort(zustand))
++        return teile.joined(separator: ", ")
++    }
++}
++
++// MARK: - Kurve
++
++private struct ZSKurvenKarte: View {
++    var stand: ZSHeuteStand?
++    var jetzt: Date
++
++    var body: some View {
++        VStack(alignment: .leading, spacing: ZSMass.space2) {
++            HStack(alignment: .firstTextBaseline) {
++                Text("Letzte 3 Stunden")
++                    .font(ZSSchrift.subhead.weight(.semibold))
++                    .foregroundStyle(ZSFarbe.text)
++                    .accessibilityAddTraits(.isHeader)
++                Spacer(minLength: ZSMass.space2)
++                Text("Finger auf die Kurve")
++                    .font(ZSSchrift.caption)
++                    .foregroundStyle(ZSFarbe.text3)
++                    .accessibilityHidden(true)
++            }
++            ZSKurve(stand: stand, jetzt: jetzt)
++        }
++        .zsKarte()
++    }
++}
++
++struct ZSKurve: View {
++    var stand: ZSHeuteStand?
++    var jetzt: Date
++
++    @State private var finger: ZSMesspunkt? = nil
++
++    private var punkte: [ZSMesspunkt] { stand?.verlauf ?? [] }
++    private var zukunft: [ZSMesspunkt] { stand?.vorhersage ?? [] }
++    private var einheit: HKUnit { stand?.einheit ?? .milligramsPerDeciliter }
++
++    private var zeitraum: ClosedRange<Date> {
++        let ende = max(jetzt, zukunft.last?.datum ?? jetzt)
++        return jetzt.addingTimeInterval(-.hours(3))...ende
++    }
++
++    private var wertebereich: ClosedRange<Double> {
++        let alle = (punkte + zukunft).map(\.mgdl)
++        let unten = min(60, (alle.min() ?? 60) - 10)
++        let oben = max(200, (alle.max() ?? 200) + 10)
++        return unten...oben
++    }
++
++    var body: some View {
++        VStack(spacing: 6) {
++            GeometryReader { geo in
++                let flaeche = CGRect(origin: .zero, size: geo.size)
++                ZStack(alignment: .topLeading) {
++                    zielband(in: flaeche)
++                    if !punkte.isEmpty {
++                        fuellung(in: flaeche)
++                        linie(punkte, in: flaeche)
++                            .stroke(ZSFarbe.orangeLinie, style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
++                        if let letzter = punkte.last, !zukunft.isEmpty {
++                            linie([letzter] + zukunft, in: flaeche)
++                                .stroke(ZSFarbe.orangeLinie.opacity(0.7), style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [2, 5]))
++                        }
++                        if let letzter = punkte.last {
++                            Circle()
++                                .fill(ZSFarbe.orange)
++                                .overlay(Circle().strokeBorder(ZSFarbe.tinte, lineWidth: 2.5))
++                                .frame(width: 13, height: 13)
++                                .position(position(letzter, in: flaeche))
++                        }
++                    } else {
++                        Text("Noch keine Werte")
++                            .font(ZSSchrift.subhead)
++                            .foregroundStyle(ZSFarbe.text2)
++                            .frame(maxWidth: .infinity, maxHeight: .infinity)
++                    }
++                    grenzen(in: flaeche)
++                    if let finger {
++                        fingerAnzeige(finger, in: flaeche)
++                    }
++                }
++                .contentShape(Rectangle())
++                .gesture(
++                    DragGesture(minimumDistance: 0)
++                        .onChanged { zug in finger = naechster(zu: zug.location.x, in: flaeche) }
++                        .onEnded { _ in finger = nil }
++                )
++            }
++            achse
++        }
++        .accessibilityElement(children: .ignore)
++        .accessibilityLabel("Zuckerkurve der letzten 3 Stunden")
++        .accessibilityValue(barrierefreiWert)
++    }
++
++    private var barrierefreiWert: String {
++        guard let minimum = punkte.min(by: { $0.mgdl < $1.mgdl }), let maximum = punkte.max(by: { $0.mgdl < $1.mgdl }) else {
++            return "keine Werte"
++        }
++        let e = ZSFormat.einheit(einheit)
++        return "tiefster Wert \(ZSFormat.glukose(minimum.mgdl, einheit)) \(e) um \(ZSFormat.uhrzeit(minimum.datum)), höchster Wert \(ZSFormat.glukose(maximum.mgdl, einheit)) \(e) um \(ZSFormat.uhrzeit(maximum.datum))"
++    }
++
++    private var achse: some View {
++        let start = zeitraum.lowerBound
++        let stunden = (1...2).map { start.addingTimeInterval(.hours(Double($0))) }
++        return HStack {
++            Text(ZSFormat.uhrzeit(start))
++            Spacer()
++            ForEach(stunden, id: \.self) { datum in
++                Text(ZSFormat.uhrzeit(datum))
++                Spacer()
++            }
++            Text("jetzt")
++        }
++        .font(ZSSchrift.caption)
++        .foregroundStyle(ZSFarbe.text3)
++        .accessibilityHidden(true)
++    }
++
++    private func x(_ datum: Date, in r: CGRect) -> CGFloat {
++        let gesamt = zeitraum.upperBound.timeIntervalSince(zeitraum.lowerBound)
++        guard gesamt > 0 else { return r.minX }
++        return r.minX + CGFloat(datum.timeIntervalSince(zeitraum.lowerBound) / gesamt) * r.width
++    }
++
++    private func y(_ mgdl: Double, in r: CGRect) -> CGFloat {
++        let b = wertebereich
++        let anteil = (min(max(mgdl, b.lowerBound), b.upperBound) - b.lowerBound) / (b.upperBound - b.lowerBound)
++        return r.maxY - CGFloat(anteil) * r.height
++    }
++
++    private func position(_ p: ZSMesspunkt, in r: CGRect) -> CGPoint {
++        CGPoint(x: x(p.datum, in: r), y: y(p.mgdl, in: r))
++    }
++
++    private func linie(_ werte: [ZSMesspunkt], in r: CGRect) -> Path {
++        Path { pfad in
++            guard let erster = werte.first else { return }
++            pfad.move(to: position(erster, in: r))
++            for p in werte.dropFirst() {
++                pfad.addLine(to: position(p, in: r))
++            }
++        }
++    }
++
++    private func fuellung(in r: CGRect) -> some View {
++        Path { pfad in
++            guard let erster = punkte.first, let letzter = punkte.last else { return }
++            pfad.move(to: CGPoint(x: x(erster.datum, in: r), y: r.maxY))
++            for p in punkte {
++                pfad.addLine(to: position(p, in: r))
++            }
++            pfad.addLine(to: CGPoint(x: x(letzter.datum, in: r), y: r.maxY))
++            pfad.closeSubpath()
++        }
++        .fill(LinearGradient(colors: [ZSFarbe.orange.opacity(0.3), ZSFarbe.orange.opacity(0)], startPoint: .top, endPoint: .bottom))
++    }
++
++    /// Zielband 70–180 als Fläche text bei 5 %, keine Linien.
++    private func zielband(in r: CGRect) -> some View {
++        let oben = y(180, in: r)
++        let unten = y(70, in: r)
++        return Rectangle()
++            .fill(ZSFarbe.text.opacity(0.05))
++            .frame(width: r.width, height: max(0, unten - oben))
++            .offset(y: oben)
++    }
++
++    /// Die zwei Grenzen rechts, caption in text-3. Ist das Band zu schmal (kleines iPhone), steht nur 180 über dem Band.
++    private func grenzen(in r: CGRect) -> some View {
++        let innen = y(70, in: r) - y(180, in: r) >= 44
++        return ZStack(alignment: .topTrailing) {
++            ForEach(innen ? [180.0, 70.0] : [180.0], id: \.self) { grenze in
++                Text(ZSFormat.glukose(grenze, einheit))
++                    .font(ZSSchrift.caption)
++                    .foregroundStyle(ZSFarbe.text3)
++                    .padding(.trailing, 2)
++                    .frame(width: r.width, alignment: .trailing)
++                    .position(x: r.midX, y: y(grenze, in: r) + (grenze > 100 ? 9 : -9) * (innen ? 1 : -1))
++            }
++        }
++        .accessibilityHidden(true)
++    }
++
++    private func naechster(zu fingerX: CGFloat, in r: CGRect) -> ZSMesspunkt? {
++        punkte.min { abs(x($0.datum, in: r) - fingerX) < abs(x($1.datum, in: r) - fingerX) }
++    }
++
++    private func fingerAnzeige(_ p: ZSMesspunkt, in r: CGRect) -> some View {
++        let punkt = position(p, in: r)
++        let text = "\(ZSFormat.glukose(p.mgdl, einheit)) \(ZSFormat.einheit(einheit)) · \(ZSFormat.uhrzeit(p.datum))"
++        return ZStack(alignment: .topLeading) {
++            Rectangle()
++                .fill(ZSFarbe.text3)
++                .frame(width: 1, height: r.height)
++                .position(x: punkt.x, y: r.midY)
++            Circle()
++                .fill(ZSFarbe.text)
++                .frame(width: 9, height: 9)
++                .position(punkt)
++            Text(text)
++                .font(ZSSchrift.caption)
++                .monospacedDigit()
++                .foregroundStyle(ZSFarbe.text)
++                .padding(.horizontal, ZSMass.space2)
++                .padding(.vertical, ZSMass.space1)
++                .background(Capsule().fill(ZSFarbe.flaeche3))
++                .fixedSize()
++                .position(x: min(max(punkt.x, 70), r.maxX - 70), y: 12)
++        }
++    }
++}
++
++// MARK: - Pod-/Sensor-Karte
++
++private struct ZSGeraeteKarte: View {
++    var pumpe: ZSGeraet?
++    var sensor: ZSGeraet?
++    var gestapelt: Bool
++
++    var body: some View {
++        let layout = gestapelt ? AnyLayout(VStackLayout(spacing: ZSMass.space3)) : AnyLayout(HStackLayout(alignment: .top, spacing: ZSMass.space4))
++        layout {
++            ZSGeraeteSpalte(geraet: pumpe ?? ZSGeraet(name: "Pumpe", anteil: nil, zustand: .ohne, detail: "nicht verbunden"))
++            ZSGeraeteSpalte(geraet: sensor ?? ZSGeraet(name: "Sensor", anteil: nil, zustand: .ohne, detail: "nicht verbunden"))
++        }
++        .padding(.vertical, -ZSMass.space1)
++        .zsKarte()
++    }
++}
++
++private struct ZSGeraeteSpalte: View {
++    var geraet: ZSGeraet
++
++    private var farbe: Color {
++        switch geraet.zustand {
++        case .normal: return ZSFarbe.orange
++        case .bald: return ZSFarbe.hoch
++        case .jetzt: return ZSFarbe.tief
++        case .ohne: return ZSFarbe.text3
++        }
++    }
++
++    var body: some View {
++        VStack(alignment: .leading, spacing: ZSMass.space2) {
++            // Passt der Zusatz nicht neben den Namen, steht er darunter statt abgeschnitten.
++            ViewThatFits(in: .horizontal) {
++                HStack(alignment: .firstTextBaseline, spacing: ZSMass.space2) {
++                    name
++                    Spacer(minLength: 0)
++                    detailText
++                }
++                VStack(alignment: .leading, spacing: 2) {
++                    name
++                    detailText
++                }
++            }
++            GeometryReader { geo in
++                ZStack(alignment: .leading) {
++                    Capsule().fill(ZSFarbe.flaeche2)
++                    if let anteil = geraet.anteil {
++                        Capsule()
++                            .fill(farbe)
++                            .frame(width: max(6, geo.size.width * CGFloat(min(max(anteil, 0), 1))))
++                    }
++                }
++            }
++            .frame(height: 6)
++        }
++        .frame(maxWidth: .infinity)
++        .accessibilityElement(children: .ignore)
++        .accessibilityLabel(geraet.name)
++        .accessibilityValue(barrierefreiWert)
++    }
++
++    private var name: some View {
++        Text(geraet.name)
++            .font(ZSSchrift.subhead.weight(.semibold))
++            .foregroundStyle(ZSFarbe.text)
++            .lineLimit(1)
++    }
++
++    @ViewBuilder
++    private var detailText: some View {
++        if let detail = geraet.detail {
++            Text(detail)
++                .font(ZSSchrift.caption)
++                .foregroundStyle(geraet.zustand == .bald || geraet.zustand == .jetzt ? farbe : ZSFarbe.text2)
++                .lineLimit(1)
++        }
++    }
++
++    private var barrierefreiWert: String {
++        var teile: [String] = []
++        if let anteil = geraet.anteil {
++            teile.append("\(Int((anteil * 100).rounded())) Prozent der Laufzeit verbraucht")
++        }
++        if let detail = geraet.detail {
++            teile.append(detail)
++        }
++        return teile.joined(separator: ", ")
++    }
++}
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+new file mode 100644
+index 0000000..117c130
+--- /dev/null
++++ b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+@@ -0,0 +1,508 @@
++//
++//  ZuckerschockTabs.swift
++//  Loop
++//
++//  Zuckerschock: Bubble-Menü-Tab-Leiste und der Container für die vier Tabs.
++//  Loops bisheriger Startbildschirm (StatusTableViewController) bleibt unverändert und
++//  lebt im Tab „Verlauf“. Alle Loop-Funktionen bleiben so erreichbar.
++//
++
++import Combine
++import SwiftUI
++import UIKit
++
++// MARK: - Tabs
++
++enum ZSTab: Int, CaseIterable, Identifiable {
++    case heute, essen, verlauf, therapie
++
++    var id: Int { rawValue }
++
++    var titel: String {
++        switch self {
++        case .heute: return "Heute"
++        case .essen: return "Essen"
++        case .verlauf: return "Verlauf"
++        case .therapie: return "Therapie"
++        }
++    }
++
++    var symbol: String {
++        switch self {
++        case .heute: return "chart.line.uptrend.xyaxis"
++        case .essen: return "fork.knife"
++        case .verlauf: return "clock"
++        case .therapie: return "slider.horizontal.3"
++        }
++    }
++}
++
++final class ZSTabAuswahl: ObservableObject {
++    @Published var tab: ZSTab = .heute
++}
++
++// MARK: - Bubble-Menü
++
++/// Der aktive Tab sitzt als oranger Tropfen tief in einer schmalen Leiste.
++struct ZSBubbleMenue: View {
++    @ObservedObject var auswahl: ZSTabAuswahl
++
++    @Environment(\.accessibilityReduceMotion) private var reduceMotion
++    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
++    @Environment(\.colorSchemeContrast) private var kontrast
++    @Environment(\.colorScheme) private var farbschema
++
++    var body: some View {
++        GeometryReader { geo in
++            let breite = geo.size.width / CGFloat(ZSTab.allCases.count)
++            ZStack(alignment: .topLeading) {
++                Color.clear
++
++                // Tropfen hinter dem Icon, wandert nur per transform.
++                Circle()
++                    .fill(ZSFarbe.orange)
++                    .frame(width: ZSMass.tropfen, height: ZSMass.tropfen)
++                    .offset(x: breite * (CGFloat(auswahl.tab.rawValue) + 0.5) - ZSMass.tropfen / 2, y: 3)
++                    .animation(reduceMotion ? nil : ZSBewegung.iOS(ZSBewegung.dauerKurz), value: auswahl.tab)
++                    .accessibilityHidden(true)
++
++                HStack(spacing: 0) {
++                    ForEach(ZSTab.allCases) { tab in
++                        knopf(tab)
++                            .frame(width: breite)
++                    }
++                }
++            }
++        }
++        .frame(height: ZSMass.leisteHoehe)
++        .background { leiste }
++        .accessibilityElement(children: .contain)
++        .accessibilityLabel("Tab-Leiste")
++    }
++
++    private func knopf(_ tab: ZSTab) -> some View {
++        let aktiv = auswahl.tab == tab
++        return Button {
++            // Tabwechsel ohne Überblenden: Inhalt wechselt sofort.
++            auswahl.tab = tab
++        } label: {
++            VStack(spacing: 5) {
++                Image(systemName: tab.symbol)
++                    .font(.system(size: 18, weight: .regular))
++                    .frame(width: ZSMass.tropfen, height: ZSMass.tropfen)
++                    .foregroundStyle(aktiv ? ZSFarbe.tinte : ZSFarbe.text2)
++                Text(tab.titel)
++                    .font(ZSSchrift.tabLabel.weight(aktiv ? .semibold : .medium))
++                    .foregroundStyle(aktiv ? ZSFarbe.orangeText : ZSFarbe.text2)
++                    .lineLimit(1)
++                    .minimumScaleFactor(0.7)
++                    .dynamicTypeSize(...DynamicTypeSize.xLarge)
++            }
++            .padding(.top, 3)
++            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
++            .contentShape(Rectangle())
++        }
++        .buttonStyle(.plain)
++        .accessibilityLabel(tab.titel)
++        .accessibilityValue("Tab \(tab.rawValue + 1) von \(ZSTab.allCases.count)")
++        .accessibilityAddTraits(aktiv ? .isSelected : [])
++        .accessibilityShowsLargeContentViewer {
++            Label(tab.titel, systemImage: tab.symbol)
++        }
++    }
++
++    @ViewBuilder
++    private var leiste: some View {
++        if #available(iOS 26, *) {
++            if reduceTransparency {
++                deckendeLeiste
++            } else {
++                Color.clear
++                    .glassEffect(.regular, in: Capsule(style: .continuous))
++                    .overlay(randLinie(Capsule(style: .continuous)))
++                    .shadow(color: .black.opacity(farbschema == .dark ? 0.55 : 0.12), radius: 16, y: 12)
++            }
++        } else {
++            deckendeLeiste
++        }
++    }
++
++    /// Deckende Fassung für „Transparenz reduzieren“ (und vor iOS 26).
++    private var deckendeLeiste: some View {
++        Capsule(style: .continuous)
++            .fill(ZSFarbe.leiste)
++            .overlay(randLinie(Capsule(style: .continuous)))
++            .shadow(color: .black.opacity(farbschema == .dark ? 0.55 : 0.12), radius: 16, y: 12)
++    }
++
++    @ViewBuilder
++    private func randLinie(_ form: Capsule) -> some View {
++        if kontrast == .increased {
++            form.strokeBorder(ZSFarbe.randSteuer, lineWidth: 1)
++        } else if farbschema == .light {
++            form.strokeBorder(ZSFarbe.haarlinie, lineWidth: 1)
++        }
++    }
++}
++
++/// Unter der Leiste läuft der Inhalt weich ins Grund aus.
++private struct ZSAuslauf: View {
++    var body: some View {
++        LinearGradient(colors: [ZSFarbe.grund.opacity(0), ZSFarbe.grund.opacity(0.92), ZSFarbe.grund],
++                       startPoint: .top, endPoint: .bottom)
++            .ignoresSafeArea()
++            .allowsHitTesting(false)
++            .accessibilityHidden(true)
++    }
++}
++
++// MARK: - Essen (Phase 1: Übergabe an Loops KH-Eingabe)
++
++private struct ZSEssenView: View {
++    var aktionen: ZSAktionen
++
++    var body: some View {
++        ZStack {
++            ZSHorizont()
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space6) {
++                    Text("Essen")
++                        .font(ZSSchrift.largeTitle)
++                        .foregroundStyle(ZSFarbe.text)
++                        .accessibilityAddTraits(.isHeader)
++                        .padding(.top, ZSMass.space2)
++
++                    VStack(alignment: .leading, spacing: ZSMass.space3) {
++                        Text("Kohlenhydrate eintragen")
++                            .font(ZSSchrift.headline)
++                            .foregroundStyle(ZSFarbe.text)
++                        Text("Du trägst die Menge in Loops gewohnter Eingabe ein. Loop rechnet wie bisher.")
++                            .font(ZSSchrift.subhead)
++                            .foregroundStyle(ZSFarbe.text2)
++                            .fixedSize(horizontal: false, vertical: true)
++                        Button(action: aktionen.essen) {
++                            Label("KH eintragen", systemImage: "plus")
++                                .font(ZSSchrift.headline)
++                        }
++                        .buttonStyle(ZSDruckStil(art: .primaer))
++                        .padding(.top, ZSMass.space1)
++                    }
++                    .zsKarte()
++
++                    VStack(alignment: .leading, spacing: ZSMass.space2) {
++                        Text("Rezeptkartei")
++                            .font(ZSSchrift.headline)
++                            .foregroundStyle(ZSFarbe.text)
++                        Text("Noch nichts gekocht? Dein erstes Rezept wartet.")
++                            .font(ZSSchrift.subhead)
++                            .foregroundStyle(ZSFarbe.text2)
++                    }
++                    .zsKarte()
++                }
++                .padding(.horizontal, ZSMass.space5)
++                .padding(.bottom, ZSMass.space8)
++            }
++        }
++    }
++}
++
++// MARK: - Therapie (Phase 1: Zugang zu Loops Einstellungen)
++
++private struct ZSTherapieView: View {
++    var aktionen: ZSAktionen
++
++    var body: some View {
++        ZStack {
++            ZSHorizont()
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space6) {
++                    Text("Therapie")
++                        .font(ZSSchrift.largeTitle)
++                        .foregroundStyle(ZSFarbe.text)
++                        .accessibilityAddTraits(.isHeader)
++                        .padding(.top, ZSMass.space2)
++
++                    VStack(spacing: 0) {
++                        ZSListenZeile(titel: "Einstellungen", untertitel: "Therapie, Pumpe, Sensor, Dienste", symbol: "gearshape", marke: true, aktion: aktionen.einstellungen)
++                    }
++                    .background(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous).fill(ZSFarbe.flaeche1))
++                    .clipShape(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous))
++
++                    Text("Alle Werte und Grenzen stellst du wie bisher in Loop ein. Zuckerschock ändert daran nichts.")
++                        .font(ZSSchrift.footnote)
++                        .foregroundStyle(ZSFarbe.text2)
++                        .fixedSize(horizontal: false, vertical: true)
++                }
++                .padding(.horizontal, ZSMass.space5)
++                .padding(.bottom, ZSMass.space8)
++            }
++        }
++    }
++}
++
++private struct ZSListenZeile: View {
++    var titel: String
++    var untertitel: String?
++    var symbol: String
++    var marke = false
++    var aktion: () -> Void
++
++    var body: some View {
++        Button(action: aktion) {
++            HStack(spacing: ZSMass.space3) {
++                Image(systemName: symbol)
++                    .font(.system(size: 15, weight: .regular))
++                    .foregroundStyle(marke ? ZSFarbe.tinte : ZSFarbe.text)
++                    .frame(width: 29, height: 29)
++                    .background(RoundedRectangle(cornerRadius: ZSMass.radiusXS, style: .continuous).fill(marke ? ZSFarbe.orange : ZSFarbe.flaeche2))
++                VStack(alignment: .leading, spacing: 2) {
++                    Text(titel)
++                        .font(ZSSchrift.body)
++                        .foregroundStyle(ZSFarbe.text)
++                    if let untertitel {
++                        Text(untertitel)
++                            .font(ZSSchrift.subhead)
++                            .foregroundStyle(ZSFarbe.text2)
++                    }
++                }
++                Spacer(minLength: ZSMass.space2)
++                Image(systemName: "chevron.right")
++                    .font(.footnote.weight(.semibold))
++                    .foregroundStyle(ZSFarbe.text3)
++            }
++            .padding(.horizontal, ZSMass.space4)
++            .frame(minHeight: 52)
++            .contentShape(Rectangle())
++        }
++        .buttonStyle(ZSZeilenStil())
++    }
++}
++
++/// Listenzeilen hellen beim Drücken auf, statt zu schrumpfen.
++private struct ZSZeilenStil: ButtonStyle {
++    func makeBody(configuration: Configuration) -> some View {
++        configuration.label
++            .background(configuration.isPressed ? ZSFarbe.flaeche2 : Color.clear)
++    }
++}
++
++private struct ZSHinweisView: View {
++    var titel: String
++    var text: String
++
++    var body: some View {
++        ZStack {
++            ZSHorizont()
++            VStack(alignment: .leading, spacing: ZSMass.space3) {
++                Text(titel)
++                    .font(ZSSchrift.largeTitle)
++                    .foregroundStyle(ZSFarbe.text)
++                Text(text)
++                    .font(ZSSchrift.body)
++                    .foregroundStyle(ZSFarbe.text2)
++                Spacer()
++            }
++            .padding(.horizontal, ZSMass.space5)
++            .padding(.top, ZSMass.space2)
++            .frame(maxWidth: .infinity, alignment: .leading)
++        }
++    }
++}
++
++// MARK: - Container
++
++final class ZuckerschockTabController: UIViewController {
++    /// Loops unveränderter Startbildschirm, im Tab „Verlauf“.
++    let statusTableViewController: StatusTableViewController?
++
++    private let auswahl = ZSTabAuswahl()
++    private let heuteModell: ZSHeuteModell
++    private var kinder: [ZSTab: UIViewController] = [:]
++    private var aktuellerTab: ZSTab = .heute
++    private var abo: AnyCancellable?
++
++    private lazy var leiste = UIHostingController(rootView: ZSBubbleMenue(auswahl: auswahl))
++    private lazy var auslauf = UIHostingController(rootView: ZSAuslauf())
++
++    /// Platz, den die Leiste unten belegt (Leiste + Abstand zum unteren Rand + Luft darüber).
++    private static let leistenPlatz: CGFloat = ZSMass.leisteHoehe + ZSMass.space2 + ZSMass.space2
++
++    init(statusTableViewController: StatusTableViewController?, heuteQuelle: ZSHeuteQuelle) {
++        self.statusTableViewController = statusTableViewController
++        self.heuteModell = ZSHeuteModell(quelle: heuteQuelle)
++        super.init(nibName: nil, bundle: nil)
++    }
++
++    @available(*, unavailable)
++    required init?(coder: NSCoder) {
++        fatalError("init(coder:) has not been implemented")
++    }
++
++    /// Nur der sichtbare Tab bekommt viewWillAppear & Co., damit Loops Ansicht weiß, ob sie zu sehen ist.
++    override var shouldAutomaticallyForwardAppearanceMethods: Bool { false }
++
++    override var childForStatusBarStyle: UIViewController? { kinder[aktuellerTab] }
++
++    override func viewDidLoad() {
++        super.viewDidLoad()
++        view.backgroundColor = ZSFarbe.uiGrund
++
++        let aktionen = ZSAktionen(
++            essen: { [weak self] in self?.statusTableViewController?.presentCarbEntryScreen(nil) },
++            bolus: { [weak self] in self?.statusTableViewController?.presentBolusScreen() },
++            zumEssenTab: { [weak self] in self?.auswahl.tab = .essen },
++            einstellungen: { [weak self] in
++                guard let status = self?.statusTableViewController else { return }
++                status.onSettingsTapped(UIBarButtonItem())
++            })
++
++        kinder[.heute] = gastgeber(ZSHeuteView(modell: heuteModell, aktionen: aktionen))
++        kinder[.essen] = gastgeber(ZSEssenView(aktionen: aktionen))
++        kinder[.verlauf] = statusTableViewController ?? gastgeber(ZSHinweisView(titel: "Verlauf", text: "Hier liegt in der App Loops gewohnte Ansicht mit allen Kurven."))
++        kinder[.therapie] = gastgeber(ZSTherapieView(aktionen: aktionen))
++
++        // Alle Tabs bleiben im Fenster (nur versteckt). So kann Loops Ansicht jederzeit
++        // ihre Sheets zeigen, z. B. Bolus oder KH aus dem Heute-Tab.
++        for tab in ZSTab.allCases {
++            guard let kind = kinder[tab] else { continue }
++            addChild(kind)
++            kind.view.frame = view.bounds
++            kind.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
++            kind.view.isHidden = tab != aktuellerTab
++            kind.additionalSafeAreaInsets.bottom = Self.leistenPlatz
++            view.addSubview(kind.view)
++            kind.didMove(toParent: self)
++        }
++
++        einbauen(auslauf, interaktiv: false)
++        einbauen(leiste, interaktiv: true)
++        leiste.view.addInteraction(UILargeContentViewerInteraction())
++
++        NSLayoutConstraint.activate([
++            auslauf.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
++            auslauf.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
++            auslauf.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
++            auslauf.view.topAnchor.constraint(equalTo: leiste.view.topAnchor, constant: -ZSMass.space6),
++
++            leiste.view.centerXAnchor.constraint(equalTo: view.centerXAnchor),
++            leiste.view.widthAnchor.constraint(lessThanOrEqualToConstant: 390),
++            leiste.view.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: ZSMass.space4),
++            leiste.view.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -ZSMass.space4),
++            leiste.view.heightAnchor.constraint(equalToConstant: ZSMass.leisteHoehe),
++            // Abstand zum unteren Rand: Safe Area + 8 pt (über Loops Werkzeugleiste, falls sichtbar)
++            leiste.view.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -ZSMass.space2)
++        ])
++        let breit = leiste.view.widthAnchor.constraint(equalTo: view.widthAnchor, constant: -2 * ZSMass.space4)
++        breit.priority = .defaultHigh
++        breit.isActive = true
++
++        abo = auswahl.$tab
++            .removeDuplicates()
++            .sink { [weak self] tab in self?.wechseln(zu: tab) }
++    }
++
++    private func gastgeber<V: View>(_ inhalt: V) -> UIViewController {
++        let host = UIHostingController(rootView: inhalt)
++        host.view.backgroundColor = ZSFarbe.uiGrund
++        return host
++    }
++
++    private func einbauen(_ host: UIViewController, interaktiv: Bool) {
++        addChild(host)
++        host.view.translatesAutoresizingMaskIntoConstraints = false
++        host.view.backgroundColor = .clear
++        host.view.isUserInteractionEnabled = interaktiv
++        view.addSubview(host.view)
++        host.didMove(toParent: self)
++    }
++
++    // MARK: Erscheinen
++
++    override func viewWillAppear(_ animated: Bool) {
++        super.viewWillAppear(animated)
++        kinder[aktuellerTab]?.beginAppearanceTransition(true, animated: animated)
++        leistenAnpassen(animated: animated)
++    }
++
++    override func viewDidAppear(_ animated: Bool) {
++        super.viewDidAppear(animated)
++        kinder[aktuellerTab]?.endAppearanceTransition()
++    }
++
++    override func viewWillDisappear(_ animated: Bool) {
++        super.viewWillDisappear(animated)
++        kinder[aktuellerTab]?.beginAppearanceTransition(false, animated: animated)
++    }
++
++    override func viewDidDisappear(_ animated: Bool) {
++        super.viewDidDisappear(animated)
++        kinder[aktuellerTab]?.endAppearanceTransition()
++    }
++
++    // MARK: Tabwechsel
++
++    private func wechseln(zu tab: ZSTab) {
++        guard tab != aktuellerTab, isViewLoaded else { return }
++        let alt = kinder[aktuellerTab]
++        let neu = kinder[tab]
++        let sichtbar = view.window != nil
++
++        if sichtbar {
++            alt?.beginAppearanceTransition(false, animated: false)
++            neu?.beginAppearanceTransition(true, animated: false)
++        }
++        alt?.view.isHidden = true
++        neu?.view.isHidden = false
++        aktuellerTab = tab
++        if sichtbar {
++            alt?.endAppearanceTransition()
++            neu?.endAppearanceTransition()
++        }
++
++        leistenAnpassen(animated: false)
++        setNeedsStatusBarAppearanceUpdate()
++        UIAccessibility.post(notification: .screenChanged, argument: nil)
++    }
++
++    /// Navigationsleiste bleibt aus; Loops Werkzeugleiste nur im Tab „Verlauf“.
++    private func leistenAnpassen(animated: Bool) {
++        navigationController?.setNavigationBarHidden(true, animated: animated)
++        if aktuellerTab == .verlauf, let status = statusTableViewController {
++            toolbarItems = status.toolbarItems
++            navigationController?.setToolbarHidden(false, animated: animated)
++        } else {
++            navigationController?.setToolbarHidden(true, animated: animated)
++        }
++    }
++}
++
++// MARK: - Vorschau (nur Simulator, für Screenshots)
++
++#if targetEnvironment(simulator)
++enum ZSVorschau {
++    /// Im Simulator mit der Umgebungsvariable ZS_VORSCHAU=1 startet die Oberfläche mit Beispielwerten,
++    /// ohne Loop zu starten. Auf dem iPhone gibt es diesen Weg nicht.
++    static var istAktiv: Bool {
++        ProcessInfo.processInfo.environment["ZS_VORSCHAU"] == "1"
++    }
++
++    static func wurzel() -> UIViewController {
++        let umgebung = ProcessInfo.processInfo.environment
++        let szenario = ZSVorschauQuelle.Szenario(rawValue: umgebung["ZS_SZENARIO"] ?? "") ?? .normal
++        let tabs = ZuckerschockTabController(statusTableViewController: nil, heuteQuelle: ZSVorschauQuelle(szenario: szenario))
++        let navigation = UINavigationController(rootViewController: tabs)
++        navigation.setNavigationBarHidden(true, animated: false)
++        if let name = umgebung["ZS_TAB"], let tab = ZSTab.allCases.first(where: { $0.titel.lowercased() == name.lowercased() }) {
++            tabs.loadViewIfNeeded()
++            tabs.vorschauTab(tab)
++        }
++        return navigation
++    }
++}
++
++extension ZuckerschockTabController {
++    fileprivate func vorschauTab(_ tab: ZSTab) {
++        auswahl.tab = tab
++    }
++}
++#endif
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTheme.swift b/Loop/Loop/Zuckerschock/ZuckerschockTheme.swift
+new file mode 100644
+index 0000000..e36f902
+--- /dev/null
++++ b/Loop/Loop/Zuckerschock/ZuckerschockTheme.swift
+@@ -0,0 +1,320 @@
++//
++//  ZuckerschockTheme.swift
++//  Loop
++//
++//  Zuckerschock: Farben, Schriften, Abstände und Bewegung aus design/ci/tokens.json.
++//  Reine Darstellung, keine Logik.
++//
++
++import SwiftUI
++import UIKit
++
++// MARK: - Farben
++
++enum ZSFarbe {
++    /// Farbe mit je einem Wert für Dunkel und Hell (Hex wie in tokens.json, optional mit Alpha).
++    private static func dynamisch(_ dunkel: String, _ hell: String) -> Color {
++        Color(uiColor: uiDynamisch(dunkel, hell))
++    }
++
++    static func uiDynamisch(_ dunkel: String, _ hell: String) -> UIColor {
++        UIColor { traits in
++            UIColor(zsHex: traits.userInterfaceStyle == .light ? hell : dunkel)
++        }
++    }
++
++    static let orange = dynamisch("#f4571b", "#f4571b")
++    static let orangeHell = dynamisch("#ff9a5c", "#ff9a5c")
++    static let orangeLinie = dynamisch("#f8793f", "#e2581c")
++    static let orangeTief = dynamisch("#da4a12", "#da4a12")
++    static let orangeGlut = dynamisch("#c8430f", "#c8430f")
++    static let orangeKohle = dynamisch("#3a1606", "#f3d9c9")
++    static let orangeText = dynamisch("#ff8a4c", "#b23a0c")
++    static let tinte = dynamisch("#0b0b0c", "#0b0b0c")
++    /// Alles, was auf Orange steht. Nie Weiß auf Orange.
++    static let aufOrange = tinte
++
++    static let grund = dynamisch("#000000", "#f7f3ee")
++    static let flaeche1 = dynamisch("#161618", "#ffffff")
++    static let flaeche2 = dynamisch("#222225", "#efe9e1")
++    static let flaeche3 = dynamisch("#2e2e32", "#e4ddd3")
++    static let leiste = dynamisch("#2e2e32", "#ffffff")
++    static let haarlinie = dynamisch("#f7f3ee1a", "#0b0b0c14")
++    static let randSteuer = dynamisch("#f7f3ee6b", "#0b0b0c73")
++    static let fokus = dynamisch("#f7f3ee", "#0b0b0c")
++
++    static let text = dynamisch("#f7f3ee", "#0b0b0c")
++    static let text2 = dynamisch("#f7f3eea8", "#0b0b0ca6")
++    static let text3 = dynamisch("#f7f3ee8a", "#0b0b0c99")
++
++    static let ziel = dynamisch("#5bd38a", "#1e7a45")
++    static let hoch = dynamisch("#ffc44d", "#8a5a00")
++    static let tief = dynamisch("#ff6b6b", "#c42b30")
++    static let tiefFlaeche = dynamisch("#3b1214", "#fbe4e4")
++    static let info = dynamisch("#8fb8ff", "#2a5bb8")
++
++    /// Reines Marken-Orange ohne Theme-Wechsel, für Glimmen und Glut-Schatten.
++    static let glimmen = Color(red: 244 / 255, green: 87 / 255, blue: 27 / 255)
++
++    static let uiGrund = uiDynamisch("#000000", "#f7f3ee")
++}
++
++extension UIColor {
++    /// "#rrggbb" oder "#rrggbbaa"
++    convenience init(zsHex hex: String) {
++        var s = hex.trimmingCharacters(in: .whitespaces)
++        if s.hasPrefix("#") { s.removeFirst() }
++        var wert: UInt64 = 0
++        Scanner(string: s).scanHexInt64(&wert)
++        let r, g, b, a: CGFloat
++        if s.count == 8 {
++            r = CGFloat((wert >> 24) & 0xff) / 255
++            g = CGFloat((wert >> 16) & 0xff) / 255
++            b = CGFloat((wert >> 8) & 0xff) / 255
++            a = CGFloat(wert & 0xff) / 255
++        } else {
++            r = CGFloat((wert >> 16) & 0xff) / 255
++            g = CGFloat((wert >> 8) & 0xff) / 255
++            b = CGFloat(wert & 0xff) / 255
++            a = 1
++        }
++        self.init(red: r, green: g, blue: b, alpha: a)
++    }
++}
++
++// MARK: - Verläufe (immer aus dem Schwarz heraus)
++
++enum ZSVerlauf {
++    /// Nur Primärbutton: orange-hell → orange → orange-tief, 135°.
++    static let primaer = LinearGradient(
++        colors: [ZSFarbe.orangeHell, ZSFarbe.orange, ZSFarbe.orangeTief],
++        startPoint: .topLeading, endPoint: .bottomTrailing)
++
++    /// Die eine Hero-Karte pro Screen: flaeche-1 bis 45 %, dann zur Kante orange-kohle.
++    static let kante = LinearGradient(
++        stops: [
++            .init(color: ZSFarbe.flaeche1, location: 0),
++            .init(color: ZSFarbe.flaeche1, location: 0.45),
++            .init(color: ZSFarbe.orangeKohle, location: 1)
++        ],
++        startPoint: UnitPoint(x: 0.21, y: 0.05), endPoint: UnitPoint(x: 0.79, y: 0.95))
++}
++
++/// Hintergrund „Horizont“: leises oranges Glimmen am oberen Rand, für Tab-Seiten.
++struct ZSHorizont: View {
++    var body: some View {
++        ZStack {
++            ZSFarbe.grund
++            // radial-gradient(130% 55% at 50% -12%, ...)
++            GeometryReader { geo in
++                EllipticalGradient(
++                    stops: [
++                        .init(color: ZSFarbe.glimmen.opacity(0.16), location: 0),
++                        .init(color: ZSFarbe.glimmen.opacity(0.05), location: 0.38),
++                        .init(color: ZSFarbe.glimmen.opacity(0), location: 0.62)
++                    ],
++                    center: .center,
++                    startRadiusFraction: 0,
++                    endRadiusFraction: 0.5)
++                .frame(width: geo.size.width * 2.6, height: geo.size.height * 1.1)
++                .position(x: geo.size.width / 2, y: -0.12 * geo.size.height)
++            }
++        }
++        .ignoresSafeArea()
++    }
++}
++
++// MARK: - Schrift
++
++enum ZSSchrift {
++    // SF Pro über die iOS-TextStyles (Dynamic Type)
++    static let largeTitle = Font.largeTitle.weight(.bold)
++    static let title2 = Font.title2.weight(.bold)
++    static let title3 = Font.title3.weight(.semibold)
++    static let headline = Font.headline
++    static let body = Font.body
++    static let subhead = Font.subheadline
++    static let footnote = Font.footnote
++    static let caption = Font.caption.weight(.medium)
++    /// Nur Tab-Labels (11 pt), mit Large Content Viewer.
++    static let tabLabel = Font.caption2.weight(.medium)
++}
++
++/// SF Pro Rounded für Zahlen, skaliert per ScaledMetric, Ziffern tabellarisch.
++struct ZSZahl: ViewModifier {
++    enum Stil {
++        case wertHero, wertGross, wert, wertKlein, einheit
++
++        var basis: CGFloat {
++            switch self {
++            case .wertHero: return 64
++            case .wertGross: return 34
++            case .wert: return 22
++            case .wertKlein: return 17
++            case .einheit: return 13
++            }
++        }
++
++        var gewicht: Font.Weight { self == .einheit ? .medium : .semibold }
++
++        var bezug: Font.TextStyle {
++            switch self {
++            case .wertHero, .wertGross: return .largeTitle
++            case .wert: return .title2
++            case .wertKlein: return .body
++            case .einheit: return .footnote
++            }
++        }
++    }
++
++    let stil: Stil
++    @ScaledMetric private var groesse: CGFloat
++
++    init(_ stil: Stil) {
++        self.stil = stil
++        _groesse = ScaledMetric(wrappedValue: stil.basis, relativeTo: stil.bezug)
++    }
++
++    func body(content: Content) -> some View {
++        content
++            .font(.system(size: groesse, weight: stil.gewicht, design: .rounded))
++            .monospacedDigit()
++            .tracking(stil == .wertHero ? -groesse * 0.02 : 0)
++    }
++}
++
++extension View {
++    func zsZahl(_ stil: ZSZahl.Stil) -> some View { modifier(ZSZahl(stil)) }
++}
++
++// MARK: - Form und Abstand
++
++enum ZSMass {
++    static let space1: CGFloat = 4
++    static let space2: CGFloat = 8
++    static let space3: CGFloat = 12
++    static let space4: CGFloat = 16
++    static let space5: CGFloat = 20
++    static let space6: CGFloat = 24
++    static let space8: CGFloat = 32
++    static let tap: CGFloat = 44
++
++    static let radiusXS: CGFloat = 7
++    static let radiusS: CGFloat = 10
++    static let radiusM: CGFloat = 16
++    static let radiusKarte: CGFloat = 24
++
++    static let leisteHoehe: CGFloat = 64
++    static let tropfen: CGFloat = 36
++}
++
++// MARK: - Bewegung
++
++enum ZSBewegung {
++    /// kurve-ios: cubic-bezier(0.32, 0.72, 0, 1)
++    static func iOS(_ dauer: Double) -> Animation {
++        .timingCurve(0.32, 0.72, 0, 1, duration: dauer)
++    }
++
++    static let dauerDruck = 0.09
++    static let dauerKurz = 0.22
++    static let dauerSeite = 0.42
++}
++
++// MARK: - Karte
++
++struct ZSKarte: ViewModifier {
++    var hero = false
++
++    func body(content: Content) -> some View {
++        content
++            .padding(ZSMass.space4)
++            .frame(maxWidth: .infinity, alignment: .leading)
++            .background {
++                RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous)
++                    .fill(hero ? AnyShapeStyle(ZSVerlauf.kante) : AnyShapeStyle(ZSFarbe.flaeche1))
++            }
++    }
++}
++
++extension View {
++    func zsKarte(hero: Bool = false) -> some View { modifier(ZSKarte(hero: hero)) }
++}
++
++// MARK: - Buttons
++
++/// Druck: 0,97 in dauer-druck, federnd zurück. Kein Glanz.
++struct ZSDruckStil: ButtonStyle {
++    enum Art { case primaer, sekundaer }
++    var art: Art
++
++    @Environment(\.accessibilityReduceMotion) private var reduceMotion
++
++    func makeBody(configuration: Configuration) -> some View {
++        configuration.label
++            .frame(maxWidth: .infinity, minHeight: art == .primaer ? 52 : ZSMass.tap)
++            .foregroundStyle(art == .primaer ? ZSFarbe.aufOrange : ZSFarbe.text)
++            .background {
++                switch art {
++                case .primaer:
++                    Capsule(style: .continuous)
++                        .fill(configuration.isPressed ? AnyShapeStyle(ZSFarbe.orangeTief) : AnyShapeStyle(ZSVerlauf.primaer))
++                        .shadow(color: ZSFarbe.glimmen.opacity(0.28), radius: 12, y: 8)
++                case .sekundaer:
++                    RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous)
++                        .fill(ZSFarbe.flaeche1)
++                }
++            }
++            .contentShape(Rectangle())
++            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.97 : 1)
++            .animation(reduceMotion ? nil : .spring(response: 0.25, dampingFraction: 0.6), value: configuration.isPressed)
++    }
++}
++
++// MARK: - Marke
++
++/// Der Schock-Tropfen: Tropfen mit Blitz als echtem Loch (evenodd), aus app-icon-standard.svg.
++struct ZSSchockTropfen: Shape {
++    func path(in rect: CGRect) -> Path {
++        // Original-Koordinaten: viewBox 304 170 416 598
++        var p = Path()
++        p.move(to: CGPoint(x: 512, y: 170))
++        p.addCurve(to: CGPoint(x: 720, y: 560), control1: CGPoint(x: 610, y: 300), control2: CGPoint(x: 720, y: 420))
++        p.addArc(center: CGPoint(x: 512, y: 560), radius: 208, startAngle: .degrees(0), endAngle: .degrees(180), clockwise: false)
++        p.addCurve(to: CGPoint(x: 512, y: 170), control1: CGPoint(x: 304, y: 420), control2: CGPoint(x: 414, y: 300))
++        p.closeSubpath()
++
++        let blitz: [(CGFloat, CGFloat)] = [
++            (556.2, 400.8), (556.5, 397), (556, 393.2), (554.8, 389.5), (552.9, 386.2), (550.3, 383.4),
++            (547.3, 381.1), (543.9, 379.4), (540.1, 378.4), (536.3, 378.2), (532.5, 378.8), (528.9, 380.1),
++            (525.6, 382), (522.8, 384.6), (520.6, 387.7), (421.4, 555.7), (419.9, 559), (419, 562.6),
++            (418.8, 566.3), (419.3, 570), (420.5, 573.5), (422.3, 576.7), (424.7, 579.5), (427.6, 581.7),
++            (430.9, 583.4), (434.4, 584.5), (438.1, 584.8), (480.5, 584.8), (462.7, 683), (462.4, 686.9),
++            (462.9, 690.7), (464.1, 694.4), (466, 697.7), (468.6, 700.6), (471.7, 703), (475.1, 704.6),
++            (478.9, 705.6), (482.7, 705.8), (486.5, 705.2), (490.2, 703.9), (493.4, 701.9), (496.3, 699.2),
++            (498.5, 696.1), (602.7, 514.7), (604.2, 511.3), (605, 507.8), (605.2, 504.1), (604.7, 500.5),
++            (603.5, 497), (601.6, 493.8), (599.2, 491), (596.4, 488.8), (593.1, 487.1), (589.6, 486.1),
++            (585.9, 485.7), (541.6, 485.7)
++        ]
++        p.move(to: CGPoint(x: blitz[0].0, y: blitz[0].1))
++        for punkt in blitz.dropFirst() {
++            p.addLine(to: CGPoint(x: punkt.0, y: punkt.1))
++        }
++        p.closeSubpath()
++
++        let quelle = CGRect(x: 304, y: 170, width: 416, height: 598)
++        let massstab = min(rect.width / quelle.width, rect.height / quelle.height)
++        let versatzX = rect.midX - quelle.midX * massstab
++        let versatzY = rect.midY - quelle.midY * massstab
++        return p.applying(CGAffineTransform(a: massstab, b: 0, c: 0, d: massstab, tx: versatzX, ty: versatzY))
++    }
++}
++
++struct ZSBildmarke: View {
++    var body: some View {
++        ZSSchockTropfen()
++            .fill(ZSFarbe.orange, style: FillStyle(eoFill: true))
++            .aspectRatio(416 / 598, contentMode: .fit)
++            .accessibilityHidden(true)
++    }
++}
