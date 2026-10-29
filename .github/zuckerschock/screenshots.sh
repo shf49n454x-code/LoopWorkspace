@@ -85,6 +85,8 @@ for eintrag in "${GERAETE[@]}"; do
       aufnehmen "$udid" "$name-dark-large-hypo-$hypo" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_BLATT=hypo SIMCTL_CHILD_ZS_HYPO=$hypo
     done
     aufnehmen "$udid" "$name-dark-large-therapieplan" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_BLATT=therapieplan
+    aufnehmen "$udid" "$name-dark-large-heute-keton" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_SZENARIO=hoch SIMCTL_CHILD_ZS_KETON=hinweis
+    aufnehmen "$udid" "$name-dark-large-keton" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_BLATT=keton SIMCTL_CHILD_ZS_KETON=hinweis
     xcrun simctl ui "$udid" appearance light
     aufnehmen "$udid" "$name-light-large-essen" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_TAB=essen
     aufnehmen "$udid" "$name-light-large-vorrat" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_BLATT=vorrat
