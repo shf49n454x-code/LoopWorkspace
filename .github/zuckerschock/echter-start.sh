@@ -24,7 +24,7 @@ xcrun simctl boot "$udid"
 xcrun simctl bootstatus "$udid" -b > /dev/null
 xcrun simctl ui "$udid" appearance dark
 xcrun simctl install "$udid" "$APP"
-xcrun simctl launch "$udid" "$BUNDLE" > /dev/null
+xcrun simctl launch "$udid" "$BUNDLE" -AppleLanguages "(de)" -AppleLocale de_DE > /dev/null
 sleep 12
 xcrun simctl io "$udid" screenshot --type=png "$ZIEL/iPhone-16-dark-echter-start.png" > /dev/null
 if xcrun simctl spawn "$udid" launchctl list | grep -q "$BUNDLE"; then
