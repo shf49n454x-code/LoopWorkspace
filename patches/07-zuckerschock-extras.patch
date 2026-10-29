@@ -373,10 +373,10 @@ index 0000000..7a6f61e
 +}
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockBericht.swift b/Loop/Loop/Zuckerschock/ZuckerschockBericht.swift
 new file mode 100644
-index 0000000..83a9e8a
+index 0000000..ea72a11
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockBericht.swift
-@@ -0,0 +1,312 @@
+@@ -0,0 +1,319 @@
 +//
 +//  ZuckerschockBericht.swift
 +//  Loop
@@ -674,16 +674,23 @@ index 0000000..83a9e8a
 +            }
 +        }
 +        .background(ZSFarbe.grund.ignoresSafeArea())
++        .onDisappear(perform: aufraeumen)
++    }
++
++    /// Der Bericht enthält Gesundheitsdaten: nach dem Schließen wieder löschen.
++    private func aufraeumen() {
++        if let datei { try? FileManager.default.removeItem(at: datei) }
 +    }
 +
 +    private func erstellen() {
 +        laedt = true
++        aufraeumen()
 +        datei = nil
 +        laden(tage) { neu in
 +            daten = neu
 +            let pdf = ZSBericht.pdf(neu, name: name)
 +            let ziel = FileManager.default.temporaryDirectory.appendingPathComponent("Zuckerschock-Bericht-\(tage)-Tage.pdf")
-+            try? pdf.write(to: ziel, options: .atomic)
++            try? pdf.write(to: ziel, options: [.atomic, .completeFileProtection])
 +            datei = ziel
 +            laedt = false
 +        }
@@ -1138,7 +1145,7 @@ index 0000000..562cde0
 +    }
 +}
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift b/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
-index 06f6f40..eff04a9 100644
+index 5f9c44f..adc6ba1 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
 @@ -76,6 +76,9 @@ final class ZSHypoBegleiter: ObservableObject {
@@ -1151,15 +1158,15 @@ index 06f6f40..eff04a9 100644
  
      init(speicher: ZSSpeicher,
           ordner: URL? = nil,
-@@ -170,6 +173,7 @@ final class ZSHypoBegleiter: ObservableObject {
+@@ -171,6 +174,7 @@ final class ZSHypoBegleiter: ObservableObject {
          aktualisieren(jetzt: jetzt)
          liveActivityStarten()
          mitteilen()
 +        if let zustand { beiStart?(zustand) }
      }
  
-     /// Erstes Eintragen per Tipp; weiteres Eintragen nur durch Halten (in der App).
-@@ -183,6 +187,7 @@ final class ZSHypoBegleiter: ObservableObject {
+     /// Live Activity: trägt nur ein, wenn in dieser Episode noch nichts eingetragen ist.
+@@ -199,6 +203,7 @@ final class ZSHypoBegleiter: ObservableObject {
  
      func beenden(jetzt: Date = Date(), wiederImZiel: Bool = false) {
          guard var episode = aktiv else { return }
@@ -1379,7 +1386,7 @@ index 0000000..5116c61
 +    }
 +}
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
-index 94f6841..23a6d2b 100644
+index 11a3665..4d5d9c8 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
 @@ -183,12 +183,28 @@ private struct ZSTherapieView: View {
@@ -1536,8 +1543,8 @@ index 94f6841..23a6d2b 100644
 +
      /// Öffnet die Kamera der Foto-KH (Kontrollzentrum, Action-Button).
      func fotoKH() {
-         presentedViewController?.dismiss(animated: false)
-@@ -600,7 +693,9 @@ enum ZSVorschau {
+         guard linkDarfWechseln else { return }
+@@ -613,7 +706,9 @@ enum ZSVorschau {
                                               essenQuelle: ZSVorschauEssenQuelle(), speicher: ZSSpeicher.vorschau(),
                                               vorrat: ZSVorrat.vorschau(), vorratQuelle: ZSVorschauVorratQuelle(),
                                               hypoBegleiter: hypoVorschau(umgebung),
@@ -1548,7 +1555,7 @@ index 94f6841..23a6d2b 100644
          let navigation = UINavigationController(rootViewController: tabs)
          navigation.setNavigationBarHidden(true, animated: false)
          if let name = umgebung["ZS_TAB"], let tab = ZSTab.allCases.first(where: { $0.titel.lowercased() == name.lowercased() }) {
-@@ -629,6 +724,14 @@ extension ZuckerschockTabController {
+@@ -642,6 +737,14 @@ extension ZuckerschockTabController {
              blattZeigen { schliessen in AnyView(ZSTherapieplanView(speicher: self.speicher, schliessen: schliessen)) }
          case "keton":
              blattZeigen { schliessen in AnyView(ZSKetonView(keton: self.keton, schliessen: schliessen)) }
