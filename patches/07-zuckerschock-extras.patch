@@ -1,0 +1,1578 @@
+diff --git a/Loop/Loop.xcodeproj/project.pbxproj b/Loop/Loop.xcodeproj/project.pbxproj
+index 7c61f29..9557589 100644
+--- a/Loop/Loop.xcodeproj/project.pbxproj
++++ b/Loop/Loop.xcodeproj/project.pbxproj
+@@ -7,6 +7,10 @@
+ 	objects = {
+ 
+ /* Begin PBXBuildFile section */
++		5A5DCEE2DDE1AF0F65F574D9 /* ZuckerschockBericht.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CCEE2DDE1AF0F65F574D9 /* ZuckerschockBericht.swift */; };
++		5A5DE734B88CFFE8B0E834CC /* ZuckerschockStellen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CE734B88CFFE8B0E834CC /* ZuckerschockStellen.swift */; };
++		5A5D2AC134184974CF5DCDB6 /* ZuckerschockAngehoerige.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C2AC134184974CF5DCDB6 /* ZuckerschockAngehoerige.swift */; };
++		5A5D6A3799C584F81592AA85 /* ZuckerschockHinweise.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C6A3799C584F81592AA85 /* ZuckerschockHinweise.swift */; };
+ 		5A5D677C06E9236F42EEE6EA /* ZuckerschockKeton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C677C06E9236F42EEE6EA /* ZuckerschockKeton.swift */; };
+ 		5A5E339D3A8A26391EC01FB9 /* ZuckerschockTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C00000000000000000010 /* ZuckerschockTheme.swift */; };
+ 		5A5E2F5203E82EF20E6BE75F /* ZuckerschockWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C2F5203E82EF20E6BE75F /* ZuckerschockWidgets.swift */; };
+@@ -776,6 +780,10 @@
+ /* End PBXCopyFilesBuildPhase section */
+ 
+ /* Begin PBXFileReference section */
++		5A5CCEE2DDE1AF0F65F574D9 /* ZuckerschockBericht.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockBericht.swift; sourceTree = "<group>"; };
++		5A5CE734B88CFFE8B0E834CC /* ZuckerschockStellen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockStellen.swift; sourceTree = "<group>"; };
++		5A5C2AC134184974CF5DCDB6 /* ZuckerschockAngehoerige.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockAngehoerige.swift; sourceTree = "<group>"; };
++		5A5C6A3799C584F81592AA85 /* ZuckerschockHinweise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockHinweise.swift; sourceTree = "<group>"; };
+ 		5A5C677C06E9236F42EEE6EA /* ZuckerschockKeton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockKeton.swift; sourceTree = "<group>"; };
+ 		5A5C2F5203E82EF20E6BE75F /* ZuckerschockWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockWidgets.swift; sourceTree = "<group>"; };
+ 		5A5C911AD14F5C87FECF59BF /* ZuckerschockWidgetGemeinsam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockWidgetGemeinsam.swift; sourceTree = "<group>"; };
+@@ -1558,6 +1566,10 @@
+ 		5A5C00000000000000000001 /* Zuckerschock */ = {
+ 			isa = PBXGroup;
+ 			children = (
++				5A5CCEE2DDE1AF0F65F574D9 /* ZuckerschockBericht.swift */,
++				5A5CE734B88CFFE8B0E834CC /* ZuckerschockStellen.swift */,
++				5A5C2AC134184974CF5DCDB6 /* ZuckerschockAngehoerige.swift */,
++				5A5C6A3799C584F81592AA85 /* ZuckerschockHinweise.swift */,
+ 				5A5C677C06E9236F42EEE6EA /* ZuckerschockKeton.swift */,
+ 				5A5C2F5203E82EF20E6BE75F /* ZuckerschockWidgets.swift */,
+ 				5A5C911AD14F5C87FECF59BF /* ZuckerschockWidgetGemeinsam.swift */,
+@@ -3440,6 +3452,10 @@
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
++				5A5DCEE2DDE1AF0F65F574D9 /* ZuckerschockBericht.swift in Sources */,
++				5A5DE734B88CFFE8B0E834CC /* ZuckerschockStellen.swift in Sources */,
++				5A5D2AC134184974CF5DCDB6 /* ZuckerschockAngehoerige.swift in Sources */,
++				5A5D6A3799C584F81592AA85 /* ZuckerschockHinweise.swift in Sources */,
+ 				5A5D677C06E9236F42EEE6EA /* ZuckerschockKeton.swift in Sources */,
+ 				5A5D911AD14F5C87FECF59BF /* ZuckerschockWidgetGemeinsam.swift in Sources */,
+ 				5A5D4931624412E5911E5892 /* ZuckerschockHypoGemeinsam.swift in Sources */,
+diff --git a/Loop/Loop/Managers/LoopAppManager.swift b/Loop/Loop/Managers/LoopAppManager.swift
+index ffb10b9..8f22524 100644
+--- a/Loop/Loop/Managers/LoopAppManager.swift
++++ b/Loop/Loop/Managers/LoopAppManager.swift
+@@ -331,14 +331,24 @@ class LoopAppManager: NSObject {
+         }
+ 
+         // Zuckerschock: Bubble-Menü mit Heute-Screen; Loops Startbildschirm lebt unverändert im Tab „Verlauf“.
++        let hypoBegleiter = ZSHypoBegleiter(deviceManager: deviceDataManager, speicher: ZSSpeicher.shared)
++        // Licht-Alarm über Home Assistant (nur wenn eingerichtet und eingeschaltet).
++        hypoBegleiter.beiStart = { stand in
++            Task { await ZSHomeAssistant.melden(.unterzucker, wert: "\(stand.wertText) \(stand.einheitText)", trend: stand.trendPfeil) }
++        }
++        hypoBegleiter.beiZiel = {
++            Task { await ZSHomeAssistant.melden(.wiederImZiel, wert: nil, trend: nil) }
++        }
+         let heuteQuelle = ZSLoopQuelle(deviceManager: deviceDataManager, automaticDosingStatus: automaticDosingStatus, onboardingManager: onboardingManager)
+         let tabController = ZuckerschockTabController(statusTableViewController: statusTableViewController, heuteQuelle: heuteQuelle,
+                                                       essenQuelle: ZSLoopEssenQuelle(deviceManager: deviceDataManager), speicher: ZSSpeicher.shared,
+                                                       vorrat: ZSVorrat.shared, vorratQuelle: ZSLoopVorratQuelle(deviceManager: deviceDataManager, vorrat: ZSVorrat.shared),
+-                                                      hypoBegleiter: ZSHypoBegleiter(deviceManager: deviceDataManager, speicher: ZSSpeicher.shared),
+-                                                      keton: ZSKeton.shared)
++                                                      hypoBegleiter: hypoBegleiter,
++                                                      keton: ZSKeton.shared, hinweise: ZSHinweise.shared, stellen: ZSStellen.shared)
+         tabController.ketonWaechter = ZSKetonWaechter(deviceManager: deviceDataManager, keton: ZSKeton.shared)
++        tabController.hinweisWaechter = ZSHinweisWaechter(deviceManager: deviceDataManager, hinweise: ZSHinweise.shared, speicher: ZSSpeicher.shared)
+         tabController.vorratWaechter = ZSVorratWaechter(deviceManager: deviceDataManager, vorrat: ZSVorrat.shared)
++        tabController.vorratWaechter?.beiPodWechsel = { ZSHinweise.shared.stelleOffen = true }
+         rootNavigationController?.setViewControllers([tabController], animated: true)
+ 
+         deviceDataManager.refreshDeviceData()
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockAngehoerige.swift b/Loop/Loop/Zuckerschock/ZuckerschockAngehoerige.swift
+new file mode 100644
+index 0000000..152dfa1
+--- /dev/null
++++ b/Loop/Loop/Zuckerschock/ZuckerschockAngehoerige.swift
+@@ -0,0 +1,280 @@
++//
++//  ZuckerschockAngehoerige.swift
++//  Loop
++//
++//  Zuckerschock: Angehörigen-Ansicht (groß, klar, für Helfer) und Home-Assistant-Licht-Alarm:
++//  Bei Unterzucker ruft die App einen Webhook auf deinem Home Assistant auf.
++//  Ohne Marke, ohne Humor. Keine Dosis.
++//
++
++import Foundation
++import Security
++import SwiftUI
++
++// MARK: - Home Assistant
++
++enum ZSHomeAssistant {
++    private static let urlSchluessel = "Zuckerschock.HA.url"
++    private static let aktivSchluessel = "Zuckerschock.HA.aktiv"
++    private static let dienst = "Zuckerschock.HomeAssistant"
++    private static let konto = "webhook-id"
++
++    static var basisURL: String {
++        get { UserDefaults.standard.string(forKey: urlSchluessel) ?? "" }
++        set { UserDefaults.standard.set(newValue.trimmingCharacters(in: .whitespacesAndNewlines), forKey: urlSchluessel) }
++    }
++
++    static var aktiv: Bool {
++        get { UserDefaults.standard.bool(forKey: aktivSchluessel) }
++        set { UserDefaults.standard.set(newValue, forKey: aktivSchluessel) }
++    }
++
++    /// Webhook-ID liegt im Schlüsselbund, denn wer sie kennt, kann den Alarm auslösen.
++    static var webhookID: String? {
++        get {
++            let abfrage: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: dienst,
++                                          kSecAttrAccount as String: konto, kSecReturnData as String: true, kSecMatchLimit as String: kSecMatchLimitOne]
++            var ergebnis: AnyObject?
++            guard SecItemCopyMatching(abfrage as CFDictionary, &ergebnis) == errSecSuccess, let daten = ergebnis as? Data else { return nil }
++            return String(data: daten, encoding: .utf8)
++        }
++        set {
++            let basis: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: dienst, kSecAttrAccount as String: konto]
++            SecItemDelete(basis as CFDictionary)
++            guard let neu = newValue?.trimmingCharacters(in: .whitespacesAndNewlines), !neu.isEmpty else { return }
++            var eintrag = basis
++            eintrag[kSecValueData as String] = Data(neu.utf8)
++            eintrag[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
++            SecItemAdd(eintrag as CFDictionary, nil)
++        }
++    }
++
++    enum Ereignis: String {
++        case unterzucker, wiederImZiel = "wieder_im_ziel", test
++    }
++
++    /// Ruft `<url>/api/webhook/<id>` mit Ereignis, Wert und Zeit auf.
++    @discardableResult
++    static func melden(_ ereignis: Ereignis, wert: String?, trend: String?, erzwingen: Bool = false) async -> Bool {
++        guard aktiv || erzwingen, let id = webhookID,
++              let basis = URL(string: basisURL), basis.scheme == "https" || basis.scheme == "http" else { return false }
++        var anfrage = URLRequest(url: basis.appendingPathComponent("api/webhook").appendingPathComponent(id), timeoutInterval: 15)
++        anfrage.httpMethod = "POST"
++        anfrage.setValue("application/json", forHTTPHeaderField: "Content-Type")
++        let koerper: [String: Any] = [
++            "ereignis": ereignis.rawValue,
++            "wert": wert ?? "",
++            "trend": trend ?? "",
++            "zeit": ISO8601DateFormatter().string(from: Date())
++        ]
++        anfrage.httpBody = try? JSONSerialization.data(withJSONObject: koerper)
++        guard let ergebnis = try? await URLSession.shared.data(for: anfrage) else { return false }
++        return (200..<300).contains((ergebnis.1 as? HTTPURLResponse)?.statusCode ?? 0)
++    }
++}
++
++// MARK: - Angehörigen-Ansicht
++
++struct ZSAngehoerigeView: View {
++    @ObservedObject var modell: ZSHeuteModell
++    @ObservedObject var begleiter: ZSHypoBegleiter
++    var schliessen: () -> Void
++
++    @State private var zeigeEinstellungen = false
++
++    var body: some View {
++        let stand = modell.stand
++        let jetzt = modell.jetzt
++        let aktuell = stand?.aktuell
++        let einheit = stand?.einheit ?? .milligramsPerDeciliter
++        let alt = ZSFormat.istAlt(aktuell?.datum, jetzt: jetzt)
++        let zustand = aktuell.map { ZSGlukoseZustand(mgdl: $0.mgdl) }
++
++        ZStack {
++            Color.black.ignoresSafeArea()
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space6) {
++                    HStack {
++                        Text("Für Angehörige")
++                            .font(ZSSchrift.title3)
++                            .foregroundStyle(Color.white)
++                            .accessibilityAddTraits(.isHeader)
++                        Spacer()
++                        Button("Schließen", action: schliessen)
++                            .foregroundStyle(Color.white.opacity(0.7))
++                            .frame(minHeight: ZSMass.tap)
++                    }
++
++                    VStack(alignment: .leading, spacing: ZSMass.space2) {
++                        HStack(alignment: .firstTextBaseline, spacing: ZSMass.space2) {
++                            Text(aktuell.map { ZSFormat.glukose($0.mgdl, einheit) } ?? "–")
++                                .font(.system(size: 96, weight: .bold, design: .rounded))
++                                .monospacedDigit()
++                                .minimumScaleFactor(0.5)
++                                .foregroundStyle(alt ? Color.white.opacity(0.6) : Color.white)
++                            Text(alt ? "" : (stand?.trend?.pfeil ?? ""))
++                                .font(.system(size: 48, weight: .bold))
++                                .foregroundStyle(Color.white)
++                        }
++                        Text(ZSFormat.einheit(einheit))
++                            .font(ZSSchrift.title3)
++                            .foregroundStyle(Color.white.opacity(0.7))
++                        Text(zustandText(zustand, alt: alt, aktuell: aktuell, jetzt: jetzt))
++                            .font(ZSSchrift.title2)
++                            .foregroundStyle(zustandFarbe(zustand, alt: alt))
++                    }
++                    .accessibilityElement(children: .combine)
++
++                    if let hypo = begleiter.zustand {
++                        VStack(alignment: .leading, spacing: ZSMass.space2) {
++                            Text("Unterzucker-Begleiter läuft")
++                                .font(ZSSchrift.headline)
++                                .foregroundStyle(Color.white)
++                            Text(hypo.gegessenUm.map { "Gegessen um \(ZSFormat.uhrzeit($0)), \(hypo.gegessenAnzahl)×." } ?? "Noch nichts gegessen. Jetzt \(hypo.mengeText) geben.")
++                                .font(ZSSchrift.body)
++                                .foregroundStyle(Color.white)
++                        }
++                        .padding(ZSMass.space4)
++                        .frame(maxWidth: .infinity, alignment: .leading)
++                        .background(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous).fill(Color(red: 0.23, green: 0.07, blue: 0.08)))
++                        .overlay(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous).strokeBorder(Color(red: 1, green: 0.42, blue: 0.42), lineWidth: 1.5))
++                    }
++
++                    VStack(alignment: .leading, spacing: ZSMass.space2) {
++                        Text("Im Notfall")
++                            .font(ZSSchrift.headline)
++                            .foregroundStyle(Color.white)
++                        Text("Wach und ansprechbar: schnelle Kohlenhydrate geben, nach 15 Minuten erneut messen.")
++                        Text("Nicht ansprechbar: nichts in den Mund geben. Glukagon laut Notfallpass, dann 112 anrufen.")
++                        Text("Insulin pausieren: in Loop unter Einstellungen, Pumpe, Insulin pausieren.")
++                    }
++                    .font(ZSSchrift.body)
++                    .foregroundStyle(Color.white.opacity(0.85))
++                    .fixedSize(horizontal: false, vertical: true)
++
++                    if let notruf = URL(string: "tel:112") {
++                        Link(destination: notruf) {
++                            Text("112 anrufen")
++                                .font(ZSSchrift.headline)
++                                .foregroundStyle(Color.white)
++                                .frame(maxWidth: .infinity, minHeight: 56)
++                                .background(Capsule().strokeBorder(Color.white, lineWidth: 1.5))
++                        }
++                    }
++
++                    Button("Licht-Alarm über Home Assistant") { zeigeEinstellungen = true }
++                        .font(ZSSchrift.subhead)
++                        .foregroundStyle(Color.white.opacity(0.7))
++                        .frame(maxWidth: .infinity, minHeight: ZSMass.tap)
++                }
++                .padding(ZSMass.space5)
++            }
++        }
++        .preferredColorScheme(.dark)
++        .sheet(isPresented: $zeigeEinstellungen) {
++            ZSHomeAssistantView { zeigeEinstellungen = false }
++        }
++    }
++
++    private func zustandText(_ zustand: ZSGlukoseZustand?, alt: Bool, aktuell: ZSMesspunkt?, jetzt: Date) -> String {
++        if let aktuell, alt { return "Wert \(ZSFormat.alter(von: aktuell.datum, jetzt: jetzt))" }
++        switch zustand {
++        case .tief: return "Unterzucker"
++        case .hoch: return "Über Ziel"
++        case .ziel: return "Im Ziel"
++        case nil: return "Kein Wert"
++        }
++    }
++
++    private func zustandFarbe(_ zustand: ZSGlukoseZustand?, alt: Bool) -> Color {
++        if alt { return Color.white.opacity(0.6) }
++        switch zustand {
++        case .tief: return Color(red: 1, green: 0.42, blue: 0.42)
++        case .hoch: return Color(red: 1, green: 0.77, blue: 0.3)
++        case .ziel: return Color(red: 0.36, green: 0.83, blue: 0.54)
++        case nil: return Color.white.opacity(0.6)
++        }
++    }
++}
++
++struct ZSHomeAssistantView: View {
++    var schliessen: () -> Void
++
++    @State private var url = ZSHomeAssistant.basisURL
++    @State private var id = ""
++    @State private var aktiv = ZSHomeAssistant.aktiv
++    @State private var hatID = ZSHomeAssistant.webhookID != nil
++    @State private var testErgebnis: String?
++
++    var body: some View {
++        VStack(spacing: 0) {
++            ZSBlattKopf(titel: "Home Assistant", abbrechen: schliessen)
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space4) {
++                    Text("Bei Unterzucker ruft die App einen Webhook in deinem Home Assistant auf, zum Beispiel um ein Licht rot blinken zu lassen. Ereignisse: unterzucker, wieder_im_ziel.")
++                        .font(ZSSchrift.subhead)
++                        .foregroundStyle(ZSFarbe.text2)
++                        .fixedSize(horizontal: false, vertical: true)
++                    ZSEingabeFeld(titel: "Adresse deines Home Assistant") {
++                        TextField("https://homeassistant.local:8123", text: $url)
++                            .keyboardType(.URL)
++                            .textInputAutocapitalization(.never)
++                            .autocorrectionDisabled()
++                    }
++                    if hatID {
++                        HStack {
++                            Label("Webhook-ID hinterlegt", systemImage: "checkmark")
++                                .foregroundStyle(ZSFarbe.text)
++                            Spacer()
++                            Button("Entfernen") {
++                                ZSHomeAssistant.webhookID = nil
++                                hatID = false
++                            }
++                            .foregroundStyle(ZSFarbe.orangeText)
++                        }
++                        .font(ZSSchrift.body)
++                    } else {
++                        ZSEingabeFeld(titel: "Webhook-ID") {
++                            SecureField("z. B. zuckerschock_alarm", text: $id)
++                                .textInputAutocapitalization(.never)
++                                .autocorrectionDisabled()
++                        }
++                    }
++                    Toggle("Licht-Alarm aktiv", isOn: $aktiv)
++                        .font(ZSSchrift.body)
++                        .foregroundStyle(ZSFarbe.text)
++                    HStack(spacing: ZSMass.space3) {
++                        Button("Sichern") { sichern() }
++                            .buttonStyle(ZSRandStil())
++                        Button("Testalarm senden") {
++                            sichern()
++                            Task {
++                                let ok = await ZSHomeAssistant.melden(.test, wert: nil, trend: nil, erzwingen: true)
++                                await MainActor.run { testErgebnis = ok ? "Home Assistant hat den Test angenommen." : "Keine Antwort. Adresse und ID prüfen." }
++                            }
++                        }
++                        .buttonStyle(ZSRandStil())
++                    }
++                    .font(ZSSchrift.subhead.weight(.semibold))
++                    if let testErgebnis {
++                        Text(testErgebnis)
++                            .font(ZSSchrift.subhead)
++                            .foregroundStyle(ZSFarbe.text)
++                    }
++                }
++                .padding(ZSMass.space5)
++            }
++        }
++        .background(ZSFarbe.grund.ignoresSafeArea())
++    }
++
++    private func sichern() {
++        ZSHomeAssistant.basisURL = url
++        ZSHomeAssistant.aktiv = aktiv
++        if !id.isEmpty {
++            ZSHomeAssistant.webhookID = id
++            id = ""
++            hatID = true
++        }
++    }
++}
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockBericht.swift b/Loop/Loop/Zuckerschock/ZuckerschockBericht.swift
+new file mode 100644
+index 0000000..c66faae
+--- /dev/null
++++ b/Loop/Loop/Zuckerschock/ZuckerschockBericht.swift
+@@ -0,0 +1,312 @@
++//
++//  ZuckerschockBericht.swift
++//  Loop
++//
++//  Zuckerschock: Arztbericht als PDF. Zeit im Zielbereich, Mittelwert, GMI, Variabilität,
++//  Tagesprofil, Unterzucker, Keton und Mahlzeiten für 14, 30 oder 90 Tage. Nur lesend aus Loop.
++//
++
++import Foundation
++import HealthKit
++import LoopCore
++import LoopKit
++import SwiftUI
++import UIKit
++
++// MARK: - Auswertung
++
++struct ZSBerichtDaten {
++    var von: Date
++    var bis: Date
++    var werte: [ZSMesspunkt]
++    var tagesInsulin: Double?
++    var khJeTag: Double?
++    var hypos: [ZSHypoEpisode]
++    var ketone: [ZSKetonWert]
++    var mahlzeiten: [ZSMahlzeit]
++
++    var mittel: Double? { werte.isEmpty ? nil : werte.map(\.mgdl).reduce(0, +) / Double(werte.count) }
++
++    /// Glukose-Management-Indikator: 3,31 + 0,02392 × Mittelwert (mg/dl).
++    var gmi: Double? { mittel.map { 3.31 + 0.02392 * $0 } }
++
++    /// Variationskoeffizient in Prozent.
++    var cv: Double? {
++        guard let mittel, werte.count > 1 else { return nil }
++        let varianz = werte.map { pow($0.mgdl - mittel, 2) }.reduce(0, +) / Double(werte.count - 1)
++        return sqrt(varianz) / mittel * 100
++    }
++
++    /// Anteile: <54, 54–69, 70–180, 181–250, >250 (in Prozent).
++    var bereiche: [Double] {
++        guard !werte.isEmpty else { return [0, 0, 0, 0, 0] }
++        let n = Double(werte.count)
++        func anteil(_ bedingung: (Double) -> Bool) -> Double { Double(werte.filter { bedingung($0.mgdl) }.count) / n * 100 }
++        return [anteil { $0 < 54 }, anteil { $0 >= 54 && $0 < 70 }, anteil { $0 >= 70 && $0 <= 180 }, anteil { $0 > 180 && $0 <= 250 }, anteil { $0 > 250 }]
++    }
++
++    /// Sensor-Abdeckung: Anteil der erwarteten 5-Minuten-Werte.
++    var abdeckung: Double {
++        let erwartet = bis.timeIntervalSince(von) / 300
++        return erwartet > 0 ? min(100, Double(werte.count) / erwartet * 100) : 0
++    }
++
++    /// Tagesprofil: je Stunde Median sowie 25. und 75. Perzentil.
++    var tagesprofil: [(stunde: Int, p25: Double, median: Double, p75: Double)] {
++        (0..<24).compactMap { stunde in
++            let werteStunde = werte.filter { Calendar.current.component(.hour, from: $0.datum) == stunde }.map(\.mgdl).sorted()
++            guard werteStunde.count >= 3 else { return nil }
++            func perzentil(_ p: Double) -> Double { werteStunde[min(werteStunde.count - 1, Int(Double(werteStunde.count - 1) * p))] }
++            return (stunde: stunde, p25: perzentil(0.25), median: perzentil(0.5), p75: perzentil(0.75))
++        }
++    }
++}
++
++enum ZSBericht {
++    static func laden(tage: Int, deviceManager: DeviceDataManager, begleiter: ZSHypoBegleiter, keton: ZSKeton, speicher: ZSSpeicher,
++                      fertig: @escaping (ZSBerichtDaten) -> Void) {
++        let bis = Date()
++        let von = bis.addingTimeInterval(-.days(Double(tage)))
++        let gruppe = DispatchGroup()
++        var werte: [ZSMesspunkt] = []
++        var insulin: Double?
++        var kh: Double?
++
++        // Glukose aus Apple Health: Loop hält lokal nur 7 Tage, Health hat den ganzen Zeitraum.
++        gruppe.enter()
++        let abfrage = HKSampleQuery(
++            sampleType: HKQuantityType(.bloodGlucose),
++            predicate: HKQuery.predicateForSamples(withStart: von, end: bis),
++            limit: HKObjectQueryNoLimit,
++            sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)]) { _, proben, _ in
++            werte = (proben as? [HKQuantitySample] ?? []).map {
++                ZSMesspunkt(datum: $0.startDate, mgdl: $0.quantity.doubleValue(for: .milligramsPerDeciliter))
++            }
++            gruppe.leave()
++        }
++        HKHealthStore().execute(abfrage)
++
++        // Insulin und KH je Tag aus Loops lokalem Speicher (höchstens 7 Tage).
++        let lokaleTage = Double(min(tage, 7))
++        let lokalVon = bis.addingTimeInterval(-.days(lokaleTage))
++        gruppe.enter()
++        deviceManager.doseStore.getTotalUnitsDelivered(since: lokalVon) { ergebnis in
++            if case .success(let gesamt) = ergebnis { insulin = gesamt.value / lokaleTage }
++            gruppe.leave()
++        }
++        gruppe.enter()
++        deviceManager.carbStore.getCarbEntries(start: lokalVon, end: bis) { ergebnis in
++            if case .success(let eintraege) = ergebnis {
++                kh = eintraege.reduce(0) { $0 + $1.quantity.doubleValue(for: .gram()) } / lokaleTage
++            }
++            gruppe.leave()
++        }
++        gruppe.notify(queue: .main) {
++            fertig(ZSBerichtDaten(von: von, bis: bis, werte: werte, tagesInsulin: insulin, khJeTag: kh,
++                                  hypos: begleiter.verlauf.filter { $0.start >= von },
++                                  ketone: keton.werte.filter { $0.datum >= von },
++                                  mahlzeiten: speicher.mahlzeiten.filter { $0.datum >= von }))
++        }
++    }
++
++    // MARK: PDF
++
++    /// A4, 595 × 842 pt. Schlicht in Schwarz auf Weiß, gut druckbar.
++    static func pdf(_ d: ZSBerichtDaten, name: String) -> Data {
++        let seite = CGRect(x: 0, y: 0, width: 595, height: 842)
++        let renderer = UIGraphicsPDFRenderer(bounds: seite)
++        let datum = DateFormatter()
++        datum.locale = Locale(identifier: "de_DE")
++        datum.dateFormat = "d. MMMM yyyy"
++
++        return renderer.pdfData { kontext in
++            kontext.beginPage()
++            var y: CGFloat = 48
++            let rand: CGFloat = 48
++            let breite = seite.width - 2 * rand
++
++            func text(_ s: String, _ schrift: UIFont, farbe: UIColor = .black, x: CGFloat = rand, w: CGFloat? = nil) -> CGFloat {
++                let attribute: [NSAttributedString.Key: Any] = [.font: schrift, .foregroundColor: farbe]
++                let box = (s as NSString).boundingRect(with: CGSize(width: w ?? breite, height: 1000), options: [.usesLineFragmentOrigin], attributes: attribute, context: nil)
++                (s as NSString).draw(with: CGRect(x: x, y: y, width: w ?? breite, height: box.height), options: [.usesLineFragmentOrigin], attributes: attribute, context: nil)
++                return box.height
++            }
++
++            y += text("Bericht für die Diabetes-Praxis", .systemFont(ofSize: 22, weight: .bold))
++            y += 4
++            y += text("\(name.isEmpty ? "" : name + " · ")\(datum.string(from: d.von)) bis \(datum.string(from: d.bis)) · Loop mit Zuckerschock", .systemFont(ofSize: 11), farbe: .darkGray)
++            y += 20
++
++            // Kennzahlen
++            let kennzahlen: [(String, String)] = [
++                ("Zeit im Ziel 70–180", d.werte.isEmpty ? "–" : "\(ZSFormat.zahl(d.bereiche[2], stellen: 0)) %"),
++                ("Mittelwert", d.mittel.map { "\(ZSFormat.zahl($0, stellen: 0)) mg/dl" } ?? "–"),
++                ("GMI", d.gmi.map { "\(ZSFormat.zahl($0, stellen: 1)) %" } ?? "–"),
++                ("Variabilität (CV)", d.cv.map { "\(ZSFormat.zahl($0, stellen: 0)) %" } ?? "–"),
++                ("Sensor-Abdeckung", "\(ZSFormat.zahl(d.abdeckung, stellen: 0)) %"),
++                ("Insulin pro Tag (7 Tage)", d.tagesInsulin.map { "\(ZSFormat.zahl($0, stellen: 1)) IE" } ?? "–"),
++                ("KH pro Tag (7 Tage)", d.khJeTag.map { "\(ZSFormat.zahl($0, stellen: 0)) g" } ?? "–")
++            ]
++            let spalte = breite / 4
++            for (index, eintrag) in kennzahlen.enumerated() {
++                let x = rand + CGFloat(index % 4) * spalte
++                let zeileY = y + CGFloat(index / 4) * 46
++                let gemerkt = y
++                y = zeileY
++                _ = text(eintrag.1, .monospacedDigitSystemFont(ofSize: 17, weight: .semibold), x: x, w: spalte - 8)
++                y = zeileY + 22
++                _ = text(eintrag.0, .systemFont(ofSize: 9), farbe: .darkGray, x: x, w: spalte - 8)
++                y = gemerkt
++            }
++            y += 100
++
++            // Bereiche als Balken
++            y += text("Verteilung", .systemFont(ofSize: 13, weight: .semibold))
++            y += 6
++            let farben: [UIColor] = [UIColor(red: 0.6, green: 0.1, blue: 0.12, alpha: 1), UIColor(red: 0.85, green: 0.3, blue: 0.3, alpha: 1),
++                                     UIColor(red: 0.2, green: 0.55, blue: 0.3, alpha: 1), UIColor(red: 0.95, green: 0.7, blue: 0.2, alpha: 1),
++                                     UIColor(red: 0.85, green: 0.5, blue: 0.1, alpha: 1)]
++            let namen = ["unter 54", "54–69", "70–180", "181–250", "über 250"]
++            var x = rand
++            for (index, anteil) in d.bereiche.enumerated() {
++                let w = breite * CGFloat(anteil / 100)
++                farben[index].setFill()
++                UIBezierPath(rect: CGRect(x: x, y: y, width: w, height: 16)).fill()
++                x += w
++            }
++            y += 22
++            for (index, anteil) in d.bereiche.enumerated() {
++                _ = text("\(namen[index]) mg/dl: \(ZSFormat.zahl(anteil, stellen: 1)) %", .systemFont(ofSize: 9), farbe: .darkGray, x: rand + CGFloat(index) * breite / 5, w: breite / 5 - 4)
++            }
++            y += 24
++
++            // Tagesprofil
++            y += text("Tagesprofil (Median, 25.–75. Perzentil)", .systemFont(ofSize: 13, weight: .semibold))
++            y += 6
++            let feld = CGRect(x: rand, y: y, width: breite, height: 170)
++            UIColor(white: 0.95, alpha: 1).setFill()
++            let lo: Double = 40, hi: Double = 350
++            let zielOben = feld.maxY - feld.height * CGFloat((180 - lo) / (hi - lo))
++            let zielUnten = feld.maxY - feld.height * CGFloat((70 - lo) / (hi - lo))
++            UIBezierPath(rect: CGRect(x: feld.minX, y: zielOben, width: feld.width, height: zielUnten - zielOben)).fill()
++            let profil = d.tagesprofil
++            func punkt(_ stunde: Int, _ wert: Double) -> CGPoint {
++                CGPoint(x: feld.minX + feld.width * (CGFloat(stunde) + 0.5) / 24, y: feld.maxY - feld.height * CGFloat((min(max(wert, lo), hi) - lo) / (hi - lo)))
++            }
++            if profil.count > 1 {
++                let band = UIBezierPath()
++                band.move(to: punkt(profil[0].stunde, profil[0].p75))
++                profil.dropFirst().forEach { band.addLine(to: punkt($0.stunde, $0.p75)) }
++                profil.reversed().forEach { band.addLine(to: punkt($0.stunde, $0.p25)) }
++                band.close()
++                UIColor(white: 0.75, alpha: 1).setFill()
++                band.fill()
++                let linie = UIBezierPath()
++                linie.move(to: punkt(profil[0].stunde, profil[0].median))
++                profil.dropFirst().forEach { linie.addLine(to: punkt($0.stunde, $0.median)) }
++                linie.lineWidth = 2
++                UIColor.black.setStroke()
++                linie.stroke()
++            }
++            let gemerkt = y
++            for stunde in stride(from: 0, through: 24, by: 6) {
++                y = feld.maxY + 4
++                _ = text(String(format: "%02d:00", stunde % 24), .systemFont(ofSize: 8), farbe: .darkGray, x: feld.minX + feld.width * CGFloat(stunde) / 24 - 12, w: 40)
++            }
++            y = gemerkt + feld.height + 26
++
++            // Ereignisse
++            y += text("Ereignisse", .systemFont(ofSize: 13, weight: .semibold))
++            y += 6
++            let nachts = d.hypos.filter { ZSHypoFarbe.istNacht($0.start) }.count
++            let tiefster = d.hypos.map(\.tiefsterWert).min()
++            let zeilen = [
++                "Unterzucker-Episoden (Begleiter): \(d.hypos.count), davon nachts \(nachts)\(tiefster.map { ", tiefster Wert \(ZSFormat.zahl($0, stellen: 0)) mg/dl" } ?? "")",
++                "Keton-Messungen: \(d.ketone.count)\(d.ketone.map(\.mmol).max().map { ", höchster Wert \(ZSFormat.zahl($0, stellen: 1)) mmol/l" } ?? "")",
++                "Mahlzeiten über Zuckerschock: \(d.mahlzeiten.count), mit Rückmeldung \(d.mahlzeiten.filter { $0.rueckmeldung != nil }.count) (mehr: \(d.mahlzeiten.filter { $0.rueckmeldung == .mehr }.count), weniger: \(d.mahlzeiten.filter { $0.rueckmeldung == .weniger }.count))"
++            ]
++            for zeile in zeilen {
++                y += text("• " + zeile, .systemFont(ofSize: 10))
++                y += 3
++            }
++            y += 16
++            _ = text("Werte aus Loop (Sensor, Pumpe, KH-Einträge). Zuckerschock rechnet keine Insulindosis. Therapie-Einstellungen stehen in Loop.", .systemFont(ofSize: 8), farbe: .gray)
++        }
++    }
++}
++
++// MARK: - Ansicht
++
++struct ZSBerichtView: View {
++    var laden: (Int, @escaping (ZSBerichtDaten) -> Void) -> Void
++    var schliessen: () -> Void
++
++    @AppStorage("Zuckerschock.Bericht.name") private var name = ""
++    @State private var tage = 14
++    @State private var datei: URL?
++    @State private var daten: ZSBerichtDaten?
++    @State private var laedt = false
++
++    var body: some View {
++        VStack(spacing: 0) {
++            ZSBlattKopf(titel: "Arztbericht", abbrechen: schliessen)
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space4) {
++                    Picker("Zeitraum", selection: $tage) {
++                        Text("14 Tage").tag(14)
++                        Text("30 Tage").tag(30)
++                        Text("90 Tage").tag(90)
++                    }
++                    .pickerStyle(.segmented)
++                    ZSEingabeFeld(titel: "Name auf dem Bericht (optional)") {
++                        TextField("z. B. Jon", text: $name)
++                    }
++                    Button {
++                        erstellen()
++                    } label: {
++                        Text(laedt ? "Bericht wird erstellt …" : "Bericht erstellen").font(ZSSchrift.headline)
++                    }
++                    .buttonStyle(ZSDruckStil(art: .primaer))
++                    .disabled(laedt)
++
++                    if let daten {
++                        VStack(alignment: .leading, spacing: ZSMass.space2) {
++                            Text("Zeit im Ziel \(ZSFormat.zahl(daten.bereiche[2], stellen: 0)) % · Mittelwert \(daten.mittel.map { ZSFormat.zahl($0, stellen: 0) } ?? "–") mg/dl · GMI \(daten.gmi.map { ZSFormat.zahl($0, stellen: 1) } ?? "–") %")
++                                .font(ZSSchrift.subhead)
++                                .foregroundStyle(ZSFarbe.text)
++                            Text("\(daten.werte.count) Werte, Abdeckung \(ZSFormat.zahl(daten.abdeckung, stellen: 0)) %")
++                                .font(ZSSchrift.footnote)
++                                .foregroundStyle(ZSFarbe.text2)
++                        }
++                        .zsKarte()
++                    }
++                    if let datei {
++                        ShareLink(item: datei) {
++                            Label("Bericht teilen oder drucken", systemImage: "square.and.arrow.up")
++                                .font(ZSSchrift.headline)
++                        }
++                        .buttonStyle(ZSRandStil())
++                    }
++                    Text("Der Bericht bleibt auf deinem iPhone, bis du ihn teilst.")
++                        .font(ZSSchrift.footnote)
++                        .foregroundStyle(ZSFarbe.text2)
++                }
++                .padding(ZSMass.space5)
++            }
++        }
++        .background(ZSFarbe.grund.ignoresSafeArea())
++    }
++
++    private func erstellen() {
++        laedt = true
++        datei = nil
++        laden(tage) { neu in
++            daten = neu
++            let pdf = ZSBericht.pdf(neu, name: name)
++            let ziel = FileManager.default.temporaryDirectory.appendingPathComponent("Zuckerschock-Bericht-\(tage)-Tage.pdf")
++            try? pdf.write(to: ziel, options: .atomic)
++            datei = ziel
++            laedt = false
++        }
++    }
++}
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
+index 5f32017..0cfa4da 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
+@@ -28,12 +28,18 @@ struct ZSAktionen {
+     var therapieplan: () -> Void
+     /// Öffnet den Keton-Check.
+     var keton: () -> Void
++    var modi: () -> Void
++    var bericht: () -> Void
++    var angehoerige: () -> Void
++    var stellen: () -> Void
++    var alarme: () -> Void
+ }
+ 
+ struct ZSHeuteView: View {
+     @ObservedObject var modell: ZSHeuteModell
+     @ObservedObject var vorrat: ZSVorrat
+     @ObservedObject var keton: ZSKeton
++    @ObservedObject var hinweise: ZSHinweise
+     var aktionen: ZSAktionen
+ 
+     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+@@ -68,6 +74,9 @@ struct ZSHeuteView: View {
+ 
+             if let anlass = keton.anlass {
+                 ZSKetonHinweis(anlass: anlass, messen: aktionen.keton)
++            } else if let hinweis = hinweise.alle(stand: stand, jetzt: jetzt).first {
++                // Höchstens ein Hinweis, damit Heute ohne Scrollen auskommt.
++                ZSHinweisKarte(hinweis: hinweis, aktion: aktion(fuer: hinweis))
+             }
+ 
+             ZSHeroKarte(stand: stand, jetzt: jetzt, gestapelt: dynamicTypeSize.isAccessibilitySize)
+@@ -88,6 +97,15 @@ struct ZSHeuteView: View {
+         .padding(.bottom, ZSMass.space3)
+     }
+ 
++    private func aktion(fuer hinweis: ZSHinweis) -> (() -> Void)? {
++        switch hinweis.art {
++        case .bolusVergessen: return aktionen.bolus
++        case .stelle: return aktionen.stellen
++        case .sport, .alkohol: return aktionen.modi
++        case .spritzEss, .hochBald, .build: return nil
++        }
++    }
++
+     private func kopf(stand: ZSHeuteStand?, jetzt: Date) -> some View {
+         HStack(alignment: .bottom) {
+             VStack(alignment: .leading, spacing: 0) {
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHinweise.swift b/Loop/Loop/Zuckerschock/ZuckerschockHinweise.swift
+new file mode 100644
+index 0000000..562cde0
+--- /dev/null
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHinweise.swift
+@@ -0,0 +1,393 @@
++//
++//  ZuckerschockHinweise.swift
++//  Loop
++//
++//  Zuckerschock: Modi (Sport, Alkohol; Krank liegt im Keton-Check) und Hinweise:
++//  Spritz-Ess-Abstand, „Bolus vergessen?“, „Hoch bald“, Build-Wächter (90-Tage-Ablauf).
++//  Alles nur lesend aus Loop; die App rechnet keine Dosis.
++//
++
++import Combine
++import Foundation
++import HealthKit
++import LoopCore
++import LoopKit
++import SwiftUI
++import UserNotifications
++
++// MARK: - Modell
++
++struct ZSModi: Codable, Equatable {
++    var sportBis: Date?
++    var alkoholBis: Date?
++
++    func sportAktiv(_ jetzt: Date = Date()) -> Bool { (sportBis ?? .distantPast) > jetzt }
++    func alkoholAktiv(_ jetzt: Date = Date()) -> Bool { (alkoholBis ?? .distantPast) > jetzt }
++}
++
++struct ZSHinweis: Identifiable, Equatable {
++    enum Art: Equatable {
++        case spritzEss(essenAb: Date)
++        case bolusVergessen(gramm: Double, um: Date)
++        case hochBald(wert: String)
++        case build(tage: Int)
++        case sport
++        case alkohol
++        case stelle
++    }
++
++    var art: Art
++    var titel: String
++    var text: String
++
++    var id: String {
++        switch art {
++        case .spritzEss: return "spritzEss"
++        case .bolusVergessen: return "bolusVergessen"
++        case .hochBald: return "hochBald"
++        case .build: return "build"
++        case .sport: return "sport"
++        case .alkohol: return "alkohol"
++        case .stelle: return "stelle"
++        }
++    }
++
++    /// Kleinere Zahl zuerst: was jetzt zählt, steht oben.
++    var rang: Int {
++        switch art {
++        case .bolusVergessen: return 0
++        case .spritzEss: return 1
++        case .hochBald: return 2
++        case .stelle: return 3
++        case .alkohol: return 4
++        case .sport: return 5
++        case .build(let tage): return tage <= 3 ? 0 : 6
++        }
++    }
++}
++
++/// Reine Regeln, ohne Seiteneffekte.
++enum ZSHinweisRegeln {
++    /// Letzter Bolus innerhalb des Spritz-Ess-Abstands und seitdem keine KH: Essen ab …
++    static func spritzEss(abstandMinuten: Int?, boli: [Date], kh: [Date], jetzt: Date) -> Date? {
++        guard let abstand = abstandMinuten, abstand > 0, let bolus = boli.max(), jetzt.timeIntervalSince(bolus) >= 0 else { return nil }
++        let essenAb = bolus.addingTimeInterval(.minutes(Double(abstand)))
++        guard essenAb > jetzt, !kh.contains(where: { $0 >= bolus.addingTimeInterval(-.minutes(5)) }) else { return nil }
++        return essenAb
++    }
++
++    /// KH ab 10 g vor 15 bis 45 Minuten eingetragen, kein Bolus von 10 Minuten davor bis jetzt.
++    static func bolusVergessen(kh: [(datum: Date, gramm: Double)], boli: [Date], jetzt: Date) -> (Date, Double)? {
++        for eintrag in kh.sorted(by: { $0.datum > $1.datum }) where eintrag.gramm >= 10 {
++            let alter = jetzt.timeIntervalSince(eintrag.datum)
++            guard alter >= .minutes(15), alter <= .minutes(45) else { continue }
++            if !boli.contains(where: { $0 >= eintrag.datum.addingTimeInterval(-.minutes(10)) && $0 <= jetzt }) {
++                return (eintrag.datum, eintrag.gramm)
++            }
++        }
++        return nil
++    }
++
++    /// Jetzt im Ziel, laut Loops Vorhersage in 30 Minuten über 180.
++    static func hochBald(aktuell: Double?, in30: Double?, wertAlt: Bool) -> Bool {
++        guard let aktuell, let in30, !wertAlt else { return false }
++        return aktuell <= 180 && aktuell >= 70 && in30 > 180
++    }
++}
++
++// MARK: - Hinweise
++
++final class ZSHinweise: ObservableObject {
++    static let shared = ZSHinweise()
++
++    @Published var modi: ZSModi { didSet { sichern(); alkoholErinnerung() } }
++    @Published private(set) var loopHinweise: [ZSHinweis] = []
++    /// Nach einem Pod-Wechsel: „Wo sitzt der neue Pod?“
++    @Published var stelleOffen = false { didSet { UserDefaults.standard.set(stelleOffen, forKey: "Zuckerschock.stelleOffen") } }
++
++    private let schluessel = "Zuckerschock.Modi"
++    private var gemeldet = Set<String>()
++
++    init(modi: ZSModi? = nil) {
++        if let modi {
++            self.modi = modi
++        } else if let daten = UserDefaults.standard.data(forKey: schluessel), let gespeichert = try? JSONDecoder().decode(ZSModi.self, from: daten) {
++            self.modi = gespeichert
++        } else {
++            self.modi = ZSModi()
++        }
++        stelleOffen = UserDefaults.standard.bool(forKey: "Zuckerschock.stelleOffen")
++    }
++
++    private func sichern() {
++        UserDefaults.standard.set(try? JSONEncoder().encode(modi), forKey: schluessel)
++    }
++
++    /// Alle Hinweise für jetzt, nach Rang sortiert. `stand` liefert den Heute-Stand für „Hoch bald“.
++    func alle(stand: ZSHeuteStand?, jetzt: Date = Date()) -> [ZSHinweis] {
++        var liste = loopHinweise
++        if let stand, ZSHinweisRegeln.hochBald(aktuell: stand.aktuell?.mgdl, in30: stand.in30Min, wertAlt: ZSFormat.istAlt(stand.aktuell?.datum, jetzt: jetzt)),
++           let in30 = stand.in30Min {
++            let wert = "\(ZSFormat.glukose(in30, stand.einheit)) \(ZSFormat.einheit(stand.einheit))"
++            liste.append(ZSHinweis(art: .hochBald(wert: wert), titel: "Hoch bald", text: "In 30 Min. etwa \(wert) laut Loop."))
++        }
++        if let tage = ZSBuildWaechter.tageBisAblauf(jetzt: jetzt), tage <= 14 {
++            liste.append(ZSHinweis(art: .build(tage: tage), titel: "Build läuft ab",
++                                   text: tage <= 0 ? "Der Build ist abgelaufen. Starte Build Loop neu." : "Noch \(tage) \(tage == 1 ? "Tag" : "Tage"). Starte rechtzeitig Build Loop neu."))
++        }
++        if modi.alkoholAktiv(jetzt) {
++            liste.append(ZSHinweis(art: .alkohol, titel: "Alkohol-Modus", text: "Unterzucker-Gefahr bis morgen früh. Vor dem Schlafen Zucker prüfen, Snack nach deinem Plan."))
++        }
++        if modi.sportAktiv(jetzt) {
++            liste.append(ZSHinweis(art: .sport, titel: "Sport-Modus", text: "Nutze Loops Voreinstellung für Sport. Schnelle KH griffbereit halten."))
++        }
++        if stelleOffen {
++            liste.append(ZSHinweis(art: .stelle, titel: "Neuer Pod", text: "Wo sitzt er? Trag die Stelle ein."))
++        }
++        return liste.sorted { $0.rang < $1.rang }
++    }
++
++    func setzeLoopHinweise(_ neu: [ZSHinweis]) {
++        loopHinweise = neu
++        for hinweis in neu where !gemeldet.contains(meldeSchluessel(hinweis)) {
++            guard case .bolusVergessen = hinweis.art else { continue }
++            gemeldet.insert(meldeSchluessel(hinweis))
++            let inhalt = UNMutableNotificationContent()
++            inhalt.title = hinweis.titel
++            inhalt.body = hinweis.text
++            inhalt.sound = .default
++            inhalt.interruptionLevel = .timeSensitive
++            UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "Zuckerschock.BolusVergessen", content: inhalt, trigger: nil))
++        }
++    }
++
++    private func meldeSchluessel(_ hinweis: ZSHinweis) -> String {
++        if case .bolusVergessen(_, let um) = hinweis.art { return "bolus-\(um.timeIntervalSince1970)" }
++        return hinweis.id
++    }
++
++    /// Nach Alkohol am nächsten Morgen um 7 Uhr erinnern.
++    private func alkoholErinnerung() {
++        let zentrale = UNUserNotificationCenter.current()
++        zentrale.removePendingNotificationRequests(withIdentifiers: ["Zuckerschock.Alkohol"])
++        guard modi.alkoholAktiv() else { return }
++        var morgen = Calendar.current.dateComponents([.year, .month, .day], from: Date().addingTimeInterval(.hours(12)))
++        morgen.hour = 7
++        let inhalt = UNMutableNotificationContent()
++        inhalt.title = "Guten Morgen"
++        inhalt.body = "Nach Alkohol: Zucker prüfen, die Unterzucker-Gefahr hält bis heute Mittag an."
++        inhalt.sound = .default
++        zentrale.add(UNNotificationRequest(identifier: "Zuckerschock.Alkohol", content: inhalt, trigger: UNCalendarNotificationTrigger(dateMatching: morgen, repeats: false)))
++    }
++}
++
++/// Liest Boli und KH aus Loop und setzt Spritz-Ess-Abstand und „Bolus vergessen?“.
++final class ZSHinweisWaechter {
++    private let deviceManager: DeviceDataManager
++    private let hinweise: ZSHinweise
++    private let speicher: ZSSpeicher
++    private var abos = Set<AnyCancellable>()
++
++    init(deviceManager: DeviceDataManager, hinweise: ZSHinweise, speicher: ZSSpeicher) {
++        self.deviceManager = deviceManager
++        self.hinweise = hinweise
++        self.speicher = speicher
++        let center = NotificationCenter.default
++        center.publisher(for: .LoopDataUpdated, object: deviceManager.loopManager).map { _ in () }
++            .merge(with: Timer.publish(every: 60, on: .main, in: .common).autoconnect().map { _ in () })
++            .debounce(for: .seconds(2), scheduler: DispatchQueue.main)
++            .sink { [weak self] in self?.pruefen() }
++            .store(in: &abos)
++        ZSBuildWaechter.mitteilungenPlanen()
++    }
++
++    func pruefen() {
++        let jetzt = Date()
++        let gruppe = DispatchGroup()
++        var boli: [Date] = []
++        var kh: [(datum: Date, gramm: Double)] = []
++        gruppe.enter()
++        deviceManager.doseStore.getNormalizedDoseEntries(start: jetzt.addingTimeInterval(-.hours(1)), end: nil) { ergebnis in
++            if case .success(let dosen) = ergebnis {
++                boli = dosen.filter { $0.type == .bolus }.map(\.startDate)
++            }
++            gruppe.leave()
++        }
++        gruppe.enter()
++        deviceManager.carbStore.getCarbEntries(start: jetzt.addingTimeInterval(-.hours(1)), end: nil) { ergebnis in
++            if case .success(let eintraege) = ergebnis {
++                kh = eintraege.map { (datum: $0.startDate, gramm: $0.quantity.doubleValue(for: .gram())) }
++            }
++            gruppe.leave()
++        }
++        gruppe.notify(queue: .main) { [weak self] in
++            guard let self else { return }
++            var neu: [ZSHinweis] = []
++            if let treffer = ZSHinweisRegeln.bolusVergessen(kh: kh, boli: boli, jetzt: jetzt) {
++                let (um, gramm) = treffer
++                neu.append(ZSHinweis(art: .bolusVergessen(gramm: gramm, um: um), titel: "Bolus vergessen?",
++                                     text: "\(ZSFormat.zahl(gramm, stellen: 0)) g KH um \(ZSFormat.uhrzeit(um)), noch kein Bolus."))
++            }
++            if let essenAb = ZSHinweisRegeln.spritzEss(abstandMinuten: self.speicher.plan.spritzEssAbstandMinuten, boli: boli, kh: kh.map(\.datum), jetzt: jetzt) {
++                neu.append(ZSHinweis(art: .spritzEss(essenAb: essenAb), titel: "Spritz-Ess-Abstand", text: "Essen ab \(ZSFormat.uhrzeit(essenAb)), laut deinem Plan."))
++            }
++            self.hinweise.setzeLoopHinweise(neu)
++        }
++    }
++}
++
++// MARK: - Build-Wächter (90-Tage-Ablauf)
++
++enum ZSBuildWaechter {
++    static func ablauf() -> Date? {
++        guard let profil = BuildDetails.default.profileExpiration else { return nil }
++        return AppExpirationAlerter.calculateExpirationDate(profileExpiration: profil)
++    }
++
++    static func tageBisAblauf(jetzt: Date = Date()) -> Int? {
++        guard let ablauf = ablauf() else { return nil }
++        return Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: jetzt), to: Calendar.current.startOfDay(for: ablauf)).day
++    }
++
++    /// Mitteilungen 10, 3 und 1 Tag vor Ablauf, jeweils um 18 Uhr.
++    static func mitteilungenPlanen() {
++        guard let ablauf = ablauf() else { return }
++        let zentrale = UNUserNotificationCenter.current()
++        for tage in [10, 3, 1] {
++            let kennung = "Zuckerschock.Build.\(tage)"
++            zentrale.removePendingNotificationRequests(withIdentifiers: [kennung])
++            guard let tag = Calendar.current.date(byAdding: .day, value: -tage, to: ablauf), tag > Date() else { continue }
++            var zeit = Calendar.current.dateComponents([.year, .month, .day], from: tag)
++            zeit.hour = 18
++            let inhalt = UNMutableNotificationContent()
++            inhalt.title = "Build läuft in \(tage) \(tage == 1 ? "Tag" : "Tagen") ab"
++            inhalt.body = "Starte Build Loop neu, damit Zuckerschock weiterläuft."
++            inhalt.sound = .default
++            zentrale.add(UNNotificationRequest(identifier: kennung, content: inhalt, trigger: UNCalendarNotificationTrigger(dateMatching: zeit, repeats: false)))
++        }
++    }
++}
++
++// MARK: - Hinweiskarte (neutral, ohne Marke)
++
++struct ZSHinweisKarte: View {
++    var hinweis: ZSHinweis
++    var aktion: (() -> Void)?
++
++    private var symbol: String {
++        switch hinweis.art {
++        case .spritzEss: return "timer"
++        case .bolusVergessen: return "questionmark.circle"
++        case .hochBald: return "arrow.up.right"
++        case .build: return "hammer"
++        case .sport: return "figure.run"
++        case .alkohol: return "wineglass"
++        case .stelle: return "mappin.and.ellipse"
++        }
++    }
++
++    private var farbe: Color {
++        switch hinweis.art {
++        case .bolusVergessen, .hochBald, .build: return ZSFarbe.hoch
++        default: return ZSFarbe.info
++        }
++    }
++
++    var body: some View {
++        Button {
++            aktion?()
++        } label: {
++            HStack(alignment: .top, spacing: ZSMass.space3) {
++                Image(systemName: symbol)
++                    .font(.body.weight(.semibold))
++                    .foregroundStyle(farbe)
++                    .frame(width: 24)
++                VStack(alignment: .leading, spacing: 2) {
++                    Text(hinweis.titel)
++                        .font(ZSSchrift.subhead.weight(.semibold))
++                        .foregroundStyle(ZSFarbe.text)
++                    Text(hinweis.text)
++                        .font(ZSSchrift.subhead)
++                        .foregroundStyle(ZSFarbe.text2)
++                        .fixedSize(horizontal: false, vertical: true)
++                }
++                Spacer(minLength: 0)
++                if aktion != nil {
++                    Image(systemName: "chevron.right")
++                        .font(.footnote.weight(.semibold))
++                        .foregroundStyle(ZSFarbe.text3)
++                }
++            }
++            .padding(.horizontal, ZSMass.space4)
++            .padding(.vertical, ZSMass.space3)
++            .frame(maxWidth: .infinity, alignment: .leading)
++            .background(RoundedRectangle(cornerRadius: ZSMass.radiusM, style: .continuous).fill(ZSFarbe.flaeche1))
++        }
++        .buttonStyle(.plain)
++        .disabled(aktion == nil)
++        .accessibilityElement(children: .combine)
++    }
++}
++
++// MARK: - Modi
++
++struct ZSModiView: View {
++    @ObservedObject var hinweise: ZSHinweise
++    @ObservedObject var keton: ZSKeton
++    var voreinstellungen: () -> Void
++    var schliessen: () -> Void
++
++    var body: some View {
++        VStack(spacing: 0) {
++            ZSBlattKopf(titel: "Modi", abbrechen: schliessen)
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space4) {
++                    Text("Modi geben dir passende Hinweise. Sie ändern nichts an Loops Dosierung. Ziele und Voreinstellungen stellst du in Loop ein.")
++                        .font(ZSSchrift.subhead)
++                        .foregroundStyle(ZSFarbe.text2)
++                        .fixedSize(horizontal: false, vertical: true)
++
++                    modus(titel: "Sport", text: "Für 3 Stunden. Hinweis auf Loops Sport-Voreinstellung.", symbol: "figure.run",
++                          an: Binding(get: { hinweise.modi.sportAktiv() }, set: { hinweise.modi.sportBis = $0 ? Date().addingTimeInterval(.hours(3)) : nil }))
++                    modus(titel: "Alkohol", text: "Bis morgen 12 Uhr. Erinnerung morgens um 7.", symbol: "wineglass",
++                          an: Binding(get: { hinweise.modi.alkoholAktiv() }, set: { neu in
++                              var mittag = Calendar.current.dateComponents([.year, .month, .day], from: Date().addingTimeInterval(.hours(12)))
++                              mittag.hour = 12
++                              hinweise.modi.alkoholBis = neu ? Calendar.current.date(from: mittag) : nil
++                          }))
++                    modus(titel: "Krank", text: "Erinnert alle 3 bis 4 Stunden an den Keton-Check.", symbol: "thermometer.medium",
++                          an: $keton.krankModus)
++
++                    Button(action: voreinstellungen) {
++                        Label("Loops Voreinstellungen öffnen", systemImage: "slider.horizontal.3")
++                            .font(ZSSchrift.headline)
++                    }
++                    .buttonStyle(ZSRandStil())
++                }
++                .padding(ZSMass.space5)
++            }
++        }
++        .background(ZSFarbe.grund.ignoresSafeArea())
++    }
++
++    private func modus(titel: String, text: String, symbol: String, an: Binding<Bool>) -> some View {
++        Toggle(isOn: an) {
++            HStack(spacing: ZSMass.space3) {
++                Image(systemName: symbol)
++                    .foregroundStyle(ZSFarbe.text)
++                    .frame(width: 29, height: 29)
++                    .background(RoundedRectangle(cornerRadius: ZSMass.radiusXS, style: .continuous).fill(ZSFarbe.flaeche2))
++                VStack(alignment: .leading, spacing: 2) {
++                    Text(titel)
++                        .font(ZSSchrift.body)
++                        .foregroundStyle(ZSFarbe.text)
++                    Text(text)
++                        .font(ZSSchrift.subhead)
++                        .foregroundStyle(ZSFarbe.text2)
++                }
++            }
++        }
++        .padding(ZSMass.space4)
++        .background(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous).fill(ZSFarbe.flaeche1))
++    }
++}
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift b/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
+index 54a4921..5b61a2c 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
+@@ -74,6 +74,9 @@ final class ZSHypoBegleiter: ObservableObject {
+     /// Liefert den neuesten Wert: mg/dl, Datum, Trend.
+     private let neuesterWert: () -> (mgdl: Double, datum: Date, trend: GlucoseTrend?)?
+     private let einheit: () -> HKUnit
++    /// Für den Licht-Alarm: beim Start und wenn der Zucker wieder im Ziel ist.
++    var beiStart: ((ZSHypoAttribute.ContentState) -> Void)?
++    var beiZiel: (() -> Void)?
+ 
+     init(speicher: ZSSpeicher,
+          ordner: URL? = nil,
+@@ -163,6 +166,7 @@ final class ZSHypoBegleiter: ObservableObject {
+         aktualisieren(jetzt: jetzt)
+         liveActivityStarten()
+         mitteilen()
++        if let zustand { beiStart?(zustand) }
+     }
+ 
+     /// Erstes Eintragen per Tipp; weiteres Eintragen nur durch Halten (in der App).
+@@ -176,6 +180,7 @@ final class ZSHypoBegleiter: ObservableObject {
+ 
+     func beenden(jetzt: Date = Date(), wiederImZiel: Bool = false) {
+         guard var episode = aktiv else { return }
++        if wiederImZiel { beiZiel?() }
+         episode.ende = jetzt
+         verlauf.insert(episode, at: 0)
+         aktiv = nil
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockStellen.swift b/Loop/Loop/Zuckerschock/ZuckerschockStellen.swift
+new file mode 100644
+index 0000000..5116c61
+--- /dev/null
++++ b/Loop/Loop/Zuckerschock/ZuckerschockStellen.swift
+@@ -0,0 +1,205 @@
++//
++//  ZuckerschockStellen.swift
++//  Loop
++//
++//  Zuckerschock: Stellen-Karte. Wo saßen die letzten Pods? Vorschlag: die Stelle, die am längsten frei ist.
++//
++
++import Foundation
++import SwiftUI
++
++enum ZSStelle: String, Codable, CaseIterable, Identifiable {
++    case bauchLinks, bauchRechts, oberarmLinks, oberarmRechts, oberschenkelLinks, oberschenkelRechts, rueckenLinks, rueckenRechts
++
++    var id: String { rawValue }
++
++    var name: String {
++        switch self {
++        case .bauchLinks: return "Bauch links"
++        case .bauchRechts: return "Bauch rechts"
++        case .oberarmLinks: return "Oberarm links"
++        case .oberarmRechts: return "Oberarm rechts"
++        case .oberschenkelLinks: return "Oberschenkel links"
++        case .oberschenkelRechts: return "Oberschenkel rechts"
++        case .rueckenLinks: return "Unterer Rücken links"
++        case .rueckenRechts: return "Unterer Rücken rechts"
++        }
++    }
++
++    /// Position auf der Körperskizze (0…1), von vorn gesehen; Rücken in der rechten Skizze.
++    var position: (seite: Int, x: CGFloat, y: CGFloat) {
++        switch self {
++        case .oberarmRechts: return (0, 0.2, 0.32)
++        case .oberarmLinks: return (0, 0.8, 0.32)
++        case .bauchRechts: return (0, 0.4, 0.47)
++        case .bauchLinks: return (0, 0.6, 0.47)
++        case .oberschenkelRechts: return (0, 0.4, 0.7)
++        case .oberschenkelLinks: return (0, 0.6, 0.7)
++        case .rueckenLinks: return (1, 0.4, 0.5)
++        case .rueckenRechts: return (1, 0.6, 0.5)
++        }
++    }
++}
++
++struct ZSStellenEintrag: Codable, Identifiable, Equatable {
++    var id = UUID()
++    var stelle: ZSStelle
++    var datum: Date
++}
++
++final class ZSStellen: ObservableObject {
++    static let shared = ZSStellen()
++
++    @Published private(set) var eintraege: [ZSStellenEintrag] = []
++    private let datei: URL
++
++    init(ordner: URL? = nil) {
++        let basis = ordner ?? (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first ?? FileManager.default.temporaryDirectory)
++        let verzeichnis = basis.appendingPathComponent("Zuckerschock", isDirectory: true)
++        try? FileManager.default.createDirectory(at: verzeichnis, withIntermediateDirectories: true)
++        datei = verzeichnis.appendingPathComponent("stellen.json")
++        let decoder = JSONDecoder()
++        decoder.dateDecodingStrategy = .iso8601
++        eintraege = (try? Data(contentsOf: datei)).flatMap { try? decoder.decode([ZSStellenEintrag].self, from: $0) } ?? []
++    }
++
++    func eintragen(_ stelle: ZSStelle, am datum: Date = Date()) {
++        eintraege.insert(ZSStellenEintrag(stelle: stelle, datum: datum), at: 0)
++        let encoder = JSONEncoder()
++        encoder.dateEncodingStrategy = .iso8601
++        try? encoder.encode(eintraege).write(to: datei, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
++    }
++
++    func zuletzt(_ stelle: ZSStelle) -> Date? {
++        eintraege.first { $0.stelle == stelle }?.datum
++    }
++
++    /// Die Stelle, die am längsten frei ist (nie benutzt zuerst).
++    var vorschlag: ZSStelle {
++        ZSStelle.allCases.min { (zuletzt($0) ?? .distantPast) < (zuletzt($1) ?? .distantPast) } ?? .bauchLinks
++    }
++
++    var aktuell: ZSStellenEintrag? { eintraege.first }
++}
++
++#if targetEnvironment(simulator)
++extension ZSStellen {
++    static func vorschau() -> ZSStellen {
++        let stellen = ZSStellen(ordner: FileManager.default.temporaryDirectory.appendingPathComponent("ZSVorschau-\(UUID().uuidString)"))
++        let jetzt = Date()
++        stellen.eintraege = [
++            ZSStellenEintrag(stelle: .bauchLinks, datum: jetzt.addingTimeInterval(-.days(2))),
++            ZSStellenEintrag(stelle: .oberarmRechts, datum: jetzt.addingTimeInterval(-.days(5))),
++            ZSStellenEintrag(stelle: .bauchRechts, datum: jetzt.addingTimeInterval(-.days(8))),
++            ZSStellenEintrag(stelle: .oberschenkelLinks, datum: jetzt.addingTimeInterval(-.days(11)))
++        ]
++        return stellen
++    }
++}
++#endif
++
++struct ZSStellenView: View {
++    @ObservedObject var stellen: ZSStellen
++    var nachEintrag: () -> Void
++    var schliessen: () -> Void
++
++    var body: some View {
++        VStack(spacing: 0) {
++            ZSBlattKopf(titel: "Stellen-Karte", abbrechen: schliessen)
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space6) {
++                    VStack(alignment: .leading, spacing: ZSMass.space1) {
++                        Text("Vorschlag für den nächsten Pod")
++                            .font(ZSSchrift.subhead)
++                            .foregroundStyle(ZSFarbe.text2)
++                        Text(stellen.vorschlag.name)
++                            .font(ZSSchrift.title2)
++                            .foregroundStyle(ZSFarbe.text)
++                        Text(stellen.zuletzt(stellen.vorschlag).map { "Zuletzt \(ZSFormat.alter(von: $0, jetzt: Date()))" } ?? "Noch nie benutzt")
++                            .font(ZSSchrift.subhead)
++                            .foregroundStyle(ZSFarbe.text2)
++                    }
++                    .zsKarte()
++
++                    HStack(spacing: ZSMass.space4) {
++                        skizze(seite: 0, titel: "Vorn")
++                        skizze(seite: 1, titel: "Hinten")
++                    }
++                    .frame(height: 300)
++
++                    VStack(alignment: .leading, spacing: 0) {
++                        ZSAbschnittTitel(text: "Wo sitzt der neue Pod?")
++                            .padding(.bottom, ZSMass.space2)
++                        ForEach(ZSStelle.allCases) { stelle in
++                            Button {
++                                stellen.eintragen(stelle)
++                                nachEintrag()
++                            } label: {
++                                HStack {
++                                    Text(stelle.name)
++                                        .font(ZSSchrift.body)
++                                        .foregroundStyle(ZSFarbe.text)
++                                    Spacer()
++                                    Text(stellen.zuletzt(stelle).map { ZSFormat.alter(von: $0, jetzt: Date()) } ?? "frei")
++                                        .font(ZSSchrift.subhead)
++                                        .foregroundStyle(ZSFarbe.text2)
++                                    if stellen.aktuell?.stelle == stelle {
++                                        Image(systemName: "checkmark")
++                                            .foregroundStyle(ZSFarbe.text)
++                                    }
++                                }
++                                .frame(minHeight: ZSMass.tap)
++                                .contentShape(Rectangle())
++                            }
++                            .buttonStyle(ZSAufhellStil())
++                            Divider().overlay(ZSFarbe.haarlinie)
++                        }
++                    }
++                }
++                .padding(ZSMass.space5)
++            }
++        }
++        .background(ZSFarbe.grund.ignoresSafeArea())
++    }
++
++    /// Schlichte Körperskizze mit Punkten: frisch benutzt dunkel, lange frei hell, Vorschlag mit Ring.
++    private func skizze(seite: Int, titel: String) -> some View {
++        VStack(spacing: ZSMass.space1) {
++            GeometryReader { geo in
++                let w = geo.size.width, h = geo.size.height
++                ZStack {
++                    Circle().fill(ZSFarbe.flaeche2).frame(width: w * 0.2, height: w * 0.2).position(x: w * 0.5, y: h * 0.09)
++                    RoundedRectangle(cornerRadius: w * 0.1).fill(ZSFarbe.flaeche2).frame(width: w * 0.4, height: h * 0.38).position(x: w * 0.5, y: h * 0.38)
++                    RoundedRectangle(cornerRadius: w * 0.05).fill(ZSFarbe.flaeche2).frame(width: w * 0.1, height: h * 0.32).position(x: w * 0.2, y: h * 0.36)
++                    RoundedRectangle(cornerRadius: w * 0.05).fill(ZSFarbe.flaeche2).frame(width: w * 0.1, height: h * 0.32).position(x: w * 0.8, y: h * 0.36)
++                    RoundedRectangle(cornerRadius: w * 0.06).fill(ZSFarbe.flaeche2).frame(width: w * 0.14, height: h * 0.42).position(x: w * 0.4, y: h * 0.77)
++                    RoundedRectangle(cornerRadius: w * 0.06).fill(ZSFarbe.flaeche2).frame(width: w * 0.14, height: h * 0.42).position(x: w * 0.6, y: h * 0.77)
++                    ForEach(ZSStelle.allCases.filter { $0.position.seite == seite }) { stelle in
++                        punkt(stelle)
++                            .position(x: w * stelle.position.x, y: h * stelle.position.y)
++                    }
++                }
++            }
++            Text(titel)
++                .font(ZSSchrift.caption)
++                .foregroundStyle(ZSFarbe.text3)
++        }
++        .accessibilityElement(children: .ignore)
++        .accessibilityLabel("Körperskizze \(titel)")
++    }
++
++    private func punkt(_ stelle: ZSStelle) -> some View {
++        let tage = stellen.zuletzt(stelle).map { Date().timeIntervalSince($0) / 86_400 }
++        let frisch = (tage ?? 99) < 9
++        return ZStack {
++            Circle()
++                .fill(frisch ? ZSFarbe.text3 : ZSFarbe.text)
++                .frame(width: 14, height: 14)
++            if stelle == stellen.vorschlag {
++                Circle()
++                    .strokeBorder(ZSFarbe.orange, lineWidth: 2.5)
++                    .frame(width: 26, height: 26)
++            }
++        }
++    }
++}
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+index 94f6841..23a6d2b 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+@@ -183,12 +183,28 @@ private struct ZSTherapieView: View {
+                         ZSListenZeile(titel: "Unterzucker-Begleiter", untertitel: "Läuft von selbst, Rückblick", symbol: "heart.text.square", aktion: aktionen.hypo)
+                         Divider().overlay(ZSFarbe.haarlinie).padding(.leading, 57)
+                         ZSListenZeile(titel: "Keton-Check", untertitel: "Wert eintragen, Ampel, Krank-Modus", symbol: "drop.triangle", aktion: aktionen.keton)
++                        Divider().overlay(ZSFarbe.haarlinie).padding(.leading, 57)
++                        ZSListenZeile(titel: "Modi", untertitel: "Sport, Krank, Alkohol", symbol: "figure.run", aktion: aktionen.modi)
++                        Divider().overlay(ZSFarbe.haarlinie).padding(.leading, 57)
++                        ZSListenZeile(titel: "Stellen-Karte", untertitel: "Wo saßen die letzten Pods?", symbol: "mappin.and.ellipse", aktion: aktionen.stellen)
++                    }
++                    .background(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous).fill(ZSFarbe.flaeche1))
++                    .clipShape(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous))
++
++                    VStack(spacing: 0) {
++                        ZSListenZeile(titel: "Arztbericht", untertitel: "PDF für 14, 30 oder 90 Tage", symbol: "doc.text", aktion: aktionen.bericht)
++                        Divider().overlay(ZSFarbe.haarlinie).padding(.leading, 57)
++                        ZSListenZeile(titel: "Für Angehörige", untertitel: "Große Ansicht, Licht-Alarm über Home Assistant", symbol: "person.2", aktion: aktionen.angehoerige)
++                        Divider().overlay(ZSFarbe.haarlinie).padding(.leading, 57)
++                        ZSListenZeile(titel: "Alarme steuern", untertitel: "Loops Alarme, Stummschalten", symbol: "bell.badge", aktion: aktionen.alarme)
+                     }
+                     .background(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous).fill(ZSFarbe.flaeche1))
+                     .clipShape(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous))
+ 
+                     ZSWertVerbergenSchalter()
+ 
++                    ZSBuildZeile()
++
+                     Text("Alle Werte und Grenzen stellst du wie bisher in Loop ein. Zuckerschock ändert daran nichts.")
+                         .font(ZSSchrift.footnote)
+                         .foregroundStyle(ZSFarbe.text2)
+@@ -239,6 +255,31 @@ private struct ZSListenZeile: View {
+     }
+ }
+ 
++/// Build-Wächter: wann läuft dieser Build ab?
++private struct ZSBuildZeile: View {
++    var body: some View {
++        let tage = ZSBuildWaechter.tageBisAblauf()
++        HStack(spacing: ZSMass.space3) {
++            Image(systemName: "hammer")
++                .foregroundStyle(ZSFarbe.text)
++                .frame(width: 29, height: 29)
++                .background(RoundedRectangle(cornerRadius: ZSMass.radiusXS, style: .continuous).fill(ZSFarbe.flaeche2))
++            VStack(alignment: .leading, spacing: 2) {
++                Text("Build-Wächter")
++                    .font(ZSSchrift.body)
++                    .foregroundStyle(ZSFarbe.text)
++                Text(tage.map { $0 <= 0 ? "Abgelaufen. Build Loop neu starten." : "Läuft in \($0) \($0 == 1 ? "Tag" : "Tagen") ab. Erinnerung 10, 3 und 1 Tag vorher." } ?? "Kein Ablaufdatum bekannt.")
++                    .font(ZSSchrift.subhead)
++                    .foregroundStyle((tage ?? 99) <= 14 ? ZSFarbe.hoch : ZSFarbe.text2)
++            }
++            Spacer(minLength: 0)
++        }
++        .padding(ZSMass.space4)
++        .background(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous).fill(ZSFarbe.flaeche1))
++        .accessibilityElement(children: .combine)
++    }
++}
++
+ /// Datenschutz: Wert im gesperrten Zustand ausblenden (Widgets).
+ private struct ZSWertVerbergenSchalter: View {
+     @AppStorage("Zuckerschock.wertVerbergen") private var verbergen = false
+@@ -307,6 +348,10 @@ final class ZuckerschockTabController: UIViewController {
+     var vorratWaechter: ZSVorratWaechter?
+     private let hypoBegleiter: ZSHypoBegleiter
+     private let keton: ZSKeton
++    private let hinweise: ZSHinweise
++    private let stellen: ZSStellen
++    /// Hinweise aus Loop-Daten (Spritz-Ess-Abstand, Bolus vergessen?).
++    var hinweisWaechter: ZSHinweisWaechter?
+     /// Prüft die Keton-Auslöser; lebt so lange wie die Oberfläche.
+     var ketonWaechter: ZSKetonWaechter?
+     private var kinder: [ZSTab: UIViewController] = [:]
+@@ -320,7 +365,8 @@ final class ZuckerschockTabController: UIViewController {
+     private static let leistenPlatz: CGFloat = ZSMass.leisteHoehe + ZSMass.space2 + ZSMass.space2
+ 
+     init(statusTableViewController: StatusTableViewController?, heuteQuelle: ZSHeuteQuelle, essenQuelle: ZSEssenQuelle, speicher: ZSSpeicher,
+-         vorrat: ZSVorrat, vorratQuelle: ZSVorratQuelle, hypoBegleiter: ZSHypoBegleiter, keton: ZSKeton) {
++         vorrat: ZSVorrat, vorratQuelle: ZSVorratQuelle, hypoBegleiter: ZSHypoBegleiter, keton: ZSKeton,
++         hinweise: ZSHinweise, stellen: ZSStellen) {
+         self.statusTableViewController = statusTableViewController
+         self.heuteModell = ZSHeuteModell(quelle: heuteQuelle)
+         self.essenQuelle = essenQuelle
+@@ -329,6 +375,8 @@ final class ZuckerschockTabController: UIViewController {
+         self.vorratQuelle = vorratQuelle
+         self.hypoBegleiter = hypoBegleiter
+         self.keton = keton
++        self.hinweise = hinweise
++        self.stellen = stellen
+         super.init(nibName: nil, bundle: nil)
+     }
+ 
+@@ -379,9 +427,38 @@ final class ZuckerschockTabController: UIViewController {
+             keton: { [weak self] in self?.blattZeigen { schliessen in
+                 guard let self else { return AnyView(EmptyView()) }
+                 return AnyView(ZSKetonView(keton: self.keton, schliessen: schliessen))
+-            } })
++            } },
++            modi: { [weak self] in self?.blattZeigen { schliessen in
++                guard let self else { return AnyView(EmptyView()) }
++                return AnyView(ZSModiView(hinweise: self.hinweise, keton: self.keton, voreinstellungen: { [weak self] in
++                    self?.presentedViewController?.dismiss(animated: true) {
++                        self?.statusTableViewController?.presentCustomPresets()
++                    }
++                }, schliessen: schliessen))
++            } },
++            bericht: { [weak self] in self?.blattZeigen { schliessen in
++                guard let self else { return AnyView(EmptyView()) }
++                return AnyView(ZSBerichtView(laden: { [weak self] tage, fertig in self?.berichtLaden(tage: tage, fertig: fertig) }, schliessen: schliessen))
++            } },
++            angehoerige: { [weak self] in self?.blattZeigen { schliessen in
++                guard let self else { return AnyView(EmptyView()) }
++                return AnyView(ZSAngehoerigeView(modell: self.heuteModell, begleiter: self.hypoBegleiter, schliessen: schliessen))
++            } },
++            stellen: { [weak self] in self?.blattZeigen { schliessen in
++                guard let self else { return AnyView(EmptyView()) }
++                return AnyView(ZSStellenView(stellen: self.stellen, nachEintrag: { [weak self] in self?.hinweise.stelleOffen = false }, schliessen: schliessen))
++            } },
++            alarme: { [weak self] in
++                guard let self, let status = self.statusTableViewController else { return }
++                self.blattZeigen { schliessen in
++                    AnyView(NavigationStack {
++                        AlertManagementView(checker: status.alertPermissionsChecker, alertMuter: status.alertMuter)
++                            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Fertig", action: schliessen) } }
++                    })
++                }
++            })
+ 
+-        kinder[.heute] = gastgeber(ZSHeuteView(modell: heuteModell, vorrat: vorrat, keton: keton, aktionen: aktionen))
++        kinder[.heute] = gastgeber(ZSHeuteView(modell: heuteModell, vorrat: vorrat, keton: keton, hinweise: hinweise, aktionen: aktionen))
+         kinder[.essen] = gastgeber(ZSEssenView(speicher: speicher, steuerung: essenSteuerung, quelle: essenQuelle, aktionen: aktionen))
+         kinder[.verlauf] = statusTableViewController ?? gastgeber(ZSHinweisView(titel: "Verlauf", text: "Hier liegt in der App Loops gewohnte Ansicht mit allen Kurven."))
+         kinder[.therapie] = gastgeber(ZSTherapieView(aktionen: aktionen))
+@@ -435,6 +512,22 @@ final class ZuckerschockTabController: UIViewController {
+ 
+     private var abos = Set<AnyCancellable>()
+ 
++    private func berichtLaden(tage: Int, fertig: @escaping (ZSBerichtDaten) -> Void) {
++        if let deviceManager = statusTableViewController?.deviceManager {
++            ZSBericht.laden(tage: tage, deviceManager: deviceManager, begleiter: hypoBegleiter, keton: keton, speicher: speicher, fertig: fertig)
++        } else {
++            // Vorschau: Beispielwerte aus der Heute-Kurve, wiederholt über den Zeitraum.
++            let jetzt = Date()
++            let werte = (0..<(tage * 288)).map { i -> ZSMesspunkt in
++                let datum = jetzt.addingTimeInterval(-Double(i) * 300)
++                let stunde = Double(Calendar.current.component(.hour, from: datum))
++                return ZSMesspunkt(datum: datum, mgdl: 125 + 45 * sin((stunde - 6) / 24 * 2 * .pi) + Double((i * 37) % 50) - 25)
++            }
++            fertig(ZSBerichtDaten(von: jetzt.addingTimeInterval(-.days(Double(tage))), bis: jetzt, werte: werte, tagesInsulin: 38, khJeTag: 160,
++                                  hypos: hypoBegleiter.verlauf, ketone: keton.werte, mahlzeiten: speicher.mahlzeiten))
++        }
++    }
++
+     /// Öffnet die Kamera der Foto-KH (Kontrollzentrum, Action-Button).
+     func fotoKH() {
+         presentedViewController?.dismiss(animated: false)
+@@ -600,7 +693,9 @@ enum ZSVorschau {
+                                              essenQuelle: ZSVorschauEssenQuelle(), speicher: ZSSpeicher.vorschau(),
+                                              vorrat: ZSVorrat.vorschau(), vorratQuelle: ZSVorschauVorratQuelle(),
+                                              hypoBegleiter: hypoVorschau(umgebung),
+-                                             keton: ZSKeton.vorschau(anlass: umgebung["ZS_KETON"] == "hinweis" ? .langeHoch(seit: Date().addingTimeInterval(-.hours(2.5))) : nil))
++                                             keton: ZSKeton.vorschau(anlass: umgebung["ZS_KETON"] == "hinweis" ? .langeHoch(seit: Date().addingTimeInterval(-.hours(2.5))) : nil),
++                                             hinweise: ZSHinweise(modi: ZSModi(sportBis: umgebung["ZS_HINWEIS"] == "sport" ? Date().addingTimeInterval(.hours(2)) : nil)),
++                                             stellen: ZSStellen.vorschau())
+         let navigation = UINavigationController(rootViewController: tabs)
+         navigation.setNavigationBarHidden(true, animated: false)
+         if let name = umgebung["ZS_TAB"], let tab = ZSTab.allCases.first(where: { $0.titel.lowercased() == name.lowercased() }) {
+@@ -629,6 +724,14 @@ extension ZuckerschockTabController {
+             blattZeigen { schliessen in AnyView(ZSTherapieplanView(speicher: self.speicher, schliessen: schliessen)) }
+         case "keton":
+             blattZeigen { schliessen in AnyView(ZSKetonView(keton: self.keton, schliessen: schliessen)) }
++        case "modi":
++            blattZeigen { schliessen in AnyView(ZSModiView(hinweise: self.hinweise, keton: self.keton, voreinstellungen: {}, schliessen: schliessen)) }
++        case "bericht":
++            blattZeigen { schliessen in AnyView(ZSBerichtView(laden: { tage, fertig in self.berichtLaden(tage: tage, fertig: fertig) }, schliessen: schliessen)) }
++        case "angehoerige":
++            blattZeigen { schliessen in AnyView(ZSAngehoerigeView(modell: self.heuteModell, begleiter: self.hypoBegleiter, schliessen: schliessen)) }
++        case "stellen":
++            blattZeigen { schliessen in AnyView(ZSStellenView(stellen: self.stellen, nachEintrag: {}, schliessen: schliessen)) }
+         default:
+             break
+         }
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift b/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
+index 07aa9f3..d71a13c 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
+@@ -175,6 +175,8 @@ final class ZSVorratWaechter {
+     private let vorrat: ZSVorrat
+     private var abos = Set<AnyCancellable>()
+     private let speicherSchluessel = "Zuckerschock.letzterPodAnteil"
++    /// Wird nach einem erkannten Pod-Wechsel aufgerufen (z. B. für die Stellen-Karte).
++    var beiPodWechsel: (() -> Void)?
+ 
+     init(deviceManager: DeviceDataManager, vorrat: ZSVorrat) {
+         self.deviceManager = deviceManager
+@@ -200,6 +202,7 @@ final class ZSVorratWaechter {
+             if let vorher = letzterAnteil, ZSVorratWaechter.istWechsel(vorher: vorher, jetzt: anteil),
+                jetzt.timeIntervalSince(vorrat.stand.letzterPodWechsel ?? .distantPast) > .hours(12) {
+                 vorrat.podGewechselt(am: jetzt)
++                beiPodWechsel?()
+             }
+             letzterAnteil = anteil
+         }
