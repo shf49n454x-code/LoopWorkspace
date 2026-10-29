@@ -1556,7 +1556,7 @@ index 94f6841..23a6d2b 100644
              break
          }
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift b/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
-index 07aa9f3..d71a13c 100644
+index 672945a..31e80cd 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
 @@ -175,6 +175,8 @@ final class ZSVorratWaechter {
