@@ -1,0 +1,89 @@
+name: Zuckerschock Simulator-Check
+
+# Baut Zuckerschock für den Simulator, startet die Oberfläche auf mehreren iPhones
+# (Dunkel/Hell, normale und große Schrift) und speichert Screenshots.
+# Kein Signieren, keine Secrets, kein TestFlight.
+
+on:
+  push:
+    branches:
+      - "zuckerschock/**"
+    paths-ignore:
+      - "screenshots/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: zuckerschock-simulator-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  simulator:
+    name: Bauen und Screenshots
+    runs-on: xcode-27
+    timeout-minutes: 90
+    steps:
+      - name: Select Xcode version
+        run: "sudo xcode-select --switch /Applications/Xcode_27.0.app/Contents/Developer"
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      # Wie in build_loop.yml: alle Patches aus patches/ anwenden
+      - name: Patches anwenden
+        run: |
+          if $(ls ./patches/* &> /dev/null); then
+          git apply ./patches/* --allow-empty -v --whitespace=fix
+          fi
+
+      - name: Für den Simulator bauen
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -workspace LoopWorkspace.xcworkspace \
+            -scheme LoopWorkspace \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination "generic/platform=iOS Simulator" \
+            -derivedDataPath build \
+            ONLY_ACTIVE_ARCH=YES ARCHS=arm64 \
+            CODE_SIGNING_ALLOWED=NO \
+            2>&1 | tee buildlog.txt | grep -E "error:|warning: .*Zuckerschock|\*\* BUILD" || true
+          grep -q "\*\* BUILD SUCCEEDED \*\*" buildlog.txt
+
+      - name: Fehler aus dem Build-Log
+        if: failure()
+        run: grep -E "error:" -A3 buildlog.txt | head -200 || true
+
+      - name: Screenshots im Simulator
+        run: bash .github/zuckerschock/screenshots.sh build/Build/Products/Debug-iphonesimulator screenshots
+
+      - name: Screenshots hochladen
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: zuckerschock-screenshots
+          path: |
+            screenshots
+            buildlog.txt
+          if-no-files-found: ignore
+
+      # Screenshots zusätzlich auf einen eigenen Branch legen, damit man sie ohne Download ansehen kann.
+      - name: Screenshots auf Branch ablegen
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ZIEL="screenshots/${GITHUB_REF_NAME//\//-}"
+          cd screenshots
+          git init -q -b screenshots
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Screenshots für ${GITHUB_SHA::7}"
+          git push -f -q "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${ZIEL}"
+          echo "Screenshots auf Branch ${ZIEL}"
