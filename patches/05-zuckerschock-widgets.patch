@@ -95,7 +95,7 @@ index b34d438..0aa623b 100644
      }
  
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
-index e071c07..80392c4 100644
+index 6c519e2..3e312f5 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
 @@ -10,6 +10,7 @@
@@ -142,7 +142,7 @@ index e071c07..80392c4 100644
  /// Listenzeilen hellen beim Drücken auf, statt zu schrumpfen.
  private struct ZSZeilenStil: ButtonStyle {
      func makeBody(configuration: Configuration) -> some View {
-@@ -391,6 +414,66 @@ final class ZuckerschockTabController: UIViewController {
+@@ -391,6 +414,79 @@ final class ZuckerschockTabController: UIViewController {
          abo = auswahl.$tab
              .removeDuplicates()
              .sink { [weak self] tab in self?.wechseln(zu: tab) }
@@ -159,15 +159,28 @@ index e071c07..80392c4 100644
 +
 +    /// Öffnet die Kamera der Foto-KH (Kontrollzentrum, Action-Button).
 +    func fotoKH() {
++        guard linkDarfWechseln else { return }
 +        presentedViewController?.dismiss(animated: false)
-+        navigationController?.popToRootViewController(animated: false)
 +        auswahl.tab = .essen
 +        essenSteuerung.anfrage = .kamera
 +    }
 +
 +    func heuteZeigen() {
-+        navigationController?.popToRootViewController(animated: false)
++        guard linkDarfWechseln else { return }
++        presentedViewController?.dismiss(animated: false)
 +        auswahl.tab = .heute
++    }
++
++    /// Links von außen (Widget, Kontrollzentrum, andere Apps) wechseln nur, wenn höchstens eigene Zuckerschock-Blätter
++    /// offen sind. Loops Fenster (Bolus, KH-Eingabe, Pod-Einrichtung, Warnungen) und geöffnete Loop-Seiten bleiben unberührt.
++    private var linkDarfWechseln: Bool {
++        if (navigationController?.viewControllers.count ?? 1) > 1 { return false }
++        var offen = presentedViewController
++        while let blatt = offen {
++            guard blatt is ZSBlattHost else { return false }
++            offen = blatt.presentedViewController
++        }
++        return true
 +    }
 +
 +    private func widgetsAktualisieren(_ heute: ZSHeuteStand?) {
@@ -293,10 +306,10 @@ index 0000000..b69d648
 +}
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockWidgets.swift b/Loop/Loop/Zuckerschock/ZuckerschockWidgets.swift
 new file mode 100644
-index 0000000..f64af85
+index 0000000..c03f8af
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockWidgets.swift
-@@ -0,0 +1,325 @@
+@@ -0,0 +1,336 @@
 +//
 +//  ZuckerschockWidgets.swift
 +//  Loop Widget Extension
@@ -375,7 +388,13 @@ index 0000000..f64af85
 +    var eintrag: ZSWidgetEintrag
 +    @Environment(\.widgetFamily) private var familie
 +
++    /// „Wert gesperrt ausblenden“ verbirgt das ganze Widget (Wert, Trend, Zustand, IOB), nicht nur die Zahl.
 +    var body: some View {
++        inhalt.privacySensitive(eintrag.stand?.wertVerbergen ?? false)
++    }
++
++    @ViewBuilder
++    private var inhalt: some View {
 +        let stand = eintrag.stand
 +        let alt = stand?.istAlt(am: eintrag.date) ?? true
 +        let verbergen = stand?.wertVerbergen ?? false
@@ -453,6 +472,11 @@ index 0000000..f64af85
 +    private var vollfarbig: Bool { darstellung == .fullColor }
 +
 +    var body: some View {
++        inhalt.privacySensitive(eintrag.stand?.wertVerbergen ?? false)
++    }
++
++    @ViewBuilder
++    private var inhalt: some View {
 +        let stand = eintrag.stand
 +        switch familie {
 +        case .systemSmall:
