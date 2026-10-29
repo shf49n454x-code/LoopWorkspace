@@ -542,7 +542,7 @@ index 0000000..5a28d10
 +    }
 +}
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
-index 80392c4..94f6841 100644
+index 3e312f5..11a3665 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
 @@ -181,6 +181,8 @@ private struct ZSTherapieView: View {
@@ -596,7 +596,7 @@ index 80392c4..94f6841 100644
          kinder[.essen] = gastgeber(ZSEssenView(speicher: speicher, steuerung: essenSteuerung, quelle: essenQuelle, aktionen: aktionen))
          kinder[.verlauf] = statusTableViewController ?? gastgeber(ZSHinweisView(titel: "Verlauf", text: "Hier liegt in der App Loops gewohnte Ansicht mit allen Kurven."))
          kinder[.therapie] = gastgeber(ZSTherapieView(aktionen: aktionen))
-@@ -589,7 +599,8 @@ enum ZSVorschau {
+@@ -602,7 +612,8 @@ enum ZSVorschau {
          let tabs = ZuckerschockTabController(statusTableViewController: nil, heuteQuelle: ZSVorschauQuelle(szenario: szenario),
                                               essenQuelle: ZSVorschauEssenQuelle(), speicher: ZSSpeicher.vorschau(),
                                               vorrat: ZSVorrat.vorschau(), vorratQuelle: ZSVorschauVorratQuelle(),
@@ -606,7 +606,7 @@ index 80392c4..94f6841 100644
          let navigation = UINavigationController(rootViewController: tabs)
          navigation.setNavigationBarHidden(true, animated: false)
          if let name = umgebung["ZS_TAB"], let tab = ZSTab.allCases.first(where: { $0.titel.lowercased() == name.lowercased() }) {
-@@ -616,6 +627,8 @@ extension ZuckerschockTabController {
+@@ -629,6 +640,8 @@ extension ZuckerschockTabController {
              blattZeigen { schliessen in AnyView(ZSHypoView(begleiter: self.hypoBegleiter, schliessen: schliessen)) }
          case "therapieplan":
              blattZeigen { schliessen in AnyView(ZSTherapieplanView(speicher: self.speicher, schliessen: schliessen)) }
