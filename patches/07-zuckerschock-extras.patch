@@ -79,10 +79,10 @@ index ffb10b9..8f22524 100644
          deviceDataManager.refreshDeviceData()
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockAngehoerige.swift b/Loop/Loop/Zuckerschock/ZuckerschockAngehoerige.swift
 new file mode 100644
-index 0000000..152dfa1
+index 0000000..7a6f61e
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockAngehoerige.swift
-@@ -0,0 +1,280 @@
+@@ -0,0 +1,288 @@
 +//
 +//  ZuckerschockAngehoerige.swift
 +//  Loop
@@ -139,10 +139,11 @@ index 0000000..152dfa1
 +    }
 +
 +    /// Ruft `<url>/api/webhook/<id>` mit Ereignis, Wert und Zeit auf.
++    /// Nur über https: sonst ginge die Webhook-ID unverschlüsselt durchs Netz und jeder im selben WLAN könnte Alarme auslösen.
 +    @discardableResult
 +    static func melden(_ ereignis: Ereignis, wert: String?, trend: String?, erzwingen: Bool = false) async -> Bool {
 +        guard aktiv || erzwingen, let id = webhookID,
-+              let basis = URL(string: basisURL), basis.scheme == "https" || basis.scheme == "http" else { return false }
++              let basis = URL(string: basisURL), basis.scheme == "https", basis.host != nil else { return false }
 +        var anfrage = URLRequest(url: basis.appendingPathComponent("api/webhook").appendingPathComponent(id), timeoutInterval: 15)
 +        anfrage.httpMethod = "POST"
 +        anfrage.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -332,7 +333,7 @@ index 0000000..152dfa1
 +                        Button("Sichern") { sichern() }
 +                            .buttonStyle(ZSRandStil())
 +                        Button("Testalarm senden") {
-+                            sichern()
++                            guard sichern() else { return }
 +                            Task {
 +                                let ok = await ZSHomeAssistant.melden(.test, wert: nil, trend: nil, erzwingen: true)
 +                                await MainActor.run { testErgebnis = ok ? "Home Assistant hat den Test angenommen." : "Keine Antwort. Adresse und ID prüfen." }
@@ -353,14 +354,21 @@ index 0000000..152dfa1
 +        .background(ZSFarbe.grund.ignoresSafeArea())
 +    }
 +
-+    private func sichern() {
-+        ZSHomeAssistant.basisURL = url
++    @discardableResult
++    private func sichern() -> Bool {
++        let adresse = url.trimmingCharacters(in: .whitespacesAndNewlines)
++        guard let geprueft = URL(string: adresse), geprueft.scheme == "https", geprueft.host != nil else {
++            testErgebnis = "Nur https-Adressen. Ohne Verschlüsselung könnte jemand im selben WLAN die Webhook-ID mitlesen."
++            return false
++        }
++        ZSHomeAssistant.basisURL = adresse
 +        ZSHomeAssistant.aktiv = aktiv
 +        if !id.isEmpty {
 +            ZSHomeAssistant.webhookID = id
 +            id = ""
 +            hatID = true
 +        }
++        return true
 +    }
 +}
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockBericht.swift b/Loop/Loop/Zuckerschock/ZuckerschockBericht.swift
