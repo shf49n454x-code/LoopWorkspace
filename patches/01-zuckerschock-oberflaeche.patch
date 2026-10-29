@@ -624,10 +624,10 @@ index 0000000..db86ace
 +#endif
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 new file mode 100644
-index 0000000..798b2e7
+index 0000000..1ba70c2
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
-@@ -0,0 +1,702 @@
+@@ -0,0 +1,707 @@
 +//
 +//  ZuckerschockHeuteView.swift
 +//  Loop
@@ -720,7 +720,6 @@ index 0000000..798b2e7
 +            }
 +            .buttonStyle(ZSDruckStil(art: .primaer))
 +            .frame(maxWidth: .infinity)
-+            .layoutPriority(1)
 +            .accessibilityLabel("Essen eintragen")
 +
 +            Button(action: aktionen.bolus) {
@@ -751,8 +750,13 @@ index 0000000..798b2e7
 +                .font(.title3)
 +            Text(titel)
 +                .font(ZSSchrift.subhead.weight(.semibold))
++                .lineLimit(1)
 +        }
 +        .padding(.vertical, ZSMass.space2)
++        .padding(.horizontal, ZSMass.space1)
++        // Nie umbrechen: die kleinen Tasten behalten ihre Breite, „Essen“ nimmt den Rest.
++        .fixedSize(horizontal: true, vertical: false)
++        .frame(minWidth: 56)
 +    }
 +}
 +
@@ -1211,16 +1215,17 @@ index 0000000..798b2e7
 +            .offset(y: oben)
 +    }
 +
-+    /// Die zwei Grenzen rechts, caption in text-3.
++    /// Die zwei Grenzen rechts, caption in text-3. Ist das Band zu schmal (kleines iPhone), steht nur 180 über dem Band.
 +    private func grenzen(in r: CGRect) -> some View {
-+        ZStack(alignment: .topTrailing) {
-+            ForEach([180.0, 70.0], id: \.self) { grenze in
++        let innen = y(70, in: r) - y(180, in: r) >= 44
++        return ZStack(alignment: .topTrailing) {
++            ForEach(innen ? [180.0, 70.0] : [180.0], id: \.self) { grenze in
 +                Text(ZSFormat.glukose(grenze, einheit))
 +                    .font(ZSSchrift.caption)
 +                    .foregroundStyle(ZSFarbe.text3)
 +                    .padding(.trailing, 2)
 +                    .frame(width: r.width, alignment: .trailing)
-+                    .position(x: r.midX, y: y(grenze, in: r) + (grenze > 100 ? 9 : -9))
++                    .position(x: r.midX, y: y(grenze, in: r) + (grenze > 100 ? 9 : -9) * (innen ? 1 : -1))
 +            }
 +        }
 +        .accessibilityHidden(true)
