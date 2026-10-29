@@ -5,7 +5,14 @@ set -euo pipefail
 PRODUKTE="$1"
 ZIEL="$2"
 mkdir -p "$ZIEL"
-APP="$PRODUKTE/Loop.app"
+# Das Produkt heißt nach dem App-Namen; erkannt wird es am Programmnamen „Loop“.
+APP=$(find "$PRODUKTE" -maxdepth 1 -name "*.app" -print0 | xargs -0 -n1 | while read -r a; do
+  if /usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "$a/Info.plist" 2>/dev/null | grep -qx "Loop"; then echo "$a"; fi
+done | head -1)
+if [ -z "$APP" ]; then
+  echo "Loop.app nicht gefunden in $PRODUKTE"; ls "$PRODUKTE"
+  echo "Loop.app nicht gefunden in $PRODUKTE" > "$ZIEL/ECHTER-START-FEHLER.txt"; exit 1
+fi
 BUNDLE=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Info.plist")
 LAUFZEIT=$(xcrun simctl list runtimes -j | python3 -c '
 import json, sys
