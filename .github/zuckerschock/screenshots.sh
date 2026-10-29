@@ -36,7 +36,8 @@ geraet_anlegen() {
 aufnehmen() {
   local udid="$1" datei="$2"; shift 2
   xcrun simctl terminate "$udid" "$BUNDLE" 2>/dev/null || true
-  env "$@" xcrun simctl launch "$udid" "$BUNDLE" > /dev/null
+  # Deutsch und Region Deutschland, wie auf dem iPhone (Zahlen mit Komma)
+  env "$@" xcrun simctl launch "$udid" "$BUNDLE" -AppleLanguages "(de)" -AppleLocale de_DE > /dev/null
   sleep 5
   xcrun simctl io "$udid" screenshot --type=png "$ZIEL/$datei.png" > /dev/null
   echo "  $datei.png"
