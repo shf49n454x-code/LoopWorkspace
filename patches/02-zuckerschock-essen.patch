@@ -1,0 +1,2064 @@
+diff --git a/Loop/Loop.xcodeproj/project.pbxproj b/Loop/Loop.xcodeproj/project.pbxproj
+index dc32604..1fa4487 100644
+--- a/Loop/Loop.xcodeproj/project.pbxproj
++++ b/Loop/Loop.xcodeproj/project.pbxproj
+@@ -7,6 +7,9 @@
+ 	objects = {
+ 
+ /* Begin PBXBuildFile section */
++		5A5DDF207E1632618430FDA9 /* ZuckerschockEssenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CDF207E1632618430FDA9 /* ZuckerschockEssenView.swift */; };
++		5A5DAED0FCE6418FCD0A3420 /* ZuckerschockFotoKH.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CAED0FCE6418FCD0A3420 /* ZuckerschockFotoKH.swift */; };
++		5A5D8CAE5AEBC5D4D1E11ACF /* ZuckerschockEssenDaten.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C8CAE5AEBC5D4D1E11ACF /* ZuckerschockEssenDaten.swift */; };
+ 		5A5C00000000000000000020 /* ZuckerschockTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C00000000000000000010 /* ZuckerschockTheme.swift */; };
+ 		5A5C00000000000000000021 /* ZuckerschockHeuteDaten.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C00000000000000000011 /* ZuckerschockHeuteDaten.swift */; };
+ 		5A5C00000000000000000022 /* ZuckerschockHeuteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C00000000000000000012 /* ZuckerschockHeuteView.swift */; };
+@@ -763,6 +766,9 @@
+ /* End PBXCopyFilesBuildPhase section */
+ 
+ /* Begin PBXFileReference section */
++		5A5CDF207E1632618430FDA9 /* ZuckerschockEssenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockEssenView.swift; sourceTree = "<group>"; };
++		5A5CAED0FCE6418FCD0A3420 /* ZuckerschockFotoKH.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockFotoKH.swift; sourceTree = "<group>"; };
++		5A5C8CAE5AEBC5D4D1E11ACF /* ZuckerschockEssenDaten.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockEssenDaten.swift; sourceTree = "<group>"; };
+ 		5A5C00000000000000000010 /* ZuckerschockTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockTheme.swift; sourceTree = "<group>"; };
+ 		5A5C00000000000000000011 /* ZuckerschockHeuteDaten.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockHeuteDaten.swift; sourceTree = "<group>"; };
+ 		5A5C00000000000000000012 /* ZuckerschockHeuteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockHeuteView.swift; sourceTree = "<group>"; };
+@@ -1535,6 +1541,9 @@
+ 		5A5C00000000000000000001 /* Zuckerschock */ = {
+ 			isa = PBXGroup;
+ 			children = (
++				5A5CDF207E1632618430FDA9 /* ZuckerschockEssenView.swift */,
++				5A5CAED0FCE6418FCD0A3420 /* ZuckerschockFotoKH.swift */,
++				5A5C8CAE5AEBC5D4D1E11ACF /* ZuckerschockEssenDaten.swift */,
+ 				5A5C00000000000000000010 /* ZuckerschockTheme.swift */,
+ 				5A5C00000000000000000011 /* ZuckerschockHeuteDaten.swift */,
+ 				5A5C00000000000000000012 /* ZuckerschockHeuteView.swift */,
+@@ -3402,6 +3411,9 @@
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
++				5A5DDF207E1632618430FDA9 /* ZuckerschockEssenView.swift in Sources */,
++				5A5DAED0FCE6418FCD0A3420 /* ZuckerschockFotoKH.swift in Sources */,
++				5A5D8CAE5AEBC5D4D1E11ACF /* ZuckerschockEssenDaten.swift in Sources */,
+ 				5A5C00000000000000000020 /* ZuckerschockTheme.swift in Sources */,
+ 				5A5C00000000000000000021 /* ZuckerschockHeuteDaten.swift in Sources */,
+ 				5A5C00000000000000000022 /* ZuckerschockHeuteView.swift in Sources */,
+diff --git a/Loop/Loop/Info.plist b/Loop/Loop/Info.plist
+index 0acbff0..7f6f1e9 100644
+--- a/Loop/Loop/Info.plist
++++ b/Loop/Loop/Info.plist
+@@ -62,7 +62,7 @@
+ 	<key>NSBluetoothPeripheralUsageDescription</key>
+ 	<string>The app needs to use Bluetooth to send and receive data from your diabetes devices.</string>
+ 	<key>NSCameraUsageDescription</key>
+-	<string>Camera is used to scan barcodes of devices.</string>
++	<string>Camera is used to scan barcodes of devices and to photograph meals for a carb estimate.</string>
+ 	<key>NSFaceIDUsageDescription</key>
+ 	<string>Face ID is used to authenticate insulin bolus and to save changes to therapy settings.</string>
+ 	<key>NSHealthShareUsageDescription</key>
+diff --git a/Loop/Loop/InfoPlist.xcstrings b/Loop/Loop/InfoPlist.xcstrings
+index a7cef29..9c770a9 100644
+--- a/Loop/Loop/InfoPlist.xcstrings
++++ b/Loop/Loop/InfoPlist.xcstrings
+@@ -608,13 +608,13 @@
+         "de" : {
+           "stringUnit" : {
+             "state" : "translated",
+-            "value" : "Die Kamera wird verwendet, um Barcodes von Geräten zu scannen."
++            "value" : "Die Kamera wird verwendet, um Barcodes von Geräten zu scannen und Mahlzeiten für eine KH-Schätzung zu fotografieren."
+           }
+         },
+         "en" : {
+           "stringUnit" : {
+             "state" : "new",
+-            "value" : "Camera is used to scan barcodes of devices."
++            "value" : "Camera is used to scan barcodes of devices and to photograph meals for a carb estimate."
+           }
+         },
+         "es" : {
+diff --git a/Loop/Loop/Managers/LoopAppManager.swift b/Loop/Loop/Managers/LoopAppManager.swift
+index 7d072c5..b9dd628 100644
+--- a/Loop/Loop/Managers/LoopAppManager.swift
++++ b/Loop/Loop/Managers/LoopAppManager.swift
+@@ -332,7 +332,8 @@ class LoopAppManager: NSObject {
+ 
+         // Zuckerschock: Bubble-Menü mit Heute-Screen; Loops Startbildschirm lebt unverändert im Tab „Verlauf“.
+         let heuteQuelle = ZSLoopQuelle(deviceManager: deviceDataManager, automaticDosingStatus: automaticDosingStatus, onboardingManager: onboardingManager)
+-        let tabController = ZuckerschockTabController(statusTableViewController: statusTableViewController, heuteQuelle: heuteQuelle)
++        let tabController = ZuckerschockTabController(statusTableViewController: statusTableViewController, heuteQuelle: heuteQuelle,
++                                                      essenQuelle: ZSLoopEssenQuelle(deviceManager: deviceDataManager), speicher: ZSSpeicher.shared)
+         rootNavigationController?.setViewControllers([tabController], animated: true)
+ 
+         deviceDataManager.refreshDeviceData()
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockEssenDaten.swift b/Loop/Loop/Zuckerschock/ZuckerschockEssenDaten.swift
+new file mode 100644
+index 0000000..ba27004
+--- /dev/null
++++ b/Loop/Loop/Zuckerschock/ZuckerschockEssenDaten.swift
+@@ -0,0 +1,352 @@
++//
++//  ZuckerschockEssenDaten.swift
++//  Loop
++//
++//  Zuckerschock: Mahlzeiten, Rezeptkartei, Standardmahlzeiten, Therapieplan.
++//  Alles bleibt lokal auf dem iPhone. Keine Insulindosis wird berechnet:
++//  KH gehen an Loops bestehende KH-Eingabe, Loop rechnet wie bisher.
++//
++
++import Combine
++import Foundation
++import HealthKit
++import LoopCore
++import LoopKit
++import Security
++
++// MARK: - Fett-Protein-Einheiten (Warschauer Methode)
++
++enum ZSFPE {
++    /// 1 FPE = 100 kcal aus Fett und Eiweiß (Fett 9 kcal/g, Eiweiß 4 kcal/g).
++    static func einheiten(fettGramm: Double, eiweissGramm: Double) -> Double {
++        max(0, (fettGramm * 9 + eiweissGramm * 4) / 100)
++    }
++
++    /// Wirkdauer nach dem Warschauer Schema: 1 FPE 3 Std., 2 FPE 4 Std., 3 FPE 5 Std., ab 4 FPE 8 Std.
++    static func wirkdauer(fpe: Double) -> TimeInterval {
++        switch fpe {
++        case ..<1.5: return .hours(3)
++        case ..<2.5: return .hours(4)
++        case ..<3.5: return .hours(5)
++        default: return .hours(8)
++        }
++    }
++}
++
++// MARK: - Therapieplan (vom Diabetes-Team, Jon trägt ein)
++
++struct ZSTherapieplan: Codable, Equatable {
++    /// Gramm KH-Äquivalent je FPE, wie vom Diabetes-Team festgelegt. Ohne Wert keine FPE-Übergabe.
++    var khJeFPE: Double?
++    /// Schnelle KH bei Unterzucker: Gramm je Plättchen und Anzahl laut Plan.
++    var hypoGrammJePlaettchen: Double?
++    var hypoPlaettchen: Int?
++    /// Wartezeit nach dem Essen bei Unterzucker, laut Plan.
++    var hypoWarteMinuten: Int?
++    /// Spritz-Ess-Abstand laut Plan.
++    var spritzEssAbstandMinuten: Int?
++
++    static let leer = ZSTherapieplan()
++}
++
++// MARK: - Mahlzeiten
++
++enum ZSMahlzeitQuelle: String, Codable {
++    case foto, rezept, standard, manuell
++}
++
++enum ZSRueckmeldung: String, Codable {
++    case mehr, passte, weniger
++}
++
++struct ZSMahlzeit: Codable, Identifiable, Equatable {
++    var id = UUID()
++    var name: String
++    var datum: Date
++    var kh: Double
++    var fpe: Double?
++    var quelle: ZSMahlzeitQuelle
++    /// Von der Foto-Schätzung (für den Rückblick, nie für eine Dosis).
++    var schaetzungKH: Double?
++    var rueckmeldung: ZSRueckmeldung?
++}
++
++struct ZSStandardmahlzeit: Codable, Identifiable, Equatable {
++    var id = UUID()
++    var name: String
++    var kh: Double
++    var fpe: Double?
++}
++
++// MARK: - Rezeptkartei (Topfgewicht-Methode)
++
++struct ZSZutat: Codable, Identifiable, Equatable {
++    var id = UUID()
++    var name: String
++    var gramm: Double
++    /// Nährwerte je 100 g laut Packung.
++    var khJe100: Double
++    var fettJe100: Double
++    var eiweissJe100: Double
++
++    var kh: Double { gramm * khJe100 / 100 }
++    var fett: Double { gramm * fettJe100 / 100 }
++    var eiweiss: Double { gramm * eiweissJe100 / 100 }
++}
++
++struct ZSRezept: Codable, Identifiable, Equatable {
++    var id = UUID()
++    var name: String
++    var portionen: Int = 4
++    var zutaten: [ZSZutat] = []
++    /// Fertig gekochtes Gewicht ohne Topf oder Form.
++    var fertigGramm: Double?
++    var zuletztGewogen: Date?
++
++    var khGesamt: Double { zutaten.reduce(0) { $0 + $1.kh } }
++    var fpeGesamt: Double { ZSFPE.einheiten(fettGramm: zutaten.reduce(0) { $0 + $1.fett }, eiweissGramm: zutaten.reduce(0) { $0 + $1.eiweiss }) }
++
++    /// KH je 100 g fertigem Essen, nur wenn gewogen.
++    var khJe100: Double? {
++        guard let fertigGramm, fertigGramm > 0 else { return nil }
++        return khGesamt / fertigGramm * 100
++    }
++
++    var fpeJe100: Double? {
++        guard let fertigGramm, fertigGramm > 0 else { return nil }
++        return fpeGesamt / fertigGramm * 100
++    }
++}
++
++// MARK: - Speicher
++
++/// Einfacher JSON-Speicher in Application Support.
++final class ZSSpeicher: ObservableObject {
++    static let shared = ZSSpeicher()
++
++    @Published var mahlzeiten: [ZSMahlzeit] = [] { didSet { sichern(mahlzeiten, "mahlzeiten") } }
++    @Published var rezepte: [ZSRezept] = [] { didSet { sichern(rezepte, "rezepte") } }
++    @Published var standard: [ZSStandardmahlzeit] = [] { didSet { sichern(standard, "standard") } }
++    @Published var plan: ZSTherapieplan = .leer { didSet { sichern(plan, "therapieplan") } }
++
++    private let ordner: URL
++    private var laedt = false
++
++    init(ordner: URL? = nil) {
++        let basis = ordner ?? (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first ?? FileManager.default.temporaryDirectory)
++        self.ordner = basis.appendingPathComponent("Zuckerschock", isDirectory: true)
++        try? FileManager.default.createDirectory(at: self.ordner, withIntermediateDirectories: true)
++        laedt = true
++        mahlzeiten = laden("mahlzeiten") ?? []
++        rezepte = laden("rezepte") ?? []
++        standard = laden("standard") ?? []
++        plan = laden("therapieplan") ?? .leer
++        laedt = false
++    }
++
++    func laden<T: Decodable>(_ name: String) -> T? {
++        let url = ordner.appendingPathComponent("\(name).json")
++        guard let daten = try? Data(contentsOf: url) else { return nil }
++        let decoder = JSONDecoder()
++        decoder.dateDecodingStrategy = .iso8601
++        return try? decoder.decode(T.self, from: daten)
++    }
++
++    func sichern<T: Encodable>(_ wert: T, _ name: String) {
++        guard !laedt else { return }
++        let encoder = JSONEncoder()
++        encoder.dateEncodingStrategy = .iso8601
++        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
++        guard let daten = try? encoder.encode(wert) else { return }
++        try? daten.write(to: ordner.appendingPathComponent("\(name).json"), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
++    }
++
++    // MARK: Erfahrung
++
++    struct Erfahrung {
++        var anzahl: Int
++        var meistKH: Double
++        var mehr: Int
++        var weniger: Int
++    }
++
++    /// Wie oft gab es das schon, und mit wie viel KH (Median)?
++    func erfahrung(fuer name: String) -> Erfahrung? {
++        let gleiche = mahlzeiten.filter { $0.name.compare(name, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame }
++        guard !gleiche.isEmpty else { return nil }
++        let sortiert = gleiche.map(\.kh).sorted()
++        let median = sortiert[sortiert.count / 2]
++        return Erfahrung(anzahl: gleiche.count,
++                         meistKH: median,
++                         mehr: gleiche.filter { $0.rueckmeldung == .mehr }.count,
++                         weniger: gleiche.filter { $0.rueckmeldung == .weniger }.count)
++    }
++
++    /// Mahlzeiten, die mindestens 3 Stunden her sind und noch keine Rückmeldung haben (letzte 3 Tage).
++    func offeneRueckblicke(jetzt: Date = Date()) -> [ZSMahlzeit] {
++        mahlzeiten
++            .filter { $0.rueckmeldung == nil && jetzt.timeIntervalSince($0.datum) >= .hours(3) && jetzt.timeIntervalSince($0.datum) <= .days(3) }
++            .sorted { $0.datum > $1.datum }
++    }
++}
++
++// MARK: - Schlüsselbund (eigener API-Schlüssel)
++
++enum ZSSchluessel {
++    private static let dienst = "Zuckerschock.FotoKH"
++    private static let konto = "anthropic-api-key"
++
++    static var wert: String? {
++        let abfrage: [String: Any] = [
++            kSecClass as String: kSecClassGenericPassword,
++            kSecAttrService as String: dienst,
++            kSecAttrAccount as String: konto,
++            kSecReturnData as String: true,
++            kSecMatchLimit as String: kSecMatchLimitOne
++        ]
++        var ergebnis: AnyObject?
++        guard SecItemCopyMatching(abfrage as CFDictionary, &ergebnis) == errSecSuccess,
++              let daten = ergebnis as? Data,
++              let text = String(data: daten, encoding: .utf8), !text.isEmpty else {
++            return nil
++        }
++        return text
++    }
++
++    static func setzen(_ neu: String?) {
++        let basis: [String: Any] = [
++            kSecClass as String: kSecClassGenericPassword,
++            kSecAttrService as String: dienst,
++            kSecAttrAccount as String: konto
++        ]
++        SecItemDelete(basis as CFDictionary)
++        guard let neu = neu?.trimmingCharacters(in: .whitespacesAndNewlines), !neu.isEmpty else { return }
++        var eintrag = basis
++        eintrag[kSecValueData as String] = Data(neu.utf8)
++        // Nur lesbar, solange das iPhone entsperrt ist; nie in iCloud oder auf andere Geräte.
++        eintrag[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
++        SecItemAdd(eintrag as CFDictionary, nil)
++    }
++}
++
++// MARK: - Übergabe an Loop
++
++/// Was an Loops KH-Eingabe übergeben wird. Loop zeigt es an, der Nutzer prüft und speichert dort.
++struct ZSKHUebergabe {
++    var name: String
++    var gramm: Double
++    var wirkdauer: TimeInterval?
++    var datum = Date()
++
++    var aktivitaet: NSUserActivity {
++        let aktivitaet = NSUserActivity.forNewCarbEntry()
++        let eintrag = NewCarbEntry(
++            date: datum,
++            // Nie mehr als Loops eigene Obergrenze vorschlagen; Loop prüft und bestätigt danach selbst.
++            quantity: HKQuantity(unit: .gram(), doubleValue: min(max(0, gramm), LoopConstants.maxCarbEntryQuantity.doubleValue(for: .gram())).rounded()),
++            startDate: datum,
++            foodType: name,
++            absorptionTime: wirkdauer)
++        aktivitaet.update(from: eintrag)
++        return aktivitaet
++    }
++}
++
++// MARK: - Quelle für KH heute und Rückblick (nur lesend)
++
++protocol ZSEssenQuelle: AnyObject {
++    var einheit: HKUnit { get }
++    /// Summe der heute in Loop eingetragenen KH.
++    func khHeute(_ fertig: @escaping (Double?) -> Void)
++    func glukose(von: Date, bis: Date, _ fertig: @escaping ([ZSMesspunkt]) -> Void)
++}
++
++final class ZSLoopEssenQuelle: ZSEssenQuelle {
++    private let deviceManager: DeviceDataManager
++
++    init(deviceManager: DeviceDataManager) {
++        self.deviceManager = deviceManager
++    }
++
++    var einheit: HKUnit { deviceManager.displayGlucosePreference.unit }
++
++    func khHeute(_ fertig: @escaping (Double?) -> Void) {
++        let start = Calendar.current.startOfDay(for: Date())
++        deviceManager.carbStore.getCarbEntries(start: start, end: nil) { ergebnis in
++            let summe: Double?
++            switch ergebnis {
++            case .success(let eintraege):
++                summe = eintraege.reduce(0) { $0 + $1.quantity.doubleValue(for: .gram()) }
++            case .failure:
++                summe = nil
++            }
++            DispatchQueue.main.async { fertig(summe) }
++        }
++    }
++
++    func glukose(von: Date, bis: Date, _ fertig: @escaping ([ZSMesspunkt]) -> Void) {
++        deviceManager.glucoseStore.getGlucoseSamples(start: von, end: bis) { ergebnis in
++            var punkte: [ZSMesspunkt] = []
++            if case .success(let werte) = ergebnis {
++                punkte = werte
++                    .map { ZSMesspunkt(datum: $0.startDate, mgdl: $0.quantity.doubleValue(for: .milligramsPerDeciliter)) }
++                    .sorted { $0.datum < $1.datum }
++            }
++            DispatchQueue.main.async { fertig(punkte) }
++        }
++    }
++}
++
++#if targetEnvironment(simulator)
++final class ZSVorschauEssenQuelle: ZSEssenQuelle {
++    var einheit: HKUnit { .milligramsPerDeciliter }
++
++    func khHeute(_ fertig: @escaping (Double?) -> Void) {
++        fertig(117)
++    }
++
++    func glukose(von: Date, bis: Date, _ fertig: @escaping ([ZSMesspunkt]) -> Void) {
++        let schritte = Int(bis.timeIntervalSince(von) / .minutes(5))
++        let punkte = (0...max(0, schritte)).map { i -> ZSMesspunkt in
++            let t = Double(i) / Double(max(1, schritte))
++            let spitze = 64 * exp(-pow((t - 0.3) / 0.15, 2))
++            return ZSMesspunkt(datum: von.addingTimeInterval(.minutes(Double(i) * 5)), mgdl: 104 + spitze + 8 * t)
++        }
++        fertig(punkte)
++    }
++}
++
++extension ZSSpeicher {
++    /// Beispielinhalt für Screenshots im Simulator.
++    static func vorschau() -> ZSSpeicher {
++        let ordner = FileManager.default.temporaryDirectory.appendingPathComponent("ZSVorschau-\(UUID().uuidString)")
++        let speicher = ZSSpeicher(ordner: ordner)
++        let jetzt = Date()
++        speicher.plan = ZSTherapieplan(khJeFPE: 10, hypoGrammJePlaettchen: 3, hypoPlaettchen: 5, hypoWarteMinuten: 15, spritzEssAbstandMinuten: 15)
++        speicher.standard = [
++            ZSStandardmahlzeit(name: "Marmeladenbrot", kh: 38, fpe: 0.6),
++            ZSStandardmahlzeit(name: "Honigbrot", kh: 41, fpe: 0.5),
++            ZSStandardmahlzeit(name: "Müsli mit Milch", kh: 52, fpe: 1.4)
++        ]
++        speicher.rezepte = [
++            ZSRezept(name: "Smashed Boozy Lasagne", portionen: 6, zutaten: [
++                ZSZutat(name: "Lasagneplatten", gramm: 250, khJe100: 70, fettJe100: 1.5, eiweissJe100: 12),
++                ZSZutat(name: "Hackfleisch", gramm: 500, khJe100: 0, fettJe100: 15, eiweissJe100: 20),
++                ZSZutat(name: "Tomaten passiert", gramm: 700, khJe100: 5, fettJe100: 0.2, eiweissJe100: 1.4),
++                ZSZutat(name: "Mozzarella", gramm: 250, khJe100: 1, fettJe100: 19, eiweissJe100: 18)
++            ], fertigGramm: 1720, zuletztGewogen: jetzt.addingTimeInterval(-.days(16))),
++            ZSRezept(name: "Sesam-Ofenkartoffeln", portionen: 3, zutaten: [
++                ZSZutat(name: "Kartoffeln", gramm: 900, khJe100: 15, fettJe100: 0.1, eiweissJe100: 2),
++                ZSZutat(name: "Sesam", gramm: 30, khJe100: 10, fettJe100: 50, eiweissJe100: 18)
++            ])
++        ]
++        speicher.mahlzeiten = [
++            ZSMahlzeit(name: "Spaghetti Bolognese", datum: jetzt.addingTimeInterval(-.hours(4)), kh: 72, fpe: 3.5, quelle: .foto, schaetzungKH: 72),
++            ZSMahlzeit(name: "Spaghetti Bolognese", datum: jetzt.addingTimeInterval(-.days(5)), kh: 78, fpe: 3.5, quelle: .foto, rueckmeldung: .passte),
++            ZSMahlzeit(name: "Spaghetti Bolognese", datum: jetzt.addingTimeInterval(-.days(12)), kh: 78, fpe: 3.4, quelle: .foto, rueckmeldung: .mehr),
++            ZSMahlzeit(name: "Marmeladenbrot", datum: jetzt.addingTimeInterval(-.hours(7)), kh: 38, fpe: 0.6, quelle: .standard, rueckmeldung: .passte)
++        ]
++        return speicher
++    }
++}
++#endif
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift b/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift
+new file mode 100644
+index 0000000..afa9cb3
+--- /dev/null
++++ b/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift
+@@ -0,0 +1,1296 @@
++//
++//  ZuckerschockEssenView.swift
++//  Loop
++//
++//  Zuckerschock: der Essen-Tab. Schätzt, rechnet KH und FPE aus Rezepten,
++//  übergibt die KH an Loops bestehende KH-Eingabe. Keine Dosis.
++//
++
++import HealthKit
++import LoopCore
++import SwiftUI
++import UIKit
++
++/// Steuert den Essen-Tab von außen (z. B. „Essen“ auf Heute öffnet die Kamera).
++final class ZSEssenSteuerung: ObservableObject {
++    enum Anfrage: Equatable { case kamera, manuell }
++    @Published var anfrage: Anfrage?
++}
++
++enum ZSEssenBlatt: Identifiable {
++    case kamera
++    case schaetzung(UIImage)
++    case manuell
++    case standard(ZSStandardmahlzeit)
++    case standardNeu
++    case rezept(ZSRezept)
++    case rezeptBearbeiten(ZSRezept)
++    case rueckblick(ZSMahlzeit)
++    case einstellungen
++
++    var id: String {
++        switch self {
++        case .kamera: return "kamera"
++        case .schaetzung: return "schaetzung"
++        case .manuell: return "manuell"
++        case .standard(let s): return "standard-\(s.id)"
++        case .standardNeu: return "standardNeu"
++        case .rezept(let r): return "rezept-\(r.id)"
++        case .rezeptBearbeiten(let r): return "rezeptBearbeiten-\(r.id)"
++        case .rueckblick(let m): return "rueckblick-\(m.id)"
++        case .einstellungen: return "einstellungen"
++        }
++    }
++}
++
++/// Eine Mahlzeit, die gerade an Loop übergeben werden soll.
++struct ZSAuswahl {
++    var name: String
++    var kh: Double
++    var fpe: Double?
++    var quelle: ZSMahlzeitQuelle
++    var schaetzungKH: Double?
++}
++
++/// FPE, die nach der Mahlzeit noch als verzögerte KH in Loop eingetragen werden können.
++struct ZSOffeneFPE: Equatable {
++    var name: String
++    var fpe: Double
++    var gramm: Double
++    var wirkdauer: TimeInterval
++}
++
++struct ZSEssenView: View {
++    @ObservedObject var speicher: ZSSpeicher
++    @ObservedObject var steuerung: ZSEssenSteuerung
++    var quelle: ZSEssenQuelle
++    var aktionen: ZSAktionen
++
++    @State private var blatt: ZSEssenBlatt?
++    @State private var ausstehend: ZSKHUebergabe?
++    @State private var khHeute: Double?
++    @State private var offeneFPE: ZSOffeneFPE?
++
++    private var mahlzeitenHeute: [ZSMahlzeit] {
++        speicher.mahlzeiten.filter { Calendar.current.isDateInToday($0.datum) }
++    }
++
++    var body: some View {
++        ZStack {
++            ZSHorizont()
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space6) {
++                    kopf
++                    if let offeneFPE {
++                        fpeKarte(offeneFPE)
++                    }
++                    heuteKarte
++                    standardAbschnitt
++                    rezeptAbschnitt
++                    rueckblickAbschnitt
++                    ZSEssenListenZeile(titel: "Foto-KH und FPE einstellen", untertitel: ZSSchluessel.wert == nil ? "Kein API-Schlüssel, Eingabe von Hand" : "Eigener API-Schlüssel hinterlegt", symbol: "key") {
++                        blatt = .einstellungen
++                    }
++                    .background(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous).fill(ZSFarbe.flaeche1))
++                }
++                .padding(.horizontal, ZSMass.space5)
++                .padding(.bottom, ZSMass.space8)
++            }
++        }
++        .onAppear(perform: laden)
++        .onChange(of: steuerung.anfrage) { _, neu in
++            guard let neu else { return }
++            steuerung.anfrage = nil
++            blatt = neu == .kamera && ZSSchluessel.wert != nil ? .kamera : .manuell
++        }
++        .sheet(item: $blatt, onDismiss: uebergabeAusfuehren) { blatt in
++            inhalt(blatt)
++                .environment(\.locale, Locale(identifier: "de_DE"))
++        }
++    }
++
++    private func laden() {
++        quelle.khHeute { khHeute = $0 }
++#if targetEnvironment(simulator)
++        // Screenshots: ZS_ESSEN_BLATT öffnet ein Blatt mit Beispielinhalt.
++        if blatt == nil, ZSVorschau.istAktiv {
++            switch ProcessInfo.processInfo.environment["ZS_ESSEN_BLATT"] {
++            case "rezept": blatt = speicher.rezepte.first.map { .rezept($0) }
++            case "rueckblick": blatt = speicher.offeneRueckblicke().first.map { .rueckblick($0) }
++            case "standard": blatt = speicher.standard.first.map { .standard($0) }
++            case "manuell": blatt = .manuell
++            case "einstellungen": blatt = .einstellungen
++            default: break
++            }
++        }
++#endif
++    }
++
++    // MARK: Kopf und Karten
++
++    private var kopf: some View {
++        VStack(alignment: .leading, spacing: 0) {
++            Text("Essen")
++                .font(ZSSchrift.largeTitle)
++                .foregroundStyle(ZSFarbe.text)
++                .accessibilityAddTraits(.isHeader)
++            Text(mahlzeitenHeute.isEmpty ? "Heute noch nichts eingetragen" : "Heute \(mahlzeitenHeute.count) \(mahlzeitenHeute.count == 1 ? "Mahlzeit" : "Mahlzeiten")")
++                .font(ZSSchrift.subhead)
++                .foregroundStyle(ZSFarbe.text2)
++        }
++        .padding(.top, ZSMass.space2)
++    }
++
++    private var heuteKarte: some View {
++        VStack(alignment: .leading, spacing: ZSMass.space3) {
++            Text("Kohlenhydrate heute")
++                .font(ZSSchrift.subhead)
++                .foregroundStyle(ZSFarbe.text2)
++            HStack(alignment: .firstTextBaseline, spacing: ZSMass.space1) {
++                Text(khHeute.map { ZSFormat.zahl($0, stellen: 0) } ?? "–")
++                    .zsZahl(.wertGross)
++                    .foregroundStyle(ZSFarbe.text)
++                Text("g")
++                    .zsZahl(.einheit)
++                    .foregroundStyle(ZSFarbe.text2)
++            }
++            .accessibilityElement(children: .combine)
++            Text("Aus Loop, alle Einträge seit Mitternacht.")
++                .font(ZSSchrift.footnote)
++                .foregroundStyle(ZSFarbe.text2)
++
++            Button {
++                blatt = ZSSchluessel.wert == nil ? .manuell : .kamera
++            } label: {
++                Label(ZSSchluessel.wert == nil ? "KH eintragen" : "Fotografieren", systemImage: ZSSchluessel.wert == nil ? "plus" : "camera")
++                    .font(ZSSchrift.headline)
++            }
++            .buttonStyle(ZSDruckStil(art: .primaer))
++            .padding(.top, ZSMass.space1)
++
++            if ZSSchluessel.wert != nil {
++                Button("Ohne Foto eintragen") { blatt = .manuell }
++                    .font(ZSSchrift.headline)
++                    .foregroundStyle(ZSFarbe.orangeText)
++                    .frame(maxWidth: .infinity, minHeight: ZSMass.tap)
++            }
++        }
++        .zsKarte(hero: true)
++    }
++
++    private func fpeKarte(_ offen: ZSOffeneFPE) -> some View {
++        VStack(alignment: .leading, spacing: ZSMass.space2) {
++            Text("Fett und Eiweiß von \(offen.name)")
++                .font(ZSSchrift.headline)
++                .foregroundStyle(ZSFarbe.text)
++            Text("\(ZSFormat.zahl(offen.fpe, stellen: 1)) FPE, laut deinem Plan \(ZSFormat.zahl(offen.gramm, stellen: 0)) g über \(Int(offen.wirkdauer / 3600)) Std.")
++                .font(ZSSchrift.subhead)
++                .foregroundStyle(ZSFarbe.text2)
++            HStack(spacing: ZSMass.space3) {
++                Button("Später") { self.offeneFPE = nil }
++                    .buttonStyle(ZSDruckStil(art: .sekundaer))
++                Button("In Loop eintragen") {
++                    aktionen.uebergeben(ZSKHUebergabe(name: "FPE \(offen.name)", gramm: offen.gramm, wirkdauer: offen.wirkdauer))
++                    self.offeneFPE = nil
++                }
++                .buttonStyle(ZSDruckStil(art: .sekundaer))
++            }
++            .font(ZSSchrift.headline)
++        }
++        .zsKarte()
++    }
++
++    private var standardAbschnitt: some View {
++        VStack(alignment: .leading, spacing: ZSMass.space3) {
++            ZSAbschnittTitel(text: "Standard, schnell bestätigen")
++            ScrollView(.horizontal, showsIndicators: false) {
++                HStack(spacing: ZSMass.space3) {
++                    ForEach(speicher.standard) { mahlzeit in
++                        Button { blatt = .standard(mahlzeit) } label: {
++                            VStack(alignment: .leading, spacing: ZSMass.space1) {
++                                Text(mahlzeit.name)
++                                    .font(ZSSchrift.subhead.weight(.semibold))
++                                    .foregroundStyle(ZSFarbe.text)
++                                    .lineLimit(2)
++                                    .multilineTextAlignment(.leading)
++                                Spacer(minLength: 0)
++                                Text("\(ZSFormat.zahl(mahlzeit.kh, stellen: 0)) g KH")
++                                    .font(ZSSchrift.caption)
++                                    .foregroundStyle(ZSFarbe.text2)
++                            }
++                            .padding(ZSMass.space3)
++                            .frame(width: 128, height: 96, alignment: .topLeading)
++                            .background(RoundedRectangle(cornerRadius: ZSMass.radiusM, style: .continuous).fill(ZSFarbe.flaeche1))
++                        }
++                        .buttonStyle(.plain)
++                        .contextMenu {
++                            Button("Löschen", role: .destructive) {
++                                speicher.standard.removeAll { $0.id == mahlzeit.id }
++                            }
++                        }
++                    }
++                    Button { blatt = .standardNeu } label: {
++                        VStack(spacing: ZSMass.space1) {
++                            Image(systemName: "plus")
++                                .font(.title3)
++                            Text("Anlegen")
++                                .font(ZSSchrift.subhead.weight(.semibold))
++                        }
++                        .foregroundStyle(ZSFarbe.text2)
++                        .frame(width: 96, height: 96)
++                        .background(RoundedRectangle(cornerRadius: ZSMass.radiusM, style: .continuous).strokeBorder(ZSFarbe.randSteuer, style: StrokeStyle(lineWidth: 1, dash: [4, 4])))
++                    }
++                    .buttonStyle(.plain)
++                    .accessibilityLabel("Standardmahlzeit anlegen")
++                }
++            }
++        }
++    }
++
++    private var rezeptAbschnitt: some View {
++        VStack(alignment: .leading, spacing: ZSMass.space3) {
++            ZSAbschnittTitel(text: "Aus deiner Rezeptkartei")
++            VStack(spacing: 0) {
++                if speicher.rezepte.isEmpty {
++                    Text("Noch nichts gekocht? Dein erstes Rezept wartet.")
++                        .font(ZSSchrift.subhead)
++                        .foregroundStyle(ZSFarbe.text2)
++                        .frame(maxWidth: .infinity, alignment: .leading)
++                        .padding(ZSMass.space4)
++                }
++                ForEach(speicher.rezepte) { rezept in
++                    ZSEssenListenZeile(
++                        titel: rezept.name,
++                        untertitel: rezept.fertigGramm == nil ? "noch nicht gewogen" : "Topf gewogen\(rezept.zuletztGewogen.map { ", \(ZSFormat.alter(von: $0, jetzt: Date()))" } ?? "")",
++                        symbol: "frying.pan",
++                        wert: rezept.khJe100.map { "\(ZSFormat.zahl($0, stellen: 0)) g/100 g" }) {
++                        blatt = .rezept(rezept)
++                    }
++                    Divider().overlay(ZSFarbe.haarlinie).padding(.leading, 57)
++                }
++                ZSEssenListenZeile(titel: "Rezept anlegen", untertitel: nil, symbol: "plus") {
++                    blatt = .rezeptBearbeiten(ZSRezept(name: ""))
++                }
++            }
++            .background(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous).fill(ZSFarbe.flaeche1))
++            .clipShape(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous))
++        }
++    }
++
++    @ViewBuilder
++    private var rueckblickAbschnitt: some View {
++        let offen = speicher.offeneRueckblicke()
++        if !offen.isEmpty {
++            VStack(alignment: .leading, spacing: ZSMass.space3) {
++                ZSAbschnittTitel(text: "Stimmten die KH?")
++                VStack(spacing: 0) {
++                    ForEach(offen) { mahlzeit in
++                        ZSEssenListenZeile(
++                            titel: mahlzeit.name,
++                            untertitel: "\(ZSFormat.alter(von: mahlzeit.datum, jetzt: Date())) · \(ZSFormat.zahl(mahlzeit.kh, stellen: 0)) g KH",
++                            symbol: "clock.arrow.circlepath") {
++                            blatt = .rueckblick(mahlzeit)
++                        }
++                    }
++                }
++                .background(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous).fill(ZSFarbe.flaeche1))
++                .clipShape(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous))
++            }
++        }
++    }
++
++    // MARK: Blätter
++
++    @ViewBuilder
++    private func inhalt(_ blatt: ZSEssenBlatt) -> some View {
++        switch blatt {
++        case .kamera:
++            ZSKameraBlatt { bild in
++                self.blatt = bild.map { .schaetzung($0) }
++            }
++            .ignoresSafeArea()
++        case .schaetzung(let bild):
++            ZSSchaetzungBlatt(bild: bild, speicher: speicher, abbrechen: { self.blatt = nil }, weiter: vormerken)
++        case .manuell:
++            ZSManuellBlatt(speicher: speicher, abbrechen: { self.blatt = nil }, weiter: vormerken)
++        case .standard(let mahlzeit):
++            ZSBestaetigenBlatt(name: mahlzeit.name, startKH: mahlzeit.kh, fpe: mahlzeit.fpe, quelle: .standard, speicher: speicher, abbrechen: { self.blatt = nil }, weiter: vormerken)
++        case .standardNeu:
++            ZSStandardNeuBlatt(abbrechen: { self.blatt = nil }) { neu in
++                speicher.standard.append(neu)
++                self.blatt = nil
++            }
++        case .rezept(let rezept):
++            ZSRezeptBlatt(rezept: rezept, speicher: speicher, abbrechen: { self.blatt = nil }, bearbeiten: { self.blatt = .rezeptBearbeiten(rezept) }, weiter: vormerken)
++        case .rezeptBearbeiten(let rezept):
++            ZSRezeptBearbeitenBlatt(rezept: rezept, abbrechen: { self.blatt = nil }) { neu in
++                if let index = speicher.rezepte.firstIndex(where: { $0.id == neu.id }) {
++                    speicher.rezepte[index] = neu
++                } else {
++                    speicher.rezepte.append(neu)
++                }
++                self.blatt = nil
++            } loeschen: {
++                speicher.rezepte.removeAll { $0.id == rezept.id }
++                self.blatt = nil
++            }
++        case .rueckblick(let mahlzeit):
++            ZSRueckblickBlatt(mahlzeit: mahlzeit, quelle: quelle, abbrechen: { self.blatt = nil }) { antwort in
++                if let index = speicher.mahlzeiten.firstIndex(where: { $0.id == mahlzeit.id }) {
++                    speicher.mahlzeiten[index].rueckmeldung = antwort
++                }
++                self.blatt = nil
++            }
++        case .einstellungen:
++            ZSEssenEinstellungenBlatt(speicher: speicher) { self.blatt = nil }
++        }
++    }
++
++    /// Merkt die Übergabe vor, schließt das Blatt; übergeben wird erst, wenn es zu ist.
++    private func vormerken(_ auswahl: ZSAuswahl) {
++        speicher.mahlzeiten.append(ZSMahlzeit(name: auswahl.name, datum: Date(), kh: auswahl.kh, fpe: auswahl.fpe, quelle: auswahl.quelle, schaetzungKH: auswahl.schaetzungKH))
++        if let fpe = auswahl.fpe, fpe >= 1, let faktor = speicher.plan.khJeFPE, faktor > 0 {
++            offeneFPE = ZSOffeneFPE(name: auswahl.name, fpe: fpe, gramm: fpe * faktor, wirkdauer: ZSFPE.wirkdauer(fpe: fpe))
++        }
++        ausstehend = ZSKHUebergabe(name: auswahl.name, gramm: auswahl.kh, wirkdauer: nil)
++        blatt = nil
++    }
++
++    private func uebergabeAusfuehren() {
++        guard let uebergabe = ausstehend else { return }
++        ausstehend = nil
++        aktionen.uebergeben(uebergabe)
++        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { laden() }
++    }
++}
++
++// MARK: - Bausteine
++
++struct ZSAbschnittTitel: View {
++    var text: String
++
++    var body: some View {
++        Text(text)
++            .font(ZSSchrift.headline)
++            .foregroundStyle(ZSFarbe.text)
++            .accessibilityAddTraits(.isHeader)
++    }
++}
++
++struct ZSEssenListenZeile: View {
++    var titel: String
++    var untertitel: String?
++    var symbol: String
++    var wert: String? = nil
++    var aktion: () -> Void
++
++    var body: some View {
++        Button(action: aktion) {
++            HStack(spacing: ZSMass.space3) {
++                Image(systemName: symbol)
++                    .font(.system(size: 15))
++                    .foregroundStyle(ZSFarbe.text)
++                    .frame(width: 29, height: 29)
++                    .background(RoundedRectangle(cornerRadius: ZSMass.radiusXS, style: .continuous).fill(ZSFarbe.flaeche2))
++                VStack(alignment: .leading, spacing: 2) {
++                    Text(titel)
++                        .font(ZSSchrift.body)
++                        .foregroundStyle(ZSFarbe.text)
++                    if let untertitel {
++                        Text(untertitel)
++                            .font(ZSSchrift.subhead)
++                            .foregroundStyle(ZSFarbe.text2)
++                    }
++                }
++                Spacer(minLength: ZSMass.space2)
++                if let wert {
++                    Text(wert)
++                        .zsZahl(.wertKlein)
++                        .foregroundStyle(ZSFarbe.text2)
++                }
++                Image(systemName: "chevron.right")
++                    .font(.footnote.weight(.semibold))
++                    .foregroundStyle(ZSFarbe.text3)
++            }
++            .padding(.horizontal, ZSMass.space4)
++            .padding(.vertical, ZSMass.space2)
++            .frame(minHeight: 52)
++            .contentShape(Rectangle())
++        }
++        .buttonStyle(ZSAufhellStil())
++    }
++}
++
++/// Listenzeilen hellen beim Drücken auf, statt zu schrumpfen.
++struct ZSAufhellStil: ButtonStyle {
++    func makeBody(configuration: Configuration) -> some View {
++        configuration.label
++            .background(configuration.isPressed ? ZSFarbe.flaeche2 : Color.clear)
++    }
++}
++
++/// Kopfzeile eines Blatts: „Abbrechen“ schließt sofort, auch während einer Analyse.
++struct ZSBlattKopf: View {
++    var titel: String
++    var abbrechen: () -> Void
++
++    var body: some View {
++        ZStack {
++            Text(titel)
++                .font(ZSSchrift.title3)
++                .foregroundStyle(ZSFarbe.text)
++                .accessibilityAddTraits(.isHeader)
++            HStack {
++                Button("Abbrechen", action: abbrechen)
++                    .font(ZSSchrift.body)
++                    .foregroundStyle(ZSFarbe.orangeText)
++                    .frame(minHeight: ZSMass.tap)
++                Spacer()
++            }
++        }
++        .padding(.horizontal, ZSMass.space5)
++        .padding(.top, ZSMass.space3)
++    }
++}
++
++/// − Wert + für Gramm, Schritt einstellbar.
++struct ZSMengenWaehler: View {
++    @Binding var wert: Double
++    var einheit: String
++    var schritt: Double = 1
++    var bereich: ClosedRange<Double> = 0...999
++
++    var body: some View {
++        HStack(spacing: ZSMass.space4) {
++            Button {
++                wert = max(bereich.lowerBound, wert - schritt)
++            } label: {
++                Image(systemName: "minus")
++                    .font(.title3.weight(.semibold))
++                    .frame(width: 52, height: 52)
++                    .background(Circle().fill(ZSFarbe.flaeche2))
++            }
++            .accessibilityLabel("Weniger")
++            HStack(alignment: .firstTextBaseline, spacing: ZSMass.space1) {
++                Text(ZSFormat.zahl(wert, stellen: 0))
++                    .zsZahl(.wertGross)
++                    .contentTransition(.numericText(value: wert))
++                Text(einheit)
++                    .zsZahl(.einheit)
++                    .foregroundStyle(ZSFarbe.text2)
++            }
++            .frame(minWidth: 120)
++            .accessibilityElement(children: .combine)
++            Button {
++                wert = min(bereich.upperBound, wert + schritt)
++            } label: {
++                Image(systemName: "plus")
++                    .font(.title3.weight(.semibold))
++                    .frame(width: 52, height: 52)
++                    .background(Circle().fill(ZSFarbe.flaeche2))
++            }
++            .accessibilityLabel("Mehr")
++        }
++        .foregroundStyle(ZSFarbe.text)
++        .frame(maxWidth: .infinity)
++        .accessibilityElement(children: .contain)
++    }
++}
++
++/// Lade-Zeichen: der Blitz pulsiert, bei „Bewegung reduzieren“ steht er still.
++struct ZSBlitzLaden: View {
++    @Environment(\.accessibilityReduceMotion) private var reduceMotion
++    @State private var an = false
++
++    var body: some View {
++        ZSBlitzForm()
++            .fill(ZSFarbe.orange)
++            .frame(width: 34, height: 48)
++            .opacity(reduceMotion ? 1 : (an ? 1 : 0.35))
++            .onAppear {
++                guard !reduceMotion else { return }
++                withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) { an = true }
++            }
++            .accessibilityHidden(true)
++    }
++}
++
++/// Der Blitz aus der Bildmarke (ohne Tropfen).
++struct ZSBlitzForm: Shape {
++    func path(in rect: CGRect) -> Path {
++        // Umriss aus blitz-24 (Bildmarken-Blitz), Bezugsrahmen 418,378 bis 606,706
++        let punkte: [(CGFloat, CGFloat)] = [
++            (556.2, 400.8), (552.9, 386.2), (543.9, 379.4), (532.5, 378.8), (522.8, 384.6),
++            (421.4, 555.7), (419, 562.6), (420.5, 573.5), (427.6, 581.7), (438.1, 584.8),
++            (480.5, 584.8), (462.7, 683), (464.1, 694.4), (471.7, 703), (482.7, 705.8),
++            (493.4, 701.9), (498.5, 696.1), (602.7, 514.7), (605, 507.8), (603.5, 497),
++            (596.4, 488.8), (585.9, 485.7), (541.6, 485.7)
++        ]
++        let quelle = CGRect(x: 418.8, y: 378.2, width: 186.4, height: 327.6)
++        let massstab = min(rect.width / quelle.width, rect.height / quelle.height)
++        let dx = rect.midX - quelle.midX * massstab
++        let dy = rect.midY - quelle.midY * massstab
++        var p = Path()
++        p.move(to: CGPoint(x: punkte[0].0 * massstab + dx, y: punkte[0].1 * massstab + dy))
++        for punkt in punkte.dropFirst() {
++            p.addLine(to: CGPoint(x: punkt.0 * massstab + dx, y: punkt.1 * massstab + dy))
++        }
++        p.closeSubpath()
++        return p
++    }
++}
++
++// MARK: - Kamera
++
++struct ZSKameraBlatt: UIViewControllerRepresentable {
++    var fertig: (UIImage?) -> Void
++
++    func makeUIViewController(context: Context) -> UIImagePickerController {
++        let picker = UIImagePickerController()
++        picker.sourceType = UIImagePickerController.isSourceTypeAvailable(.camera) ? .camera : .photoLibrary
++        picker.delegate = context.coordinator
++        return picker
++    }
++
++    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
++
++    func makeCoordinator() -> Koordinator { Koordinator(fertig: fertig) }
++
++    final class Koordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
++        let fertig: (UIImage?) -> Void
++
++        init(fertig: @escaping (UIImage?) -> Void) {
++            self.fertig = fertig
++        }
++
++        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
++            fertig(info[.originalImage] as? UIImage)
++        }
++
++        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
++            fertig(nil)
++        }
++    }
++}
++
++// MARK: - Schätzung
++
++private struct ZSSchaetzungBlatt: View {
++    let bild: UIImage
++    @ObservedObject var speicher: ZSSpeicher
++    var abbrechen: () -> Void
++    var weiter: (ZSAuswahl) -> Void
++
++    @State private var ergebnis: ZSSchaetzung?
++    @State private var fehler: String?
++    @State private var kh: Double = 0
++    @State private var aufgabe: Task<Void, Never>?
++
++    var body: some View {
++        VStack(spacing: 0) {
++            ZSBlattKopf(titel: "Schätzung") {
++                aufgabe?.cancel()
++                abbrechen()
++            }
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space4) {
++                    Image(uiImage: bild)
++                        .resizable()
++                        .scaledToFill()
++                        .frame(height: 180)
++                        .frame(maxWidth: .infinity)
++                        .clipShape(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous))
++                        .accessibilityLabel("Dein Foto")
++
++                    if let ergebnis {
++                        ergebnisAnsicht(ergebnis)
++                    } else if let fehler {
++                        VStack(alignment: .leading, spacing: ZSMass.space3) {
++                            Text(fehler)
++                                .font(ZSSchrift.body)
++                                .foregroundStyle(ZSFarbe.text)
++                            Text("Du kannst die KH auch ohne Foto eintragen.")
++                                .font(ZSSchrift.subhead)
++                                .foregroundStyle(ZSFarbe.text2)
++                        }
++                        .zsKarte()
++                    } else {
++                        HStack(spacing: ZSMass.space4) {
++                            ZSBlitzLaden()
++                            VStack(alignment: .leading, spacing: 2) {
++                                Text("Claude erkennt dein Essen")
++                                    .font(ZSSchrift.headline)
++                                    .foregroundStyle(ZSFarbe.text)
++                                Text("Das dauert ein paar Sekunden.")
++                                    .font(ZSSchrift.subhead)
++                                    .foregroundStyle(ZSFarbe.text2)
++                            }
++                        }
++                        .zsKarte()
++                        .accessibilityElement(children: .combine)
++                    }
++                }
++                .padding(ZSMass.space5)
++            }
++        }
++        .background(ZSFarbe.grund.ignoresSafeArea())
++        .onAppear(perform: starten)
++        .onDisappear { aufgabe?.cancel() }
++    }
++
++    private func starten() {
++        guard aufgabe == nil else { return }
++        guard let schluessel = ZSSchluessel.wert else {
++            fehler = ZSFotoKHFehler.keinSchluessel.errorDescription
++            return
++        }
++        aufgabe = Task {
++            do {
++                let neu = try await ZSFotoKH.schaetzen(bild, schluessel: schluessel)
++                guard !Task.isCancelled else { return }
++                await MainActor.run {
++                    ergebnis = neu
++                    kh = neu.khGramm.rounded()
++                }
++            } catch is CancellationError {
++            } catch let fehlerWert as URLError where fehlerWert.code == .cancelled {
++            } catch {
++                await MainActor.run { fehler = error.localizedDescription }
++            }
++        }
++    }
++
++    @ViewBuilder
++    private func ergebnisAnsicht(_ e: ZSSchaetzung) -> some View {
++        VStack(alignment: .leading, spacing: ZSMass.space2) {
++            Text(e.gericht)
++                .font(ZSSchrift.title2)
++                .foregroundStyle(ZSFarbe.text)
++            Text("Spanne \(ZSFormat.zahl(e.khMin, stellen: 0)) bis \(ZSFormat.zahl(e.khMax, stellen: 0)) g, Sicherheit \(e.sicherheit)")
++                .font(ZSSchrift.subhead)
++                .foregroundStyle(ZSFarbe.text2)
++            if !e.hinweis.isEmpty {
++                Text(e.hinweis)
++                    .font(ZSSchrift.footnote)
++                    .foregroundStyle(ZSFarbe.text2)
++            }
++        }
++
++        ZSMengenWaehler(wert: $kh, einheit: "g KH", schritt: 2)
++            .padding(.vertical, ZSMass.space2)
++
++        HStack {
++            Text("Fett und Eiweiß")
++                .font(ZSSchrift.subhead)
++                .foregroundStyle(ZSFarbe.text2)
++            Spacer()
++            Text("\(ZSFormat.zahl(e.fpe, stellen: 1)) FPE")
++                .zsZahl(.wertKlein)
++                .foregroundStyle(ZSFarbe.text)
++        }
++        .zsKarte()
++
++        if let erfahrung = speicher.erfahrung(fuer: e.gericht) {
++            VStack(alignment: .leading, spacing: ZSMass.space1) {
++                Text("Deine Erfahrung")
++                    .font(ZSSchrift.subhead.weight(.semibold))
++                    .foregroundStyle(ZSFarbe.text)
++                Text("\(erfahrung.anzahl)× gegessen, meist \(ZSFormat.zahl(erfahrung.meistKH, stellen: 0)) g\(erfahrung.mehr > erfahrung.weniger ? ", oft waren es mehr" : (erfahrung.weniger > erfahrung.mehr ? ", oft waren es weniger" : ""))")
++                    .font(ZSSchrift.subhead)
++                    .foregroundStyle(ZSFarbe.text2)
++            }
++            .zsKarte()
++        }
++
++        Button {
++            weiter(ZSAuswahl(name: e.gericht, kh: kh, fpe: e.fpe, quelle: .foto, schaetzungKH: e.khGramm))
++        } label: {
++            Text("Weiter zum Bolus")
++                .font(ZSSchrift.headline)
++        }
++        .buttonStyle(ZSDruckStil(art: .primaer))
++
++        Text("Schätzung, kein Messwert. Du prüfst die Menge, Loop rechnet.")
++            .font(ZSSchrift.footnote)
++            .foregroundStyle(ZSFarbe.text2)
++    }
++}
++
++// MARK: - Bestätigen (Standardmahlzeit)
++
++private struct ZSBestaetigenBlatt: View {
++    var name: String
++    var startKH: Double
++    var fpe: Double?
++    var quelle: ZSMahlzeitQuelle
++    @ObservedObject var speicher: ZSSpeicher
++    var abbrechen: () -> Void
++    var weiter: (ZSAuswahl) -> Void
++
++    @State private var kh: Double = 0
++
++    var body: some View {
++        VStack(spacing: 0) {
++            ZSBlattKopf(titel: "Essen", abbrechen: abbrechen)
++            VStack(alignment: .leading, spacing: ZSMass.space4) {
++                Text(name)
++                    .font(ZSSchrift.title2)
++                    .foregroundStyle(ZSFarbe.text)
++                ZSMengenWaehler(wert: $kh, einheit: "g KH", schritt: 1)
++                if let fpe {
++                    HStack {
++                        Text("Fett und Eiweiß")
++                            .font(ZSSchrift.subhead)
++                            .foregroundStyle(ZSFarbe.text2)
++                        Spacer()
++                        Text("\(ZSFormat.zahl(fpe, stellen: 1)) FPE")
++                            .zsZahl(.wertKlein)
++                    }
++                    .zsKarte()
++                }
++                Spacer()
++                Button {
++                    weiter(ZSAuswahl(name: name, kh: kh, fpe: fpe, quelle: quelle, schaetzungKH: nil))
++                } label: {
++                    Text("Weiter zum Bolus").font(ZSSchrift.headline)
++                }
++                .buttonStyle(ZSDruckStil(art: .primaer))
++            }
++            .padding(ZSMass.space5)
++        }
++        .foregroundStyle(ZSFarbe.text)
++        .background(ZSFarbe.grund.ignoresSafeArea())
++        .onAppear { kh = startKH }
++        .presentationDetents([.medium, .large])
++    }
++}
++
++// MARK: - Von Hand
++
++private struct ZSManuellBlatt: View {
++    @ObservedObject var speicher: ZSSpeicher
++    var abbrechen: () -> Void
++    var weiter: (ZSAuswahl) -> Void
++
++    @State private var name = ""
++    @State private var kh: Double = 30
++    @State private var fett: Double?
++    @State private var eiweiss: Double?
++
++    private var fpe: Double? {
++        guard fett != nil || eiweiss != nil else { return nil }
++        return ZSFPE.einheiten(fettGramm: fett ?? 0, eiweissGramm: eiweiss ?? 0)
++    }
++
++    var body: some View {
++        VStack(spacing: 0) {
++            ZSBlattKopf(titel: "Ohne Foto", abbrechen: abbrechen)
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space4) {
++                    ZSEingabeFeld(titel: "Was gibt es?") {
++                        TextField("z. B. Käsebrot", text: $name)
++                    }
++                    ZSMengenWaehler(wert: $kh, einheit: "g KH", schritt: 1)
++                    HStack(spacing: ZSMass.space3) {
++                        ZSEingabeFeld(titel: "Fett (g)") {
++                            TextField("optional", value: $fett, format: .number)
++                                .keyboardType(.decimalPad)
++                        }
++                        ZSEingabeFeld(titel: "Eiweiß (g)") {
++                            TextField("optional", value: $eiweiss, format: .number)
++                                .keyboardType(.decimalPad)
++                        }
++                    }
++                    if let fpe {
++                        Text("\(ZSFormat.zahl(fpe, stellen: 1)) FPE")
++                            .font(ZSSchrift.subhead)
++                            .foregroundStyle(ZSFarbe.text2)
++                    }
++                    Button {
++                        let titel = name.trimmingCharacters(in: .whitespaces)
++                        weiter(ZSAuswahl(name: titel.isEmpty ? "Mahlzeit" : titel, kh: kh, fpe: fpe, quelle: .manuell, schaetzungKH: nil))
++                    } label: {
++                        Text("Weiter zum Bolus").font(ZSSchrift.headline)
++                    }
++                    .buttonStyle(ZSDruckStil(art: .primaer))
++                }
++                .padding(ZSMass.space5)
++            }
++        }
++        .background(ZSFarbe.grund.ignoresSafeArea())
++    }
++}
++
++struct ZSEingabeFeld<Inhalt: View>: View {
++    var titel: String
++    @ViewBuilder var inhalt: Inhalt
++
++    var body: some View {
++        VStack(alignment: .leading, spacing: ZSMass.space1) {
++            Text(titel)
++                .font(ZSSchrift.footnote)
++                .foregroundStyle(ZSFarbe.text2)
++            inhalt
++                .font(ZSSchrift.body)
++                .foregroundStyle(ZSFarbe.text)
++                .padding(.horizontal, ZSMass.space3)
++                .frame(minHeight: ZSMass.tap)
++                .background(RoundedRectangle(cornerRadius: ZSMass.radiusM, style: .continuous).fill(ZSFarbe.flaeche2))
++        }
++    }
++}
++
++// MARK: - Standard anlegen
++
++private struct ZSStandardNeuBlatt: View {
++    var abbrechen: () -> Void
++    var sichern: (ZSStandardmahlzeit) -> Void
++
++    @State private var name = ""
++    @State private var kh: Double = 30
++    @State private var fpe: Double?
++
++    var body: some View {
++        VStack(spacing: 0) {
++            ZSBlattKopf(titel: "Standardmahlzeit", abbrechen: abbrechen)
++            VStack(alignment: .leading, spacing: ZSMass.space4) {
++                ZSEingabeFeld(titel: "Name") {
++                    TextField("z. B. Müsli mit Milch", text: $name)
++                }
++                ZSMengenWaehler(wert: $kh, einheit: "g KH")
++                ZSEingabeFeld(titel: "FPE (optional)") {
++                    TextField("z. B. 1,5", value: $fpe, format: .number)
++                        .keyboardType(.decimalPad)
++                }
++                Spacer()
++                Button {
++                    sichern(ZSStandardmahlzeit(name: name.trimmingCharacters(in: .whitespaces), kh: kh, fpe: fpe))
++                } label: {
++                    Text("Mahlzeit sichern").font(ZSSchrift.headline)
++                }
++                .buttonStyle(ZSDruckStil(art: .primaer))
++                .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
++            }
++            .padding(ZSMass.space5)
++        }
++        .background(ZSFarbe.grund.ignoresSafeArea())
++    }
++}
++
++// MARK: - Rezept (Topfgewicht-Methode)
++
++private struct ZSRezeptBlatt: View {
++    @State var rezept: ZSRezept
++    @ObservedObject var speicher: ZSSpeicher
++    var abbrechen: () -> Void
++    var bearbeiten: () -> Void
++    var weiter: (ZSAuswahl) -> Void
++
++    @State private var teller: Double = 350
++    @State private var fertig: Double?
++
++    var body: some View {
++        VStack(spacing: 0) {
++            ZSBlattKopf(titel: "Rezept", abbrechen: abbrechen)
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space4) {
++                    HStack(alignment: .firstTextBaseline) {
++                        VStack(alignment: .leading, spacing: 2) {
++                            Text(rezept.name)
++                                .font(ZSSchrift.title2)
++                                .foregroundStyle(ZSFarbe.text)
++                            Text("Rezeptkartei, für \(rezept.portionen) Personen")
++                                .font(ZSSchrift.subhead)
++                                .foregroundStyle(ZSFarbe.text2)
++                        }
++                        Spacer()
++                        Button("Bearbeiten", action: bearbeiten)
++                            .foregroundStyle(ZSFarbe.orangeText)
++                    }
++
++                    zeile("Aus den Zutaten, ganzer Topf", "\(ZSFormat.zahl(rezept.khGesamt, stellen: 0)) g KH, \(ZSFormat.zahl(rezept.fpeGesamt, stellen: 1)) FPE")
++                        .zsKarte()
++
++                    ZSEingabeFeld(titel: "Fertig gewogen ohne Topf oder Form (g)") {
++                        TextField("Gewicht", value: $fertig, format: .number)
++                            .keyboardType(.numberPad)
++                    }
++
++                    if let je100 = gewogen.khJe100, let fpe100 = gewogen.fpeJe100 {
++                        zeile("Je 100 g", "\(ZSFormat.zahl(je100, stellen: 1)) g KH, \(ZSFormat.zahl(fpe100, stellen: 1)) FPE")
++                            .zsKarte()
++
++                        VStack(alignment: .leading, spacing: ZSMass.space2) {
++                            Text("Dein Teller")
++                                .font(ZSSchrift.headline)
++                                .foregroundStyle(ZSFarbe.text)
++                            ZSMengenWaehler(wert: $teller, einheit: "g", schritt: 10, bereich: 0...3000)
++                        }
++
++                        let kh = je100 * teller / 100
++                        let fpe = fpe100 * teller / 100
++                        HStack(spacing: ZSMass.space3) {
++                            kachel("\(ZSFormat.zahl(kh, stellen: 0)) g", "Kohlenhydrate")
++                            kachel("\(ZSFormat.zahl(fpe, stellen: 1)) FPE", "Fett und Eiweiß")
++                        }
++
++                        Button {
++                            sichernGewicht()
++                            weiter(ZSAuswahl(name: rezept.name, kh: kh, fpe: fpe, quelle: .rezept, schaetzungKH: nil))
++                        } label: {
++                            Text("Weiter zum Bolus").font(ZSSchrift.headline)
++                        }
++                        .buttonStyle(ZSDruckStil(art: .primaer))
++                    }
++
++                    Text("Den Topf wiegst du einmal pro Kochen, danach nur noch den Teller.")
++                        .font(ZSSchrift.footnote)
++                        .foregroundStyle(ZSFarbe.text2)
++                }
++                .padding(ZSMass.space5)
++            }
++        }
++        .background(ZSFarbe.grund.ignoresSafeArea())
++        .onAppear { fertig = rezept.fertigGramm }
++    }
++
++    private var gewogen: ZSRezept {
++        var kopie = rezept
++        kopie.fertigGramm = fertig
++        return kopie
++    }
++
++    private func sichernGewicht() {
++        guard fertig != rezept.fertigGramm, let index = speicher.rezepte.firstIndex(where: { $0.id == rezept.id }) else { return }
++        speicher.rezepte[index].fertigGramm = fertig
++        speicher.rezepte[index].zuletztGewogen = Date()
++    }
++
++    private func zeile(_ titel: String, _ wert: String) -> some View {
++        VStack(alignment: .leading, spacing: 2) {
++            Text(titel)
++                .font(ZSSchrift.subhead)
++                .foregroundStyle(ZSFarbe.text2)
++            Text(wert)
++                .zsZahl(.wertKlein)
++                .foregroundStyle(ZSFarbe.text)
++        }
++        .accessibilityElement(children: .combine)
++    }
++
++    private func kachel(_ wert: String, _ label: String) -> some View {
++        VStack(alignment: .leading, spacing: 2) {
++            Text(wert)
++                .zsZahl(.wert)
++                .foregroundStyle(ZSFarbe.text)
++            Text(label)
++                .font(ZSSchrift.footnote)
++                .foregroundStyle(ZSFarbe.text2)
++        }
++        .zsKarte()
++        .accessibilityElement(children: .combine)
++    }
++}
++
++private struct ZSRezeptBearbeitenBlatt: View {
++    @State var rezept: ZSRezept
++    var abbrechen: () -> Void
++    var sichern: (ZSRezept) -> Void
++    var loeschen: () -> Void
++
++    var body: some View {
++        VStack(spacing: 0) {
++            ZSBlattKopf(titel: rezept.name.isEmpty ? "Neues Rezept" : "Rezept bearbeiten", abbrechen: abbrechen)
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space4) {
++                    ZSEingabeFeld(titel: "Name") {
++                        TextField("z. B. Lasagne", text: $rezept.name)
++                    }
++                    Stepper("Für \(rezept.portionen) Personen", value: $rezept.portionen, in: 1...20)
++                        .font(ZSSchrift.body)
++                        .foregroundStyle(ZSFarbe.text)
++
++                    ZSAbschnittTitel(text: "Zutaten, Nährwerte je 100 g")
++                    ForEach($rezept.zutaten) { $zutat in
++                        VStack(alignment: .leading, spacing: ZSMass.space2) {
++                            HStack {
++                                TextField("Zutat", text: $zutat.name)
++                                    .font(ZSSchrift.headline)
++                                Button(role: .destructive) {
++                                    rezept.zutaten.removeAll { $0.id == zutat.id }
++                                } label: {
++                                    Image(systemName: "trash")
++                                }
++                                .accessibilityLabel("Zutat löschen")
++                            }
++                            HStack(spacing: ZSMass.space2) {
++                                zahlFeld("Menge g", $zutat.gramm)
++                                zahlFeld("KH", $zutat.khJe100)
++                                zahlFeld("Fett", $zutat.fettJe100)
++                                zahlFeld("Eiweiß", $zutat.eiweissJe100)
++                            }
++                        }
++                        .zsKarte()
++                    }
++                    Button {
++                        rezept.zutaten.append(ZSZutat(name: "", gramm: 100, khJe100: 0, fettJe100: 0, eiweissJe100: 0))
++                    } label: {
++                        Label("Zutat hinzufügen", systemImage: "plus")
++                            .font(ZSSchrift.headline)
++                    }
++                    .buttonStyle(ZSDruckStil(art: .sekundaer))
++
++                    Text("Zusammen: \(ZSFormat.zahl(rezept.khGesamt, stellen: 0)) g KH, \(ZSFormat.zahl(rezept.fpeGesamt, stellen: 1)) FPE")
++                        .font(ZSSchrift.subhead)
++                        .foregroundStyle(ZSFarbe.text2)
++
++                    Button {
++                        sichern(rezept)
++                    } label: {
++                        Text("Rezept sichern").font(ZSSchrift.headline)
++                    }
++                    .buttonStyle(ZSDruckStil(art: .primaer))
++                    .disabled(rezept.name.trimmingCharacters(in: .whitespaces).isEmpty)
++
++                    Button("Rezept löschen", role: .destructive, action: loeschen)
++                        .frame(maxWidth: .infinity, minHeight: ZSMass.tap)
++                }
++                .padding(ZSMass.space5)
++            }
++        }
++        .foregroundStyle(ZSFarbe.text)
++        .background(ZSFarbe.grund.ignoresSafeArea())
++    }
++
++    private func zahlFeld(_ titel: String, _ wert: Binding<Double>) -> some View {
++        VStack(alignment: .leading, spacing: 2) {
++            Text(titel)
++                .font(ZSSchrift.caption)
++                .foregroundStyle(ZSFarbe.text2)
++            TextField(titel, value: wert, format: .number)
++                .keyboardType(.decimalPad)
++                .font(ZSSchrift.body.monospacedDigit())
++                .padding(.horizontal, ZSMass.space2)
++                .frame(minHeight: ZSMass.tap)
++                .background(RoundedRectangle(cornerRadius: ZSMass.radiusS, style: .continuous).fill(ZSFarbe.flaeche2))
++        }
++    }
++}
++
++// MARK: - Rückblick
++
++private struct ZSRueckblickBlatt: View {
++    var mahlzeit: ZSMahlzeit
++    var quelle: ZSEssenQuelle
++    var abbrechen: () -> Void
++    var antworten: (ZSRueckmeldung) -> Void
++
++    @State private var punkte: [ZSMesspunkt] = []
++
++    private var spitze: ZSMesspunkt? {
++        punkte.filter { $0.datum >= mahlzeit.datum }.max { $0.mgdl < $1.mgdl }
++    }
++
++    private var start: ZSMesspunkt? {
++        punkte.last { $0.datum <= mahlzeit.datum } ?? punkte.first
++    }
++
++    var body: some View {
++        VStack(spacing: 0) {
++            ZSBlattKopf(titel: "Rückblick", abbrechen: abbrechen)
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space4) {
++                    VStack(alignment: .leading, spacing: 2) {
++                        Text(mahlzeit.name)
++                            .font(ZSSchrift.title2)
++                            .foregroundStyle(ZSFarbe.text)
++                        Text("\(ZSFormat.uhrzeit(mahlzeit.datum)) · \(ZSFormat.zahl(mahlzeit.kh, stellen: 0)) g KH\(mahlzeit.fpe.map { " · \(ZSFormat.zahl($0, stellen: 1)) FPE" } ?? "")")
++                            .font(ZSSchrift.subhead)
++                            .foregroundStyle(ZSFarbe.text2)
++                    }
++
++                    VStack(alignment: .leading, spacing: ZSMass.space2) {
++                        ZSRueckblickKurve(punkte: punkte, mahlzeit: mahlzeit.datum, spitze: spitze)
++                            .frame(height: 160)
++                        if let spitze, let start {
++                            let anstieg = spitze.mgdl - start.mgdl
++                            Text("Spitze \(ZSFormat.glukose(spitze.mgdl, quelle.einheit)) \(ZSFormat.einheit(quelle.einheit)) nach \(Int(spitze.datum.timeIntervalSince(mahlzeit.datum) / 60)) Min, \(ZSFormat.aenderung(anstieg, quelle.einheit)) seit dem Essen")
++                                .font(ZSSchrift.subhead)
++                                .foregroundStyle(ZSFarbe.text2)
++                        } else {
++                            Text("Für diese Zeit gibt es keine Werte.")
++                                .font(ZSSchrift.subhead)
++                                .foregroundStyle(ZSFarbe.text2)
++                        }
++                    }
++                    .zsKarte()
++
++                    Text("Stimmten die KH?")
++                        .font(ZSSchrift.headline)
++                        .foregroundStyle(ZSFarbe.text)
++                    HStack(spacing: ZSMass.space3) {
++                        antwort("Waren mehr", .mehr)
++                        antwort("Passte", .passte)
++                        antwort("Waren weniger", .weniger)
++                    }
++                    Text("Deine Antwort hilft der nächsten Schätzung. Sie ändert nichts an Loop.")
++                        .font(ZSSchrift.footnote)
++                        .foregroundStyle(ZSFarbe.text2)
++                }
++                .padding(ZSMass.space5)
++            }
++        }
++        .background(ZSFarbe.grund.ignoresSafeArea())
++        .onAppear {
++            quelle.glukose(von: mahlzeit.datum.addingTimeInterval(-.minutes(30)), bis: mahlzeit.datum.addingTimeInterval(.hours(4))) { punkte = $0 }
++        }
++    }
++
++    private func antwort(_ titel: String, _ wert: ZSRueckmeldung) -> some View {
++        Button(titel) { antworten(wert) }
++            .font(ZSSchrift.subhead.weight(.semibold))
++            .buttonStyle(ZSRandStil())
++    }
++}
++
++/// Sekundärbutton mit Rand rand-steuer.
++struct ZSRandStil: ButtonStyle {
++    func makeBody(configuration: Configuration) -> some View {
++        configuration.label
++            .foregroundStyle(ZSFarbe.text)
++            .multilineTextAlignment(.center)
++            .padding(.horizontal, ZSMass.space2)
++            .frame(maxWidth: .infinity, minHeight: ZSMass.tap)
++            .background(Capsule().strokeBorder(ZSFarbe.randSteuer, lineWidth: 1))
++            .background(Capsule().fill(configuration.isPressed ? ZSFarbe.flaeche2 : Color.clear))
++    }
++}
++
++private struct ZSRueckblickKurve: View {
++    var punkte: [ZSMesspunkt]
++    var mahlzeit: Date
++    var spitze: ZSMesspunkt?
++
++    var body: some View {
++        GeometryReader { geo in
++            let r = CGRect(origin: .zero, size: geo.size)
++            let anfang = punkte.first?.datum ?? mahlzeit
++            let ende = punkte.last?.datum ?? mahlzeit.addingTimeInterval(.hours(4))
++            let werte = punkte.map(\.mgdl)
++            let unten = min(60, (werte.min() ?? 60) - 10)
++            let oben = max(200, (werte.max() ?? 200) + 10)
++            let x: (Date) -> CGFloat = { d in
++                let gesamt = max(1, ende.timeIntervalSince(anfang))
++                return CGFloat(d.timeIntervalSince(anfang) / gesamt) * r.width
++            }
++            let y: (Double) -> CGFloat = { v in r.maxY - CGFloat((v - unten) / (oben - unten)) * r.height }
++
++            ZStack(alignment: .topLeading) {
++                Rectangle()
++                    .fill(ZSFarbe.text.opacity(0.05))
++                    .frame(width: r.width, height: max(0, y(70) - y(180)))
++                    .offset(y: y(180))
++                Rectangle()
++                    .fill(ZSFarbe.text3)
++                    .frame(width: 1, height: r.height)
++                    .offset(x: x(mahlzeit))
++                Path { p in
++                    guard let erster = punkte.first else { return }
++                    p.move(to: CGPoint(x: x(erster.datum), y: y(erster.mgdl)))
++                    for punkt in punkte.dropFirst() {
++                        p.addLine(to: CGPoint(x: x(punkt.datum), y: y(punkt.mgdl)))
++                    }
++                }
++                .stroke(ZSFarbe.orangeLinie, style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
++                // Schock-Spitze: im Rückblick markiert der Blitz die höchste Spitze.
++                if let spitze {
++                    ZSBlitzForm()
++                        .fill(ZSFarbe.orange)
++                        .frame(width: 12, height: 20)
++                        .position(x: x(spitze.datum), y: max(10, y(spitze.mgdl) - 14))
++                        .accessibilityHidden(true)
++                }
++            }
++        }
++        .accessibilityElement(children: .ignore)
++        .accessibilityLabel("Zuckerkurve rund um die Mahlzeit")
++    }
++}
++
++// MARK: - Einstellungen
++
++private struct ZSEssenEinstellungenBlatt: View {
++    @ObservedObject var speicher: ZSSpeicher
++    var schliessen: () -> Void
++
++    @State private var schluessel = ""
++    @State private var hatSchluessel = ZSSchluessel.wert != nil
++    @State private var faktor: Double?
++
++    var body: some View {
++        VStack(spacing: 0) {
++            ZSBlattKopf(titel: "Foto-KH und FPE", abbrechen: schliessen)
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space6) {
++                    VStack(alignment: .leading, spacing: ZSMass.space3) {
++                        ZSAbschnittTitel(text: "Eigener API-Schlüssel")
++                        Text("Mit deinem eigenen Claude-API-Schlüssel schätzt die App KH aus einem Foto. Das Foto geht direkt von deinem iPhone an Anthropic. Der Schlüssel liegt nur im Schlüsselbund dieses Geräts.")
++                            .font(ZSSchrift.subhead)
++                            .foregroundStyle(ZSFarbe.text2)
++                            .fixedSize(horizontal: false, vertical: true)
++                        if hatSchluessel {
++                            Label("Schlüssel hinterlegt", systemImage: "checkmark")
++                                .font(ZSSchrift.body)
++                                .foregroundStyle(ZSFarbe.text)
++                            Button("Schlüssel entfernen", role: .destructive) {
++                                ZSSchluessel.setzen(nil)
++                                hatSchluessel = false
++                            }
++                            .buttonStyle(ZSRandStil())
++                        } else {
++                            ZSEingabeFeld(titel: "API-Schlüssel") {
++                                SecureField("sk-ant-…", text: $schluessel)
++                                    .textInputAutocapitalization(.never)
++                                    .autocorrectionDisabled()
++                            }
++                            Button("Schlüssel sichern") {
++                                ZSSchluessel.setzen(schluessel)
++                                schluessel = ""
++                                hatSchluessel = ZSSchluessel.wert != nil
++                            }
++                            .font(ZSSchrift.headline)
++                            .buttonStyle(ZSRandStil())
++                            .disabled(schluessel.trimmingCharacters(in: .whitespaces).isEmpty)
++                            Text("Ohne Schlüssel trägst du die KH von Hand ein.")
++                                .font(ZSSchrift.footnote)
++                                .foregroundStyle(ZSFarbe.text2)
++                        }
++                    }
++
++                    VStack(alignment: .leading, spacing: ZSMass.space3) {
++                        ZSAbschnittTitel(text: "Fett-Protein-Einheiten")
++                        Text("Warschauer Methode: 1 FPE entspricht 100 kcal aus Fett und Eiweiß. Wie viel Gramm KH du je FPE einträgst, legt dein Diabetes-Team fest. Die App schätzt diesen Wert nicht.")
++                            .font(ZSSchrift.subhead)
++                            .foregroundStyle(ZSFarbe.text2)
++                            .fixedSize(horizontal: false, vertical: true)
++                        ZSEingabeFeld(titel: "Gramm KH je FPE laut Diabetes-Team") {
++                            TextField("leer lassen, wenn nicht festgelegt", value: $faktor, format: .number)
++                                .keyboardType(.decimalPad)
++                        }
++                        Button("Wert sichern") {
++                            speicher.plan.khJeFPE = faktor.flatMap { $0 > 0 ? $0 : nil }
++                        }
++                        .font(ZSSchrift.headline)
++                        .buttonStyle(ZSRandStil())
++                        Text(speicher.plan.khJeFPE == nil ? "Kein Wert hinterlegt: FPE werden nur angezeigt, nicht an Loop übergeben." : "Hinterlegt: \(ZSFormat.zahl(speicher.plan.khJeFPE ?? 0, stellen: 0)) g KH je FPE.")
++                            .font(ZSSchrift.footnote)
++                            .foregroundStyle(ZSFarbe.text2)
++                    }
++                }
++                .padding(ZSMass.space5)
++            }
++        }
++        .background(ZSFarbe.grund.ignoresSafeArea())
++        .onAppear { faktor = speicher.plan.khJeFPE }
++    }
++}
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockFotoKH.swift b/Loop/Loop/Zuckerschock/ZuckerschockFotoKH.swift
+new file mode 100644
+index 0000000..74d8916
+--- /dev/null
++++ b/Loop/Loop/Zuckerschock/ZuckerschockFotoKH.swift
+@@ -0,0 +1,160 @@
++//
++//  ZuckerschockFotoKH.swift
++//  Loop
++//
++//  Zuckerschock: KH-Schätzung aus einem Foto mit dem eigenen Claude-API-Schlüssel des Nutzers.
++//  Das Ergebnis ist eine Schätzung, kein Messwert. Der Nutzer prüft die Menge, Loop rechnet.
++//
++
++import Foundation
++import UIKit
++
++struct ZSSchaetzung: Codable, Equatable {
++    var gericht: String
++    var khGramm: Double
++    var khMin: Double
++    var khMax: Double
++    var fettGramm: Double
++    var eiweissGramm: Double
++    var sicherheit: String
++    var hinweis: String
++
++    enum CodingKeys: String, CodingKey {
++        case gericht
++        case khGramm = "kh_gramm"
++        case khMin = "kh_min"
++        case khMax = "kh_max"
++        case fettGramm = "fett_gramm"
++        case eiweissGramm = "eiweiss_gramm"
++        case sicherheit
++        case hinweis
++    }
++
++    var fpe: Double { ZSFPE.einheiten(fettGramm: fettGramm, eiweissGramm: eiweissGramm) }
++}
++
++enum ZSFotoKHFehler: LocalizedError {
++    case keinSchluessel
++    case bild
++    case abgelehnt
++    case antwort(String)
++    case http(Int, String)
++
++    var errorDescription: String? {
++        switch self {
++        case .keinSchluessel: return "Kein API-Schlüssel hinterlegt. Trag die KH von Hand ein."
++        case .bild: return "Das Foto ließ sich nicht verarbeiten."
++        case .abgelehnt: return "Für dieses Foto gibt es keine Schätzung. Trag die KH von Hand ein."
++        case .antwort(let text): return "Die Antwort war nicht lesbar. \(text)"
++        case .http(let code, let text):
++            switch code {
++            case 401: return "Der API-Schlüssel wurde nicht angenommen."
++            case 429: return "Zu viele Anfragen. Versuch es gleich noch einmal."
++            default: return "Fehler \(code). \(text)"
++            }
++        }
++    }
++}
++
++enum ZSFotoKH {
++    static let endpunkt = URL(string: "https://api.anthropic.com/v1/messages")!
++    static let modell = "claude-opus-5-5"
++
++    private static let anweisung = """
++    Du schätzt Kohlenhydrate für einen Menschen mit Typ-1-Diabetes. Auf dem Foto ist eine Mahlzeit.
++    Schätze für die gesamte sichtbare Portion: Kohlenhydrate in Gramm (beste Schätzung und eine realistische Spanne), \
++    Fett und Eiweiß in Gramm. Nenne das Gericht kurz auf Deutsch.
++    Sicherheit: "hoch", wenn Gericht und Portion klar sind, "mittel" bei Unsicherheit über Portion oder Zutaten, \
++    "niedrig", wenn kaum etwas erkennbar ist. Im Hinweis ein kurzer Satz, was die Schätzung unsicher macht.
++    Nenne nie eine Insulinmenge und gib keinen Rat zur Dosis.
++    """
++
++    private static let schema: [String: Any] = [
++        "type": "object",
++        "properties": [
++            "gericht": ["type": "string"],
++            "kh_gramm": ["type": "number"],
++            "kh_min": ["type": "number"],
++            "kh_max": ["type": "number"],
++            "fett_gramm": ["type": "number"],
++            "eiweiss_gramm": ["type": "number"],
++            "sicherheit": ["type": "string", "enum": ["niedrig", "mittel", "hoch"]],
++            "hinweis": ["type": "string"]
++        ],
++        "required": ["gericht", "kh_gramm", "kh_min", "kh_max", "fett_gramm", "eiweiss_gramm", "sicherheit", "hinweis"],
++        "additionalProperties": false
++    ]
++
++    /// Verkleinert auf höchstens 1568 px an der langen Kante und kodiert als JPEG.
++    static func jpeg(_ bild: UIImage) -> Data? {
++        let lang = max(bild.size.width, bild.size.height)
++        let faktor = min(1, 1568 / max(lang, 1))
++        let ziel = CGSize(width: (bild.size.width * faktor).rounded(), height: (bild.size.height * faktor).rounded())
++        let format = UIGraphicsImageRendererFormat.default()
++        format.scale = 1
++        let klein = UIGraphicsImageRenderer(size: ziel, format: format).image { _ in
++            bild.draw(in: CGRect(origin: .zero, size: ziel))
++        }
++        return klein.jpegData(compressionQuality: 0.75)
++    }
++
++    static func schaetzen(_ bild: UIImage, schluessel: String) async throws -> ZSSchaetzung {
++        guard let daten = jpeg(bild) else { throw ZSFotoKHFehler.bild }
++
++        let koerper: [String: Any] = [
++            "model": modell,
++            "max_tokens": 4000,
++            // Bei einer Ablehnung übernimmt serverseitig ein passendes Ausweichmodell.
++            "fallbacks": "default",
++            "output_config": [
++                "effort": "medium",
++                "format": ["type": "json_schema", "schema": schema]
++            ],
++            "system": anweisung,
++            "messages": [[
++                "role": "user",
++                "content": [
++                    ["type": "image", "source": ["type": "base64", "media_type": "image/jpeg", "data": daten.base64EncodedString()]],
++                    ["type": "text", "text": "Wie viele Kohlenhydrate hat diese Mahlzeit?"]
++                ]
++            ]]
++        ]
++
++        var anfrage = URLRequest(url: endpunkt, timeoutInterval: 90)
++        anfrage.httpMethod = "POST"
++        anfrage.setValue("application/json", forHTTPHeaderField: "content-type")
++        anfrage.setValue(schluessel, forHTTPHeaderField: "x-api-key")
++        anfrage.setValue("2026-10-21", forHTTPHeaderField: "anthropic-version")
++        anfrage.setValue("server-side-fallback-2026-07-01", forHTTPHeaderField: "anthropic-beta")
++        anfrage.httpBody = try JSONSerialization.data(withJSONObject: koerper)
++
++        let (antwortDaten, antwort) = try await URLSession.shared.data(for: anfrage)
++        try Task.checkCancellation()
++
++        let status = (antwort as? HTTPURLResponse)?.statusCode ?? 0
++        let json = (try? JSONSerialization.jsonObject(with: antwortDaten)) as? [String: Any]
++        guard status == 200 else {
++            let fehler = (json?["error"] as? [String: Any])?["message"] as? String ?? ""
++            throw ZSFotoKHFehler.http(status, fehler)
++        }
++        if json?["stop_reason"] as? String == "refusal" {
++            throw ZSFotoKHFehler.abgelehnt
++        }
++        let bloecke = json?["content"] as? [[String: Any]] ?? []
++        guard let text = bloecke.first(where: { $0["type"] as? String == "text" })?["text"] as? String,
++              let textDaten = text.data(using: .utf8) else {
++            throw ZSFotoKHFehler.antwort("Kein Text in der Antwort.")
++        }
++        do {
++            var ergebnis = try JSONDecoder().decode(ZSSchaetzung.self, from: textDaten)
++            // Spanne sauber halten und nie über Loops eigene Obergrenze für einen KH-Eintrag.
++            let obergrenze = LoopConstants.maxCarbEntryQuantity.doubleValue(for: .gram())
++            ergebnis.khGramm = min(max(0, ergebnis.khGramm), obergrenze)
++            ergebnis.khMin = min(max(0, ergebnis.khMin), ergebnis.khGramm)
++            ergebnis.khMax = min(max(ergebnis.khMax, ergebnis.khGramm), obergrenze)
++            return ergebnis
++        } catch {
++            throw ZSFotoKHFehler.antwort(error.localizedDescription)
++        }
++    }
++}
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
+index c6c3c83..0a54804 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
+@@ -10,14 +10,16 @@ import LoopCore
+ import SwiftUI
+ 
+ struct ZSAktionen {
+-    /// Öffnet Loops bestehende KH-Eingabe.
++    /// Wechselt in den Essen-Tab und öffnet die Kamera (ohne API-Schlüssel die Eingabe von Hand).
+     var essen: () -> Void
+     /// Öffnet Loops bestehenden Bolus-Ablauf.
+     var bolus: () -> Void
+-    /// Wechselt in den Essen-Tab.
++    /// Wechselt in den Essen-Tab und öffnet die Eingabe von Hand.
+     var zumEssenTab: () -> Void
+     /// Öffnet Loops Einstellungen.
+     var einstellungen: () -> Void
++    /// Öffnet Loops KH-Eingabe, vorausgefüllt mit Name, Menge und Wirkdauer.
++    var uebergeben: (ZSKHUebergabe) -> Void
+ }
+ 
+ struct ZSHeuteView: View {
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+index 117c130..66eaaf6 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+@@ -156,56 +156,6 @@ private struct ZSAuslauf: View {
+     }
+ }
+ 
+-// MARK: - Essen (Phase 1: Übergabe an Loops KH-Eingabe)
+-
+-private struct ZSEssenView: View {
+-    var aktionen: ZSAktionen
+-
+-    var body: some View {
+-        ZStack {
+-            ZSHorizont()
+-            ScrollView {
+-                VStack(alignment: .leading, spacing: ZSMass.space6) {
+-                    Text("Essen")
+-                        .font(ZSSchrift.largeTitle)
+-                        .foregroundStyle(ZSFarbe.text)
+-                        .accessibilityAddTraits(.isHeader)
+-                        .padding(.top, ZSMass.space2)
+-
+-                    VStack(alignment: .leading, spacing: ZSMass.space3) {
+-                        Text("Kohlenhydrate eintragen")
+-                            .font(ZSSchrift.headline)
+-                            .foregroundStyle(ZSFarbe.text)
+-                        Text("Du trägst die Menge in Loops gewohnter Eingabe ein. Loop rechnet wie bisher.")
+-                            .font(ZSSchrift.subhead)
+-                            .foregroundStyle(ZSFarbe.text2)
+-                            .fixedSize(horizontal: false, vertical: true)
+-                        Button(action: aktionen.essen) {
+-                            Label("KH eintragen", systemImage: "plus")
+-                                .font(ZSSchrift.headline)
+-                        }
+-                        .buttonStyle(ZSDruckStil(art: .primaer))
+-                        .padding(.top, ZSMass.space1)
+-                    }
+-                    .zsKarte()
+-
+-                    VStack(alignment: .leading, spacing: ZSMass.space2) {
+-                        Text("Rezeptkartei")
+-                            .font(ZSSchrift.headline)
+-                            .foregroundStyle(ZSFarbe.text)
+-                        Text("Noch nichts gekocht? Dein erstes Rezept wartet.")
+-                            .font(ZSSchrift.subhead)
+-                            .foregroundStyle(ZSFarbe.text2)
+-                    }
+-                    .zsKarte()
+-                }
+-                .padding(.horizontal, ZSMass.space5)
+-                .padding(.bottom, ZSMass.space8)
+-            }
+-        }
+-    }
+-}
+-
+ // MARK: - Therapie (Phase 1: Zugang zu Loops Einstellungen)
+ 
+ private struct ZSTherapieView: View {
+@@ -317,6 +267,9 @@ final class ZuckerschockTabController: UIViewController {
+ 
+     private let auswahl = ZSTabAuswahl()
+     private let heuteModell: ZSHeuteModell
++    private let essenQuelle: ZSEssenQuelle
++    private let speicher: ZSSpeicher
++    private let essenSteuerung = ZSEssenSteuerung()
+     private var kinder: [ZSTab: UIViewController] = [:]
+     private var aktuellerTab: ZSTab = .heute
+     private var abo: AnyCancellable?
+@@ -327,9 +280,11 @@ final class ZuckerschockTabController: UIViewController {
+     /// Platz, den die Leiste unten belegt (Leiste + Abstand zum unteren Rand + Luft darüber).
+     private static let leistenPlatz: CGFloat = ZSMass.leisteHoehe + ZSMass.space2 + ZSMass.space2
+ 
+-    init(statusTableViewController: StatusTableViewController?, heuteQuelle: ZSHeuteQuelle) {
++    init(statusTableViewController: StatusTableViewController?, heuteQuelle: ZSHeuteQuelle, essenQuelle: ZSEssenQuelle, speicher: ZSSpeicher) {
+         self.statusTableViewController = statusTableViewController
+         self.heuteModell = ZSHeuteModell(quelle: heuteQuelle)
++        self.essenQuelle = essenQuelle
++        self.speicher = speicher
+         super.init(nibName: nil, bundle: nil)
+     }
+ 
+@@ -348,16 +303,26 @@ final class ZuckerschockTabController: UIViewController {
+         view.backgroundColor = ZSFarbe.uiGrund
+ 
+         let aktionen = ZSAktionen(
+-            essen: { [weak self] in self?.statusTableViewController?.presentCarbEntryScreen(nil) },
++            essen: { [weak self] in
++                self?.auswahl.tab = .essen
++                self?.essenSteuerung.anfrage = .kamera
++            },
+             bolus: { [weak self] in self?.statusTableViewController?.presentBolusScreen() },
+-            zumEssenTab: { [weak self] in self?.auswahl.tab = .essen },
++            zumEssenTab: { [weak self] in
++                self?.auswahl.tab = .essen
++                self?.essenSteuerung.anfrage = .manuell
++            },
+             einstellungen: { [weak self] in
+                 guard let status = self?.statusTableViewController else { return }
+                 status.onSettingsTapped(UIBarButtonItem())
++            },
++            uebergeben: { [weak self] uebergabe in
++                // Loops eigene KH-Eingabe, vorausgefüllt. Dort prüfen, speichern, Loop schlägt den Bolus vor.
++                self?.statusTableViewController?.presentCarbEntryScreen(uebergabe.aktivitaet)
+             })
+ 
+         kinder[.heute] = gastgeber(ZSHeuteView(modell: heuteModell, aktionen: aktionen))
+-        kinder[.essen] = gastgeber(ZSEssenView(aktionen: aktionen))
++        kinder[.essen] = gastgeber(ZSEssenView(speicher: speicher, steuerung: essenSteuerung, quelle: essenQuelle, aktionen: aktionen))
+         kinder[.verlauf] = statusTableViewController ?? gastgeber(ZSHinweisView(titel: "Verlauf", text: "Hier liegt in der App Loops gewohnte Ansicht mit allen Kurven."))
+         kinder[.therapie] = gastgeber(ZSTherapieView(aktionen: aktionen))
+ 
+@@ -489,7 +454,8 @@ enum ZSVorschau {
+     static func wurzel() -> UIViewController {
+         let umgebung = ProcessInfo.processInfo.environment
+         let szenario = ZSVorschauQuelle.Szenario(rawValue: umgebung["ZS_SZENARIO"] ?? "") ?? .normal
+-        let tabs = ZuckerschockTabController(statusTableViewController: nil, heuteQuelle: ZSVorschauQuelle(szenario: szenario))
++        let tabs = ZuckerschockTabController(statusTableViewController: nil, heuteQuelle: ZSVorschauQuelle(szenario: szenario),
++                                             essenQuelle: ZSVorschauEssenQuelle(), speicher: ZSSpeicher.vorschau())
+         let navigation = UINavigationController(rootViewController: tabs)
+         navigation.setNavigationBarHidden(true, animated: false)
+         if let name = umgebung["ZS_TAB"], let tab = ZSTab.allCases.first(where: { $0.titel.lowercased() == name.lowercased() }) {
