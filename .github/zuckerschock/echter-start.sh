@@ -14,17 +14,28 @@ if [ -z "$APP" ]; then
   echo "Loop.app nicht gefunden in $PRODUKTE" > "$ZIEL/ECHTER-START-FEHLER.txt"; exit 1
 fi
 BUNDLE=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Info.plist")
-LAUFZEIT=$(xcrun simctl list runtimes -j | python3 -c '
+# Neueste iOS-Laufzeit zuerst; passt das Gerät dort nicht, die nächstältere (wie screenshots.sh).
+LAUFZEITEN=$(xcrun simctl list runtimes -j | python3 -c '
 import json, sys
 r = [x for x in json.load(sys.stdin)["runtimes"] if x.get("platform") == "iOS" and x.get("isAvailable")]
 r.sort(key=lambda x: [int(p) for p in x["version"].split(".")], reverse=True)
-print(r[0]["identifier"])')
-udid=$(xcrun simctl create "ZS Echter Start" com.apple.CoreSimulator.SimDeviceType.iPhone-16 "$LAUFZEIT")
+print("\n".join(x["identifier"] for x in r))')
+udid=""
+for laufzeit in $LAUFZEITEN; do
+  if udid=$(xcrun simctl create "ZS Echter Start" com.apple.CoreSimulator.SimDeviceType.iPhone-16 "$laufzeit" 2>/dev/null); then
+    echo "Gerät: iPhone 16, $laufzeit"
+    break
+  fi
+  udid=""
+done
+if [ -z "$udid" ]; then
+  echo "Kein passender Simulator für das iPhone 16" | tee "$ZIEL/ECHTER-START-FEHLER.txt"; exit 1
+fi
 xcrun simctl boot "$udid"
 xcrun simctl bootstatus "$udid" -b > /dev/null
 xcrun simctl ui "$udid" appearance dark
 xcrun simctl install "$udid" "$APP"
-xcrun simctl launch "$udid" "$BUNDLE" -AppleLanguages "(de)" -AppleLocale de_DE > /dev/null
+xcrun simctl launch "$udid" "$BUNDLE" -AppleLanguages "(de)" -AppleLocale de_DE > /dev/null || echo "Start meldete einen Fehler"
 sleep 12
 xcrun simctl io "$udid" screenshot --type=png "$ZIEL/iPhone-16-dark-echter-start.png" > /dev/null
 if xcrun simctl spawn "$udid" launchctl list | grep -q "$BUNDLE"; then
