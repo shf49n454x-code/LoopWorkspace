@@ -1,0 +1,1049 @@
+diff --git a/Loop/Loop Widget Extension/LoopWidgets.swift b/Loop/Loop Widget Extension/LoopWidgets.swift
+index f87c2b8..69e2d64 100644
+--- a/Loop/Loop Widget Extension/LoopWidgets.swift	
++++ b/Loop/Loop Widget Extension/LoopWidgets.swift	
+@@ -19,5 +19,8 @@ struct LoopWidgets: WidgetBundle {
+         if #available(iOS 16.2, *) {
+             GlucoseLiveActivityConfiguration()
+         }
++        if #available(iOS 17.0, *) {
++            ZSHypoLiveActivity()
++        }
+     }
+ }
+diff --git a/Loop/Loop.xcodeproj/project.pbxproj b/Loop/Loop.xcodeproj/project.pbxproj
+index a3a4b79..7bd34fb 100644
+--- a/Loop/Loop.xcodeproj/project.pbxproj
++++ b/Loop/Loop.xcodeproj/project.pbxproj
+@@ -7,6 +7,10 @@
+ 	objects = {
+ 
+ /* Begin PBXBuildFile section */
++		5A5EF086674BF8475B8A71DC /* ZuckerschockHypoLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CF086674BF8475B8A71DC /* ZuckerschockHypoLiveActivity.swift */; };
++		5A5E4931624412E5911E5892 /* ZuckerschockHypoGemeinsam.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C4931624412E5911E5892 /* ZuckerschockHypoGemeinsam.swift */; };
++		5A5D4931624412E5911E5892 /* ZuckerschockHypoGemeinsam.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C4931624412E5911E5892 /* ZuckerschockHypoGemeinsam.swift */; };
++		5A5DB3738D09088F135E6B77 /* ZuckerschockHypo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CB3738D09088F135E6B77 /* ZuckerschockHypo.swift */; };
+ 		5A5DE0BE645A5ED073A43B30 /* ZuckerschockVorrat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CE0BE645A5ED073A43B30 /* ZuckerschockVorrat.swift */; };
+ 		5A5DDF207E1632618430FDA9 /* ZuckerschockEssenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CDF207E1632618430FDA9 /* ZuckerschockEssenView.swift */; };
+ 		5A5DAED0FCE6418FCD0A3420 /* ZuckerschockFotoKH.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CAED0FCE6418FCD0A3420 /* ZuckerschockFotoKH.swift */; };
+@@ -767,6 +771,9 @@
+ /* End PBXCopyFilesBuildPhase section */
+ 
+ /* Begin PBXFileReference section */
++		5A5CF086674BF8475B8A71DC /* ZuckerschockHypoLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockHypoLiveActivity.swift; sourceTree = "<group>"; };
++		5A5C4931624412E5911E5892 /* ZuckerschockHypoGemeinsam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockHypoGemeinsam.swift; sourceTree = "<group>"; };
++		5A5CB3738D09088F135E6B77 /* ZuckerschockHypo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockHypo.swift; sourceTree = "<group>"; };
+ 		5A5CE0BE645A5ED073A43B30 /* ZuckerschockVorrat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockVorrat.swift; sourceTree = "<group>"; };
+ 		5A5CDF207E1632618430FDA9 /* ZuckerschockEssenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockEssenView.swift; sourceTree = "<group>"; };
+ 		5A5CAED0FCE6418FCD0A3420 /* ZuckerschockFotoKH.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockFotoKH.swift; sourceTree = "<group>"; };
+@@ -1543,6 +1550,9 @@
+ 		5A5C00000000000000000001 /* Zuckerschock */ = {
+ 			isa = PBXGroup;
+ 			children = (
++				5A5CF086674BF8475B8A71DC /* ZuckerschockHypoLiveActivity.swift */,
++				5A5C4931624412E5911E5892 /* ZuckerschockHypoGemeinsam.swift */,
++				5A5CB3738D09088F135E6B77 /* ZuckerschockHypo.swift */,
+ 				5A5CE0BE645A5ED073A43B30 /* ZuckerschockVorrat.swift */,
+ 				5A5CDF207E1632618430FDA9 /* ZuckerschockEssenView.swift */,
+ 				5A5CAED0FCE6418FCD0A3420 /* ZuckerschockFotoKH.swift */,
+@@ -3377,6 +3387,8 @@
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
++				5A5EF086674BF8475B8A71DC /* ZuckerschockHypoLiveActivity.swift in Sources */,
++				5A5E4931624412E5911E5892 /* ZuckerschockHypoGemeinsam.swift in Sources */,
+ 				14B1738128AEDC70006CCD7C /* StatusExtensionContext.swift in Sources */,
+ 				14B1737628AEDC6C006CCD7C /* HKUnit.swift in Sources */,
+ 				14B1737728AEDC6C006CCD7C /* NSBundle.swift in Sources */,
+@@ -3414,6 +3426,8 @@
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
++				5A5D4931624412E5911E5892 /* ZuckerschockHypoGemeinsam.swift in Sources */,
++				5A5DB3738D09088F135E6B77 /* ZuckerschockHypo.swift in Sources */,
+ 				5A5DE0BE645A5ED073A43B30 /* ZuckerschockVorrat.swift in Sources */,
+ 				5A5DDF207E1632618430FDA9 /* ZuckerschockEssenView.swift in Sources */,
+ 				5A5DAED0FCE6418FCD0A3420 /* ZuckerschockFotoKH.swift in Sources */,
+diff --git a/Loop/Loop/Managers/LoopAppManager.swift b/Loop/Loop/Managers/LoopAppManager.swift
+index 0f13afe..158a5cf 100644
+--- a/Loop/Loop/Managers/LoopAppManager.swift
++++ b/Loop/Loop/Managers/LoopAppManager.swift
+@@ -334,7 +334,8 @@ class LoopAppManager: NSObject {
+         let heuteQuelle = ZSLoopQuelle(deviceManager: deviceDataManager, automaticDosingStatus: automaticDosingStatus, onboardingManager: onboardingManager)
+         let tabController = ZuckerschockTabController(statusTableViewController: statusTableViewController, heuteQuelle: heuteQuelle,
+                                                       essenQuelle: ZSLoopEssenQuelle(deviceManager: deviceDataManager), speicher: ZSSpeicher.shared,
+-                                                      vorrat: ZSVorrat.shared, vorratQuelle: ZSLoopVorratQuelle(deviceManager: deviceDataManager, vorrat: ZSVorrat.shared))
++                                                      vorrat: ZSVorrat.shared, vorratQuelle: ZSLoopVorratQuelle(deviceManager: deviceDataManager, vorrat: ZSVorrat.shared),
++                                                      hypoBegleiter: ZSHypoBegleiter(deviceManager: deviceDataManager, speicher: ZSSpeicher.shared))
+         tabController.vorratWaechter = ZSVorratWaechter(deviceManager: deviceDataManager, vorrat: ZSVorrat.shared)
+         rootNavigationController?.setViewControllers([tabController], animated: true)
+ 
+@@ -562,6 +563,11 @@ extension LoopAppManager: DeviceOrientationController {
+ 
+ extension LoopAppManager: UNUserNotificationCenterDelegate {
+     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
++        // Zuckerschock: eigene Mitteilungen (Unterzucker, Vorrat, Hinweise) auch im Vordergrund zeigen.
++        if notification.request.identifier.hasPrefix("Zuckerschock.") {
++            completionHandler([.sound, .list, .banner])
++            return
++        }
+         switch notification.request.identifier {
+         // TODO: Until these notifications are converted to use the new alert system, they shall still show in the foreground
+         case LoopNotificationCategory.bolusFailure.rawValue,
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
+index ff1415a..2d9669e 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
+@@ -22,6 +22,10 @@ struct ZSAktionen {
+     var uebergeben: (ZSKHUebergabe) -> Void
+     /// Öffnet den Vorrat.
+     var vorrat: () -> Void
++    /// Öffnet den Unterzucker-Begleiter.
++    var hypo: () -> Void
++    /// Öffnet den Therapieplan.
++    var therapieplan: () -> Void
+ }
+ 
+ struct ZSHeuteView: View {
+@@ -52,7 +56,11 @@ struct ZSHeuteView: View {
+             kopf(stand: stand, jetzt: jetzt)
+ 
+             if let stand, let aktuell = stand.aktuell, ZSGlukoseZustand(mgdl: aktuell.mgdl) == .tief {
+-                ZSUnterzuckerWarnung(stand: stand, aktuell: aktuell, jetzt: jetzt)
++                Button(action: aktionen.hypo) {
++                    ZSUnterzuckerWarnung(stand: stand, aktuell: aktuell, jetzt: jetzt)
++                }
++                .buttonStyle(.plain)
++                .accessibilityHint("Öffnet den Unterzucker-Begleiter")
+             }
+ 
+             ZSHeroKarte(stand: stand, jetzt: jetzt, gestapelt: dynamicTypeSize.isAccessibilitySize)
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift b/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
+new file mode 100644
+index 0000000..54a4921
+--- /dev/null
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
+@@ -0,0 +1,559 @@
++//
++//  ZuckerschockHypo.swift
++//  Loop
++//
++//  Zuckerschock: Hypo-Begleiter. Startet bei Unterzucker eine Live Activity mit der Taste „Gegessen“,
++//  zählt die Wartezeit laut Plan herunter und sagt, wenn der Zucker schon steigt.
++//  Ohne Marke, ohne Humor. Mengen und Wartezeit kommen aus dem Therapieplan, nie von der App.
++//
++
++import ActivityKit
++import Combine
++import Foundation
++import HealthKit
++import LoopCore
++import LoopKit
++import SwiftUI
++import UserNotifications
++
++// MARK: - Modell
++
++struct ZSHypoEpisode: Codable, Identifiable, Equatable {
++    var id = UUID()
++    var start: Date
++    var ende: Date?
++    var tiefsterWert: Double
++    var gegessen: [Date] = []
++    var plaettchenJeMal: Int?
++
++    var dauer: TimeInterval? { ende.map { $0.timeIntervalSince(start) } }
++}
++
++/// Reine Entscheidungslogik, ohne Seiteneffekte.
++enum ZSHypoRegeln {
++    static let startUnter: Double = 70
++    static let endeAb: Double = 80
++
++    static func sollStarten(mgdl: Double, alter: TimeInterval, aktiv: Bool) -> Bool {
++        !aktiv && alter <= .minutes(10) && mgdl < startUnter
++    }
++
++    static func sollEnden(mgdl: Double, alter: TimeInterval, aktiv: Bool) -> Bool {
++        aktiv && alter <= .minutes(10) && mgdl >= endeAb
++    }
++
++    static func steigt(_ trend: GlucoseTrend?) -> Bool {
++        guard let trend else { return false }
++        return [.up, .upUp, .upUpUp].contains(trend)
++    }
++
++    /// Text der Menge laut Plan, ohne eigene Berechnung.
++    static func mengeText(_ plan: ZSTherapieplan) -> String {
++        if let anzahl = plan.hypoPlaettchen, let gramm = plan.hypoGrammJePlaettchen {
++            return "\(anzahl) Plättchen à \(ZSFormat.zahl(gramm, stellen: gramm.rounded() == gramm ? 0 : 1)) g"
++        }
++        return "schnelle KH nach deinem Plan"
++    }
++
++    static func warteMinuten(_ plan: ZSTherapieplan) -> Int {
++        plan.hypoWarteMinuten ?? 15
++    }
++}
++
++// MARK: - Begleiter
++
++final class ZSHypoBegleiter: ObservableObject {
++    @Published private(set) var aktiv: ZSHypoEpisode?
++    @Published private(set) var verlauf: [ZSHypoEpisode] = []
++    @Published private(set) var zustand: ZSHypoAttribute.ContentState?
++
++    private let speicher: ZSSpeicher
++    private let datei: URL
++    private var abos = Set<AnyCancellable>()
++    private var aktivitaet: Any?
++    /// Liefert den neuesten Wert: mg/dl, Datum, Trend.
++    private let neuesterWert: () -> (mgdl: Double, datum: Date, trend: GlucoseTrend?)?
++    private let einheit: () -> HKUnit
++
++    init(speicher: ZSSpeicher,
++         ordner: URL? = nil,
++         aenderungen: AnyPublisher<Void, Never>,
++         neuesterWert: @escaping () -> (mgdl: Double, datum: Date, trend: GlucoseTrend?)?,
++         einheit: @escaping () -> HKUnit) {
++        self.speicher = speicher
++        self.neuesterWert = neuesterWert
++        self.einheit = einheit
++        let basis = ordner ?? (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first ?? FileManager.default.temporaryDirectory)
++        let verzeichnis = basis.appendingPathComponent("Zuckerschock", isDirectory: true)
++        try? FileManager.default.createDirectory(at: verzeichnis, withIntermediateDirectories: true)
++        datei = verzeichnis.appendingPathComponent("hypos.json")
++        laden()
++
++        ZSHypoBruecke.gegessen = { [weak self] in self?.gegessen() }
++
++        aenderungen
++            .receive(on: DispatchQueue.main)
++            .sink { [weak self] in self?.pruefen() }
++            .store(in: &abos)
++        Timer.publish(every: 60, on: .main, in: .common)
++            .autoconnect()
++            .sink { [weak self] _ in self?.aktualisieren() }
++            .store(in: &abos)
++    }
++
++    convenience init(deviceManager: DeviceDataManager, speicher: ZSSpeicher) {
++        let center = NotificationCenter.default
++        let aenderungen = center.publisher(for: .LoopDataUpdated, object: deviceManager.loopManager)
++            .map { _ in () }
++            .eraseToAnyPublisher()
++        self.init(speicher: speicher, aenderungen: aenderungen, neuesterWert: { [weak deviceManager] in
++            guard let wert = deviceManager?.glucoseStore.latestGlucose else { return nil }
++            return (wert.quantity.doubleValue(for: .milligramsPerDeciliter), wert.startDate, wert.trend)
++        }, einheit: { [weak deviceManager] in deviceManager?.displayGlucosePreference.unit ?? .milligramsPerDeciliter })
++    }
++
++    // MARK: Speichern
++
++    private func laden() {
++        let decoder = JSONDecoder()
++        decoder.dateDecodingStrategy = .iso8601
++        guard let daten = try? Data(contentsOf: datei),
++              let gespeichert = try? decoder.decode(Gespeichert.self, from: daten) else { return }
++        verlauf = gespeichert.verlauf
++        aktiv = gespeichert.aktiv
++    }
++
++    private func sichern() {
++        let encoder = JSONEncoder()
++        encoder.dateEncodingStrategy = .iso8601
++        guard let daten = try? encoder.encode(Gespeichert(aktiv: aktiv, verlauf: verlauf)) else { return }
++        try? daten.write(to: datei, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
++    }
++
++    private struct Gespeichert: Codable {
++        var aktiv: ZSHypoEpisode?
++        var verlauf: [ZSHypoEpisode]
++    }
++
++    // MARK: Ablauf
++
++    func pruefen(jetzt: Date = Date()) {
++        guard let wert = neuesterWert() else { return }
++        let alter = jetzt.timeIntervalSince(wert.datum)
++
++        if ZSHypoRegeln.sollStarten(mgdl: wert.mgdl, alter: alter, aktiv: aktiv != nil) {
++            starten(mgdl: wert.mgdl, jetzt: jetzt)
++        } else if var episode = aktiv {
++            if wert.mgdl < episode.tiefsterWert {
++                episode.tiefsterWert = wert.mgdl
++                aktiv = episode
++                sichern()
++            }
++            if ZSHypoRegeln.sollEnden(mgdl: wert.mgdl, alter: alter, aktiv: true) {
++                beenden(jetzt: jetzt, wiederImZiel: true)
++                return
++            }
++        }
++        aktualisieren(jetzt: jetzt)
++    }
++
++    func starten(mgdl: Double, jetzt: Date = Date()) {
++        aktiv = ZSHypoEpisode(start: jetzt, tiefsterWert: mgdl, plaettchenJeMal: speicher.plan.hypoPlaettchen)
++        sichern()
++        aktualisieren(jetzt: jetzt)
++        liveActivityStarten()
++        mitteilen()
++    }
++
++    /// Erstes Eintragen per Tipp; weiteres Eintragen nur durch Halten (in der App).
++    func gegessen(jetzt: Date = Date()) {
++        guard var episode = aktiv else { return }
++        episode.gegessen.append(jetzt)
++        aktiv = episode
++        sichern()
++        aktualisieren(jetzt: jetzt)
++    }
++
++    func beenden(jetzt: Date = Date(), wiederImZiel: Bool = false) {
++        guard var episode = aktiv else { return }
++        episode.ende = jetzt
++        verlauf.insert(episode, at: 0)
++        aktiv = nil
++        sichern()
++        if var stand = zustand {
++            stand.wiederImZiel = wiederImZiel
++            zustand = nil
++            liveActivityBeenden(mit: stand)
++        } else {
++            liveActivityBeenden(mit: nil)
++        }
++    }
++
++    private func aktualisieren(jetzt: Date = Date()) {
++        guard let episode = aktiv else {
++            zustand = nil
++            return
++        }
++        let wert = neuesterWert()
++        let mgdl = wert?.mgdl ?? episode.tiefsterWert
++        let gegessenUm = episode.gegessen.last
++        let neu = ZSHypoAttribute.ContentState(
++            mgdl: mgdl,
++            wertText: ZSFormat.glukose(mgdl, einheit()),
++            einheitText: ZSFormat.einheit(einheit()),
++            trendPfeil: wert?.trend.map { ZSTrend($0).pfeil } ?? "",
++            wertDatum: wert?.datum ?? episode.start,
++            steigt: ZSHypoRegeln.steigt(wert?.trend),
++            gegessenUm: gegessenUm,
++            warteBis: gegessenUm?.addingTimeInterval(.minutes(Double(ZSHypoRegeln.warteMinuten(speicher.plan)))),
++            gegessenAnzahl: episode.gegessen.count,
++            mengeText: ZSHypoRegeln.mengeText(speicher.plan),
++            nachts: ZSHypoFarbe.istNacht(jetzt),
++            wiederImZiel: false)
++        if neu != zustand {
++            zustand = neu
++            liveActivityAktualisieren(neu)
++        }
++    }
++
++    // MARK: Live Activity
++
++    private func liveActivityStarten() {
++        guard #available(iOS 16.2, *), let stand = zustand, let episode = aktiv else { return }
++        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
++        do {
++            aktivitaet = try Activity.request(
++                attributes: ZSHypoAttribute(start: episode.start),
++                content: .init(state: stand, staleDate: Date().addingTimeInterval(.minutes(15))),
++                pushType: nil)
++        } catch {
++            // Ohne Live Activity bleibt die Mitteilung und die Karte auf Heute.
++        }
++    }
++
++    private func liveActivityAktualisieren(_ stand: ZSHypoAttribute.ContentState) {
++        guard #available(iOS 16.2, *), let aktivitaet = aktivitaet as? Activity<ZSHypoAttribute> else { return }
++        Task {
++            await aktivitaet.update(.init(state: stand, staleDate: Date().addingTimeInterval(.minutes(15))))
++        }
++    }
++
++    private func liveActivityBeenden(mit stand: ZSHypoAttribute.ContentState?) {
++        guard #available(iOS 16.2, *) else { return }
++        let laufend = (aktivitaet as? Activity<ZSHypoAttribute>).map { [$0] } ?? Activity<ZSHypoAttribute>.activities
++        aktivitaet = nil
++        Task {
++            for eintrag in laufend {
++                if let stand {
++                    await eintrag.end(.init(state: stand, staleDate: nil), dismissalPolicy: .after(Date().addingTimeInterval(.minutes(10))))
++                } else {
++                    await eintrag.end(nil, dismissalPolicy: .immediate)
++                }
++            }
++        }
++    }
++
++    // MARK: Mitteilung (zeitkritisch)
++
++    private func mitteilen() {
++        guard let stand = zustand else { return }
++        let inhalt = UNMutableNotificationContent()
++        inhalt.title = "Unterzucker: \(stand.wertText) \(stand.einheitText)"
++        inhalt.body = "Jetzt \(stand.mengeText) essen."
++        inhalt.sound = .default
++        inhalt.interruptionLevel = .timeSensitive
++        let anfrage = UNNotificationRequest(identifier: "Zuckerschock.Hypo", content: inhalt, trigger: nil)
++        UNUserNotificationCenter.current().add(anfrage)
++    }
++
++    // MARK: Statistik
++
++    struct Statistik {
++        var anzahl: Int
++        var nachts: Int
++        var tiefster: Double?
++        var mittlereDauer: TimeInterval?
++        var plaettchen: Int
++    }
++
++    func statistik(tage: Int, jetzt: Date = Date()) -> Statistik {
++        let ab = jetzt.addingTimeInterval(-.days(Double(tage)))
++        let episoden = verlauf.filter { $0.start >= ab }
++        let dauern = episoden.compactMap(\.dauer)
++        return Statistik(
++            anzahl: episoden.count,
++            nachts: episoden.filter { ZSHypoFarbe.istNacht($0.start) }.count,
++            tiefster: episoden.map(\.tiefsterWert).min(),
++            mittlereDauer: dauern.isEmpty ? nil : dauern.reduce(0, +) / Double(dauern.count),
++            plaettchen: episoden.reduce(0) { $0 + $1.gegessen.count * ($1.plaettchenJeMal ?? 0) })
++    }
++}
++
++#if targetEnvironment(simulator)
++extension ZSHypoBegleiter {
++    /// Laufende Episode mit Beispielwerten für Screenshots.
++    static func vorschau(speicher: ZSSpeicher, gegessenVorMinuten: Double?, nachts: Bool) -> ZSHypoBegleiter {
++        let jetzt = Date()
++        let begleiter = ZSHypoBegleiter(
++            speicher: speicher,
++            ordner: FileManager.default.temporaryDirectory.appendingPathComponent("ZSVorschau-\(UUID().uuidString)"),
++            aenderungen: Empty().eraseToAnyPublisher(),
++            neuesterWert: { (62, jetzt.addingTimeInterval(-.minutes(2)), gegessenVorMinuten == nil ? .down : .up) },
++            einheit: { .milligramsPerDeciliter })
++        begleiter.verlauf = [
++            ZSHypoEpisode(start: jetzt.addingTimeInterval(-TimeInterval.days(2.125)), ende: jetzt.addingTimeInterval(-TimeInterval.days(2.108)), tiefsterWert: 61, gegessen: [jetzt], plaettchenJeMal: 5),
++            ZSHypoEpisode(start: jetzt.addingTimeInterval(-TimeInterval.days(6)), ende: jetzt.addingTimeInterval(TimeInterval.minutes(35) - TimeInterval.days(6)), tiefsterWert: 54, gegessen: [jetzt, jetzt], plaettchenJeMal: 5)
++        ]
++        begleiter.aktiv = ZSHypoEpisode(start: jetzt.addingTimeInterval(-.minutes(6)), tiefsterWert: 62,
++                                        gegessen: gegessenVorMinuten.map { [jetzt.addingTimeInterval(-.minutes($0))] } ?? [], plaettchenJeMal: 5)
++        begleiter.aktualisieren(jetzt: jetzt)
++        if nachts, var stand = begleiter.zustand {
++            stand.nachts = true
++            begleiter.zustand = stand
++        }
++        return begleiter
++    }
++}
++#endif
++
++// MARK: - Ansicht
++
++struct ZSHypoView: View {
++    @ObservedObject var begleiter: ZSHypoBegleiter
++    var schliessen: () -> Void
++
++    @State private var haltFortschritt: Double = 0
++
++    var body: some View {
++        let stand = begleiter.zustand
++        let nachts = stand?.nachts ?? ZSHypoFarbe.istNacht()
++
++        ZStack {
++            ZSHypoFarbe.grund.ignoresSafeArea()
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space6) {
++                    HStack {
++                        Text("Unterzucker-Begleiter")
++                            .font(ZSSchrift.title3)
++                            .foregroundStyle(ZSHypoFarbe.text(nachts: nachts))
++                            .accessibilityAddTraits(.isHeader)
++                        Spacer()
++                        Button("Schließen", action: schliessen)
++                            .foregroundStyle(ZSHypoFarbe.text2(nachts: nachts))
++                            .frame(minHeight: ZSMass.tap)
++                    }
++
++                    if let stand, begleiter.aktiv != nil {
++                        laufend(stand, nachts: nachts)
++                    } else {
++                        Text("Gerade kein Unterzucker. Der Begleiter startet von selbst unter 70 mg/dl.")
++                            .font(ZSSchrift.body)
++                            .foregroundStyle(ZSHypoFarbe.text2(nachts: nachts))
++                    }
++
++                    statistik(nachts: nachts)
++                }
++                .padding(ZSMass.space5)
++            }
++        }
++        .preferredColorScheme(.dark)
++    }
++
++    @ViewBuilder
++    private func laufend(_ stand: ZSHypoAttribute.ContentState, nachts: Bool) -> some View {
++        VStack(alignment: .leading, spacing: ZSMass.space2) {
++            HStack(alignment: .firstTextBaseline, spacing: ZSMass.space2) {
++                Text(stand.wertText)
++                    .zsZahl(.wertHero)
++                    .foregroundStyle(ZSHypoFarbe.tief(nachts: nachts))
++                Text(stand.einheitText)
++                    .zsZahl(.einheit)
++                    .foregroundStyle(ZSHypoFarbe.text2(nachts: nachts))
++                Text(stand.trendPfeil)
++                    .font(.title.weight(.semibold))
++                    .foregroundStyle(ZSHypoFarbe.text(nachts: nachts))
++            }
++            .accessibilityElement(children: .combine)
++            Text(ZSFormat.istAlt(stand.wertDatum, jetzt: Date()) ? "Wert \(ZSFormat.alter(von: stand.wertDatum, jetzt: Date()))" : "Unter Ziel")
++                .font(ZSSchrift.subhead.weight(.semibold))
++                .foregroundStyle(ZSHypoFarbe.tief(nachts: nachts))
++        }
++
++        HStack(spacing: ZSMass.space4) {
++            ZSHypoRing(gegessenUm: stand.gegessenUm, warteBis: stand.warteBis, nachts: nachts, groesse: 88)
++            VStack(alignment: .leading, spacing: ZSMass.space1) {
++                if let warteBis = stand.warteBis, warteBis > Date() {
++                    Text("Warte noch bis \(ZSHypoRing.uhrzeit(warteBis))")
++                        .font(ZSSchrift.headline)
++                        .foregroundStyle(ZSHypoFarbe.text(nachts: nachts))
++                    if stand.steigt {
++                        Text("Steigt bereits, nicht nachessen.")
++                            .font(ZSSchrift.body)
++                            .foregroundStyle(ZSHypoFarbe.text(nachts: nachts))
++                    }
++                } else if stand.gegessenAnzahl == 0 {
++                    Text("Jetzt \(stand.mengeText) essen.")
++                        .font(ZSSchrift.headline)
++                        .foregroundStyle(ZSHypoFarbe.text(nachts: nachts))
++                } else {
++                    Text(stand.steigt ? "Steigt. Weiter beobachten." : "Wartezeit vorbei. Noch unter Ziel: \(stand.mengeText) essen.")
++                        .font(ZSSchrift.headline)
++                        .foregroundStyle(ZSHypoFarbe.text(nachts: nachts))
++                }
++                Text("\(stand.gegessenAnzahl)× gegessen · \(stand.mengeText)")
++                    .font(ZSSchrift.subhead)
++                    .foregroundStyle(ZSHypoFarbe.text2(nachts: nachts))
++            }
++        }
++
++        if stand.gegessenAnzahl == 0 {
++            Button {
++                begleiter.gegessen()
++            } label: {
++                Text("Gegessen")
++                    .font(ZSSchrift.headline)
++                    .frame(maxWidth: .infinity, minHeight: 56)
++                    .foregroundStyle(Color.black)
++                    .background(Capsule().fill(ZSHypoFarbe.text(nachts: nachts)))
++            }
++            .accessibilityHint("Trägt ein, dass du gegessen hast.")
++        } else {
++            // Zweites Eintragen nur durch Halten, damit niemand aus Versehen doppelt zählt.
++            Text("Nochmal gegessen? Halten")
++                .font(ZSSchrift.headline)
++                .foregroundStyle(ZSHypoFarbe.text(nachts: nachts))
++                .frame(maxWidth: .infinity, minHeight: 56)
++                .background(
++                    GeometryReader { geo in
++                        ZStack(alignment: .leading) {
++                            Capsule().strokeBorder(ZSHypoFarbe.text2(nachts: nachts), lineWidth: 1.5)
++                            Capsule()
++                                .fill(ZSHypoFarbe.text2(nachts: nachts).opacity(0.35))
++                                .frame(width: geo.size.width * haltFortschritt)
++                        }
++                    })
++                .contentShape(Capsule())
++                .onLongPressGesture(minimumDuration: 1.2, maximumDistance: 30) {
++                    haltFortschritt = 0
++                    begleiter.gegessen()
++                } onPressingChanged: { gedrueckt in
++                    withAnimation(gedrueckt ? .linear(duration: 1.2) : .easeOut(duration: 0.2)) {
++                        haltFortschritt = gedrueckt ? 1 : 0
++                    }
++                }
++                .accessibilityAddTraits(.isButton)
++                .accessibilityLabel("Nochmal gegessen")
++                .accessibilityAction { begleiter.gegessen() }
++        }
++
++        Button("Begleiter beenden") { begleiter.beenden() }
++            .font(ZSSchrift.subhead)
++            .foregroundStyle(ZSHypoFarbe.text2(nachts: nachts))
++            .frame(maxWidth: .infinity, minHeight: ZSMass.tap)
++    }
++
++    private func statistik(nachts: Bool) -> some View {
++        let zwei = begleiter.statistik(tage: 14)
++        let dreissig = begleiter.statistik(tage: 30)
++        return VStack(alignment: .leading, spacing: ZSMass.space3) {
++            Text("Rückblick")
++                .font(ZSSchrift.headline)
++                .foregroundStyle(ZSHypoFarbe.text(nachts: nachts))
++                .accessibilityAddTraits(.isHeader)
++            HStack(spacing: ZSMass.space3) {
++                kachel("\(zwei.anzahl)", "in 14 Tagen", nachts: nachts)
++                kachel("\(dreissig.anzahl)", "in 30 Tagen", nachts: nachts)
++                kachel("\(dreissig.nachts)", "davon nachts", nachts: nachts)
++            }
++            HStack(spacing: ZSMass.space3) {
++                kachel(dreissig.tiefster.map { ZSFormat.zahl($0, stellen: 0) } ?? "–", "tiefster Wert, mg/dl", nachts: nachts)
++                kachel(dreissig.mittlereDauer.map { "\(Int($0 / 60))" } ?? "–", "Min. im Mittel", nachts: nachts)
++                kachel("\(dreissig.plaettchen)", "Plättchen", nachts: nachts)
++            }
++        }
++    }
++
++    private func kachel(_ wert: String, _ label: String, nachts: Bool) -> some View {
++        VStack(alignment: .leading, spacing: 2) {
++            Text(wert)
++                .zsZahl(.wert)
++                .foregroundStyle(ZSHypoFarbe.text(nachts: nachts))
++            Text(label)
++                .font(ZSSchrift.footnote)
++                .foregroundStyle(ZSHypoFarbe.text2(nachts: nachts))
++                .lineLimit(2)
++        }
++        .padding(ZSMass.space3)
++        .frame(maxWidth: .infinity, alignment: .leading)
++        .background(RoundedRectangle(cornerRadius: ZSMass.radiusM, style: .continuous).fill(Color(white: 0.09)))
++        .accessibilityElement(children: .combine)
++    }
++}
++
++// MARK: - Therapieplan eintragen
++
++/// Werte vom Diabetes-Team. Die App schlägt hier nichts vor und rechnet nichts aus.
++struct ZSTherapieplanView: View {
++    @ObservedObject var speicher: ZSSpeicher
++    var schliessen: () -> Void
++
++    @State private var plan = ZSTherapieplan.leer
++
++    var body: some View {
++        VStack(spacing: 0) {
++            ZSBlattKopf(titel: "Therapieplan", abbrechen: schliessen)
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space6) {
++                    Text("Trag hier die Werte ein, die dein Diabetes-Team mit dir festgelegt hat. Leere Felder zeigt die App ohne Zahl an.")
++                        .font(ZSSchrift.subhead)
++                        .foregroundStyle(ZSFarbe.text2)
++                        .fixedSize(horizontal: false, vertical: true)
++
++                    VStack(alignment: .leading, spacing: ZSMass.space3) {
++                        ZSAbschnittTitel(text: "Unterzucker")
++                        ZSEingabeFeld(titel: "Plättchen pro Mal") {
++                            TextField("z. B. 5", value: $plan.hypoPlaettchen, format: .number)
++                                .keyboardType(.numberPad)
++                        }
++                        ZSEingabeFeld(titel: "Gramm KH je Plättchen") {
++                            TextField("z. B. 3", value: $plan.hypoGrammJePlaettchen, format: .number)
++                                .keyboardType(.decimalPad)
++                        }
++                        ZSEingabeFeld(titel: "Wartezeit nach dem Essen (Minuten)") {
++                            TextField("ohne Wert 15", value: $plan.hypoWarteMinuten, format: .number)
++                                .keyboardType(.numberPad)
++                        }
++                    }
++
++                    VStack(alignment: .leading, spacing: ZSMass.space3) {
++                        ZSAbschnittTitel(text: "Essen")
++                        ZSEingabeFeld(titel: "Gramm KH je FPE") {
++                            TextField("leer, wenn nicht festgelegt", value: $plan.khJeFPE, format: .number)
++                                .keyboardType(.decimalPad)
++                        }
++                        ZSEingabeFeld(titel: "Spritz-Ess-Abstand (Minuten)") {
++                            TextField("leer, wenn nicht festgelegt", value: $plan.spritzEssAbstandMinuten, format: .number)
++                                .keyboardType(.numberPad)
++                        }
++                    }
++
++                    Button {
++                        speicher.plan = plan
++                        schliessen()
++                    } label: {
++                        Text("Plan sichern").font(ZSSchrift.headline)
++                    }
++                    .buttonStyle(ZSDruckStil(art: .primaer))
++
++                    Text("Insulinmengen, Faktoren und Grenzen stellst du weiter in Loop ein.")
++                        .font(ZSSchrift.footnote)
++                        .foregroundStyle(ZSFarbe.text2)
++                }
++                .padding(ZSMass.space5)
++            }
++        }
++        .background(ZSFarbe.grund.ignoresSafeArea())
++        .environment(\.locale, Locale(identifier: "de_DE"))
++        .onAppear { plan = speicher.plan }
++    }
++}
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHypoGemeinsam.swift b/Loop/Loop/Zuckerschock/ZuckerschockHypoGemeinsam.swift
+new file mode 100644
+index 0000000..fa3113a
+--- /dev/null
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHypoGemeinsam.swift
+@@ -0,0 +1,122 @@
++//
++//  ZuckerschockHypoGemeinsam.swift
++//  Loop + Loop Widget Extension
++//
++//  Zuckerschock: gemeinsame Teile des Hypo-Begleiters für App und Live Activity.
++//  Ruhig, ohne Marke: kein Orange, kein Blitz, kein Humor. Mengen nur aus dem Therapieplan.
++//
++
++import ActivityKit
++import AppIntents
++import Foundation
++import SwiftUI
++
++struct ZSHypoAttribute: ActivityAttributes {
++    struct ContentState: Codable, Hashable {
++        /// Aktueller Wert in mg/dl und als fertiger Text in der Einheit des Nutzers.
++        var mgdl: Double
++        var wertText: String
++        var einheitText: String
++        var trendPfeil: String
++        var wertDatum: Date
++        var steigt: Bool
++        /// Zuletzt gegessen und bis wann gewartet wird (laut Plan).
++        var gegessenUm: Date?
++        var warteBis: Date?
++        var gegessenAnzahl: Int
++        /// „5 Plättchen à 3 g“ aus dem Plan, sonst „schnelle KH nach deinem Plan“.
++        var mengeText: String
++        var nachts: Bool
++        var wiederImZiel: Bool
++    }
++
++    var start: Date
++}
++
++/// Brücke von der Live Activity in die App: Der Intent läuft im App-Prozess.
++enum ZSHypoBruecke {
++    static var gegessen: (() -> Void)?
++}
++
++@available(iOS 17.0, *)
++struct ZSHypoGegessenIntent: LiveActivityIntent {
++    static let title: LocalizedStringResource = "Gegessen"
++    static let description = IntentDescription("Trägt ein, dass du schnelle Kohlenhydrate gegessen hast.")
++
++    init() {}
++
++    func perform() async throws -> some IntentResult {
++        await MainActor.run { ZSHypoBruecke.gegessen?() }
++        return .result()
++    }
++}
++
++/// Farben des Begleiters: tags ruhig, nachts rot gedimmt.
++enum ZSHypoFarbe {
++    static func text(nachts: Bool) -> Color {
++        nachts ? Color(red: 0.75, green: 0.18, blue: 0.18) : Color(red: 0.97, green: 0.95, blue: 0.93)
++    }
++
++    static func text2(nachts: Bool) -> Color {
++        nachts ? Color(red: 0.55, green: 0.13, blue: 0.13) : Color(red: 0.97, green: 0.95, blue: 0.93).opacity(0.66)
++    }
++
++    /// tief (Unterzucker), gedimmt bei Nacht.
++    static func tief(nachts: Bool) -> Color {
++        nachts ? Color(red: 0.6, green: 0.14, blue: 0.14) : Color(red: 1, green: 0.42, blue: 0.42)
++    }
++
++    static let grund = Color.black
++
++    /// 22 bis 6 Uhr gilt als Nacht.
++    static func istNacht(_ datum: Date = Date()) -> Bool {
++        let stunde = Calendar.current.component(.hour, from: datum)
++        return stunde >= 22 || stunde < 6
++    }
++}
++
++/// Countdown-Ring „Warte noch …“.
++struct ZSHypoRing: View {
++    var gegessenUm: Date?
++    var warteBis: Date?
++    var nachts: Bool
++    var groesse: CGFloat = 56
++
++    var body: some View {
++        ZStack {
++            Circle()
++                .stroke(ZSHypoFarbe.text2(nachts: nachts).opacity(0.3), lineWidth: groesse * 0.1)
++            if let gegessenUm, let warteBis, warteBis > gegessenUm {
++                ProgressView(timerInterval: gegessenUm...warteBis, countsDown: true) {
++                    EmptyView()
++                } currentValueLabel: {
++                    EmptyView()
++                }
++                .progressViewStyle(.circular)
++                .tint(ZSHypoFarbe.text(nachts: nachts))
++                .labelsHidden()
++                .frame(width: groesse, height: groesse)
++                Text(timerInterval: gegessenUm...warteBis, countsDown: true, showsHours: false)
++                    .font(.system(size: groesse * 0.24, weight: .semibold, design: .rounded))
++                    .monospacedDigit()
++                    .multilineTextAlignment(.center)
++                    .foregroundStyle(ZSHypoFarbe.text(nachts: nachts))
++                    .frame(width: groesse * 0.8)
++            } else {
++                Image(systemName: "fork.knife")
++                    .font(.system(size: groesse * 0.32))
++                    .foregroundStyle(ZSHypoFarbe.text(nachts: nachts))
++            }
++        }
++        .frame(width: groesse, height: groesse)
++        .accessibilityElement(children: .ignore)
++        .accessibilityLabel(warteBis.map { $0 > Date() ? "Warten bis \(Self.uhrzeit($0))" : "Wartezeit vorbei" } ?? "Noch nichts gegessen")
++    }
++
++    static func uhrzeit(_ datum: Date) -> String {
++        let f = DateFormatter()
++        f.locale = Locale(identifier: "de_DE")
++        f.dateFormat = "HH:mm"
++        return f.string(from: datum)
++    }
++}
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHypoLiveActivity.swift b/Loop/Loop/Zuckerschock/ZuckerschockHypoLiveActivity.swift
+new file mode 100644
+index 0000000..b9c0223
+--- /dev/null
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHypoLiveActivity.swift
+@@ -0,0 +1,140 @@
++//
++//  ZuckerschockHypoLiveActivity.swift
++//  Loop Widget Extension
++//
++//  Zuckerschock: Live Activity und Dynamic Island des Hypo-Begleiters.
++//  Ruhig, ohne Orange, ohne Blitz. Nachts rot gedimmt.
++//
++
++import ActivityKit
++import AppIntents
++import SwiftUI
++import WidgetKit
++
++@available(iOS 17.0, *)
++struct ZSHypoLiveActivity: Widget {
++    var body: some WidgetConfiguration {
++        ActivityConfiguration(for: ZSHypoAttribute.self) { context in
++            ZSHypoSperrbildschirm(stand: context.state)
++                .activityBackgroundTint(ZSHypoFarbe.grund)
++                .activitySystemActionForegroundColor(ZSHypoFarbe.text(nachts: context.state.nachts))
++        } dynamicIsland: { context in
++            let stand = context.state
++            let nachts = stand.nachts
++            return DynamicIsland {
++                DynamicIslandExpandedRegion(.leading) {
++                    VStack(alignment: .leading, spacing: 0) {
++                        HStack(alignment: .firstTextBaseline, spacing: 2) {
++                            Text(stand.wertText)
++                                .font(.system(size: 34, weight: .semibold, design: .rounded))
++                                .monospacedDigit()
++                            Text(stand.trendPfeil)
++                                .font(.title3.weight(.semibold))
++                        }
++                        Text(stand.einheitText)
++                            .font(.caption)
++                            .foregroundStyle(ZSHypoFarbe.text2(nachts: nachts))
++                    }
++                    .foregroundStyle(stand.wiederImZiel ? ZSHypoFarbe.text(nachts: nachts) : ZSHypoFarbe.tief(nachts: nachts))
++                    .padding(.leading, 4)
++                }
++                DynamicIslandExpandedRegion(.trailing) {
++                    ZSHypoRing(gegessenUm: stand.gegessenUm, warteBis: stand.warteBis, nachts: nachts, groesse: 52)
++                        .padding(.trailing, 4)
++                }
++                DynamicIslandExpandedRegion(.bottom) {
++                    ZSHypoUnterzeile(stand: stand)
++                }
++            } compactLeading: {
++                Text(stand.wertText)
++                    .font(.system(.body, design: .rounded).weight(.semibold))
++                    .monospacedDigit()
++                    .foregroundStyle(ZSHypoFarbe.tief(nachts: nachts))
++            } compactTrailing: {
++                if let gegessenUm = stand.gegessenUm, let warteBis = stand.warteBis, warteBis > Date() {
++                    Text(timerInterval: gegessenUm...warteBis, countsDown: true, showsHours: false)
++                        .monospacedDigit()
++                        .frame(maxWidth: 44)
++                        .foregroundStyle(ZSHypoFarbe.text(nachts: nachts))
++                } else {
++                    Text(stand.trendPfeil)
++                        .foregroundStyle(ZSHypoFarbe.text(nachts: nachts))
++                }
++            } minimal: {
++                Text(stand.wertText)
++                    .font(.system(.caption, design: .rounded).weight(.semibold))
++                    .foregroundStyle(ZSHypoFarbe.tief(nachts: nachts))
++            }
++            .keylineTint(ZSHypoFarbe.tief(nachts: nachts))
++        }
++    }
++}
++
++@available(iOS 17.0, *)
++private struct ZSHypoSperrbildschirm: View {
++    var stand: ZSHypoAttribute.ContentState
++
++    var body: some View {
++        let nachts = stand.nachts
++        HStack(alignment: .center, spacing: 14) {
++            VStack(alignment: .leading, spacing: 2) {
++                Text(stand.wiederImZiel ? "Wieder im Ziel" : "Unterzucker")
++                    .font(.subheadline.weight(.semibold))
++                    .foregroundStyle(stand.wiederImZiel ? ZSHypoFarbe.text(nachts: nachts) : ZSHypoFarbe.tief(nachts: nachts))
++                HStack(alignment: .firstTextBaseline, spacing: 4) {
++                    Text(stand.wertText)
++                        .font(.system(size: 40, weight: .semibold, design: .rounded))
++                        .monospacedDigit()
++                    Text(stand.einheitText)
++                        .font(.footnote.weight(.medium))
++                        .foregroundStyle(ZSHypoFarbe.text2(nachts: nachts))
++                    Text(stand.trendPfeil)
++                        .font(.title3.weight(.semibold))
++                }
++                .foregroundStyle(ZSHypoFarbe.text(nachts: nachts))
++                ZSHypoUnterzeile(stand: stand)
++            }
++            Spacer(minLength: 8)
++            ZSHypoRing(gegessenUm: stand.gegessenUm, warteBis: stand.warteBis, nachts: nachts, groesse: 64)
++        }
++        .padding(16)
++    }
++}
++
++/// Handlung plus Taste „Gegessen“. Die Taste gibt es nur, solange noch nichts eingetragen ist;
++/// zweites Eintragen nur in der App durch Halten.
++@available(iOS 17.0, *)
++private struct ZSHypoUnterzeile: View {
++    var stand: ZSHypoAttribute.ContentState
++
++    var body: some View {
++        let nachts = stand.nachts
++        HStack(spacing: 10) {
++            Text(text)
++                .font(.footnote)
++                .foregroundStyle(ZSHypoFarbe.text(nachts: nachts))
++                .lineLimit(2)
++            Spacer(minLength: 4)
++            if stand.gegessenAnzahl == 0 && !stand.wiederImZiel {
++                Button(intent: ZSHypoGegessenIntent()) {
++                    Text("Gegessen")
++                        .font(.footnote.weight(.semibold))
++                        .padding(.horizontal, 14)
++                        .padding(.vertical, 8)
++                }
++                .buttonStyle(.plain)
++                .foregroundStyle(Color.black)
++                .background(Capsule().fill(ZSHypoFarbe.text(nachts: nachts)))
++            }
++        }
++    }
++
++    private var text: String {
++        if stand.wiederImZiel { return "Wieder im Ziel. Der Begleiter endet gleich." }
++        if let warteBis = stand.warteBis, warteBis > Date() {
++            return stand.steigt ? "Steigt bereits, nicht nachessen." : "Gegessen. Warte noch bis \(ZSHypoRing.uhrzeit(warteBis))."
++        }
++        if stand.gegessenAnzahl == 0 { return "Jetzt \(stand.mengeText) essen." }
++        return stand.steigt ? "Steigt. Weiter beobachten." : "Noch unter Ziel: \(stand.mengeText) essen."
++    }
++}
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+index 5b053a8..e071c07 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+@@ -176,6 +176,10 @@ private struct ZSTherapieView: View {
+                         ZSListenZeile(titel: "Einstellungen", untertitel: "Therapie, Pumpe, Sensor, Dienste", symbol: "gearshape", marke: true, aktion: aktionen.einstellungen)
+                         Divider().overlay(ZSFarbe.haarlinie).padding(.leading, 57)
+                         ZSListenZeile(titel: "Vorrat", untertitel: "Pods, Sensoren, Insulin, Rezept", symbol: "shippingbox", aktion: aktionen.vorrat)
++                        Divider().overlay(ZSFarbe.haarlinie).padding(.leading, 57)
++                        ZSListenZeile(titel: "Therapieplan", untertitel: "Unterzucker-Plan, FPE, Spritz-Ess-Abstand", symbol: "list.clipboard", aktion: aktionen.therapieplan)
++                        Divider().overlay(ZSFarbe.haarlinie).padding(.leading, 57)
++                        ZSListenZeile(titel: "Unterzucker-Begleiter", untertitel: "Läuft von selbst, Rückblick", symbol: "heart.text.square", aktion: aktionen.hypo)
+                     }
+                     .background(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous).fill(ZSFarbe.flaeche1))
+                     .clipShape(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous))
+@@ -276,6 +280,7 @@ final class ZuckerschockTabController: UIViewController {
+     private let vorratQuelle: ZSVorratQuelle
+     /// Erkennt Pod-Wechsel im Hintergrund; lebt so lange wie die Oberfläche.
+     var vorratWaechter: ZSVorratWaechter?
++    private let hypoBegleiter: ZSHypoBegleiter
+     private var kinder: [ZSTab: UIViewController] = [:]
+     private var aktuellerTab: ZSTab = .heute
+     private var abo: AnyCancellable?
+@@ -287,13 +292,14 @@ final class ZuckerschockTabController: UIViewController {
+     private static let leistenPlatz: CGFloat = ZSMass.leisteHoehe + ZSMass.space2 + ZSMass.space2
+ 
+     init(statusTableViewController: StatusTableViewController?, heuteQuelle: ZSHeuteQuelle, essenQuelle: ZSEssenQuelle, speicher: ZSSpeicher,
+-         vorrat: ZSVorrat, vorratQuelle: ZSVorratQuelle) {
++         vorrat: ZSVorrat, vorratQuelle: ZSVorratQuelle, hypoBegleiter: ZSHypoBegleiter) {
+         self.statusTableViewController = statusTableViewController
+         self.heuteModell = ZSHeuteModell(quelle: heuteQuelle)
+         self.essenQuelle = essenQuelle
+         self.speicher = speicher
+         self.vorrat = vorrat
+         self.vorratQuelle = vorratQuelle
++        self.hypoBegleiter = hypoBegleiter
+         super.init(nibName: nil, bundle: nil)
+     }
+ 
+@@ -332,6 +338,14 @@ final class ZuckerschockTabController: UIViewController {
+             vorrat: { [weak self] in self?.blattZeigen { schliessen in
+                 guard let self else { return AnyView(EmptyView()) }
+                 return AnyView(ZSVorratView(vorrat: self.vorrat, quelle: self.vorratQuelle, schliessen: schliessen))
++            } },
++            hypo: { [weak self] in self?.blattZeigen { schliessen in
++                guard let self else { return AnyView(EmptyView()) }
++                return AnyView(ZSHypoView(begleiter: self.hypoBegleiter, schliessen: schliessen))
++            } },
++            therapieplan: { [weak self] in self?.blattZeigen { schliessen in
++                guard let self else { return AnyView(EmptyView()) }
++                return AnyView(ZSTherapieplanView(speicher: self.speicher, schliessen: schliessen))
+             } })
+ 
+         kinder[.heute] = gastgeber(ZSHeuteView(modell: heuteModell, vorrat: vorrat, aktionen: aktionen))
+@@ -476,12 +490,23 @@ enum ZSVorschau {
+         ProcessInfo.processInfo.environment["ZS_VORSCHAU"] == "1"
+     }
+ 
++    /// ZS_HYPO: „neu“ (noch nichts gegessen), „wartet“ (vor 4 Min gegessen), „nacht“ (wartet, nachts).
++    static func hypoVorschau(_ umgebung: [String: String]) -> ZSHypoBegleiter {
++        let speicher = ZSSpeicher.vorschau()
++        switch umgebung["ZS_HYPO"] {
++        case "wartet": return ZSHypoBegleiter.vorschau(speicher: speicher, gegessenVorMinuten: 4, nachts: false)
++        case "nacht": return ZSHypoBegleiter.vorschau(speicher: speicher, gegessenVorMinuten: 4, nachts: true)
++        default: return ZSHypoBegleiter.vorschau(speicher: speicher, gegessenVorMinuten: nil, nachts: false)
++        }
++    }
++
+     static func wurzel() -> UIViewController {
+         let umgebung = ProcessInfo.processInfo.environment
+         let szenario = ZSVorschauQuelle.Szenario(rawValue: umgebung["ZS_SZENARIO"] ?? "") ?? .normal
+         let tabs = ZuckerschockTabController(statusTableViewController: nil, heuteQuelle: ZSVorschauQuelle(szenario: szenario),
+                                              essenQuelle: ZSVorschauEssenQuelle(), speicher: ZSSpeicher.vorschau(),
+-                                             vorrat: ZSVorrat.vorschau(), vorratQuelle: ZSVorschauVorratQuelle())
++                                             vorrat: ZSVorrat.vorschau(), vorratQuelle: ZSVorschauVorratQuelle(),
++                                             hypoBegleiter: hypoVorschau(umgebung))
+         let navigation = UINavigationController(rootViewController: tabs)
+         navigation.setNavigationBarHidden(true, animated: false)
+         if let name = umgebung["ZS_TAB"], let tab = ZSTab.allCases.first(where: { $0.titel.lowercased() == name.lowercased() }) {
+@@ -504,6 +529,10 @@ extension ZuckerschockTabController {
+         switch name {
+         case "vorrat":
+             blattZeigen { schliessen in AnyView(ZSVorratView(vorrat: self.vorrat, quelle: self.vorratQuelle, schliessen: schliessen)) }
++        case "hypo":
++            blattZeigen { schliessen in AnyView(ZSHypoView(begleiter: self.hypoBegleiter, schliessen: schliessen)) }
++        case "therapieplan":
++            blattZeigen { schliessen in AnyView(ZSTherapieplanView(speicher: self.speicher, schliessen: schliessen)) }
+         default:
+             break
+         }
