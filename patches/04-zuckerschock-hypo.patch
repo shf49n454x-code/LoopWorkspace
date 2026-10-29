@@ -120,10 +120,10 @@ index ff1415a..2d9669e 100644
              ZSHeroKarte(stand: stand, jetzt: jetzt, gestapelt: dynamicTypeSize.isAccessibilitySize)
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift b/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
 new file mode 100644
-index 0000000..54a4921
+index 0000000..ef334c1
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
-@@ -0,0 +1,559 @@
+@@ -0,0 +1,585 @@
 +//
 +//  ZuckerschockHypo.swift
 +//  Loop
@@ -224,6 +224,11 @@ index 0000000..54a4921
 +        Timer.publish(every: 60, on: .main, in: .common)
 +            .autoconnect()
 +            .sink { [weak self] _ in self?.aktualisieren() }
++            .store(in: &abos)
++        // Live Activities lassen sich nur im Vordergrund starten: nachholen, sobald die App aktiv wird.
++        NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)
++            .receive(on: DispatchQueue.main)
++            .sink { [weak self] _ in self?.liveActivityNachholen() }
 +            .store(in: &abos)
 +    }
 +
@@ -344,9 +349,30 @@ index 0000000..54a4921
 +
 +    // MARK: Live Activity
 +
++    /// Läuft eine Episode ohne Live Activity (Start im Hintergrund oder App neu gestartet), wird sie jetzt gestartet.
++    private func liveActivityNachholen() {
++        guard aktiv != nil else { return }
++        aktualisieren()
++        guard #available(iOS 16.2, *), laufendeAktivitaet() == nil else { return }
++        liveActivityStarten()
++    }
++
++    @available(iOS 16.2, *)
++    private func laufendeAktivitaet() -> Activity<ZSHypoAttribute>? {
++        if let eigene = aktivitaet as? Activity<ZSHypoAttribute> { return eigene }
++        // Nach einem Neustart der App kennt nur ActivityKit die laufende Live Activity.
++        let gefunden = Activity<ZSHypoAttribute>.activities.first { $0.activityState == .active }
++        aktivitaet = gefunden
++        return gefunden
++    }
++
 +    private func liveActivityStarten() {
 +        guard #available(iOS 16.2, *), let stand = zustand, let episode = aktiv else { return }
 +        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
++        guard laufendeAktivitaet() == nil else {
++            liveActivityAktualisieren(stand)
++            return
++        }
 +        do {
 +            aktivitaet = try Activity.request(
 +                attributes: ZSHypoAttribute(start: episode.start),
@@ -358,7 +384,7 @@ index 0000000..54a4921
 +    }
 +
 +    private func liveActivityAktualisieren(_ stand: ZSHypoAttribute.ContentState) {
-+        guard #available(iOS 16.2, *), let aktivitaet = aktivitaet as? Activity<ZSHypoAttribute> else { return }
++        guard #available(iOS 16.2, *), let aktivitaet = laufendeAktivitaet() else { return }
 +        Task {
 +            await aktivitaet.update(.init(state: stand, staleDate: Date().addingTimeInterval(.minutes(15))))
 +        }
