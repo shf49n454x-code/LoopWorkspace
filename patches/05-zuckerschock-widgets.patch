@@ -1,0 +1,648 @@
+diff --git a/Loop/Loop Widget Extension/LoopWidgets.swift b/Loop/Loop Widget Extension/LoopWidgets.swift
+index 69e2d64..60da998 100644
+--- a/Loop/Loop Widget Extension/LoopWidgets.swift	
++++ b/Loop/Loop Widget Extension/LoopWidgets.swift	
+@@ -21,6 +21,11 @@ struct LoopWidgets: WidgetBundle {
+         }
+         if #available(iOS 17.0, *) {
+             ZSHypoLiveActivity()
++            ZSSperrWidget()
++            ZSHomeWidget()
++        }
++        if #available(iOS 18.0, *) {
++            ZSFotoKHControl()
+         }
+     }
+ }
+diff --git a/Loop/Loop.xcodeproj/project.pbxproj b/Loop/Loop.xcodeproj/project.pbxproj
+index 7bd34fb..74fe670 100644
+--- a/Loop/Loop.xcodeproj/project.pbxproj
++++ b/Loop/Loop.xcodeproj/project.pbxproj
+@@ -7,6 +7,10 @@
+ 	objects = {
+ 
+ /* Begin PBXBuildFile section */
++		5A5E339D3A8A26391EC01FB9 /* ZuckerschockTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C00000000000000000010 /* ZuckerschockTheme.swift */; };
++		5A5E2F5203E82EF20E6BE75F /* ZuckerschockWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C2F5203E82EF20E6BE75F /* ZuckerschockWidgets.swift */; };
++		5A5E911AD14F5C87FECF59BF /* ZuckerschockWidgetGemeinsam.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C911AD14F5C87FECF59BF /* ZuckerschockWidgetGemeinsam.swift */; };
++		5A5D911AD14F5C87FECF59BF /* ZuckerschockWidgetGemeinsam.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C911AD14F5C87FECF59BF /* ZuckerschockWidgetGemeinsam.swift */; };
+ 		5A5EF086674BF8475B8A71DC /* ZuckerschockHypoLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CF086674BF8475B8A71DC /* ZuckerschockHypoLiveActivity.swift */; };
+ 		5A5E4931624412E5911E5892 /* ZuckerschockHypoGemeinsam.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C4931624412E5911E5892 /* ZuckerschockHypoGemeinsam.swift */; };
+ 		5A5D4931624412E5911E5892 /* ZuckerschockHypoGemeinsam.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C4931624412E5911E5892 /* ZuckerschockHypoGemeinsam.swift */; };
+@@ -771,6 +775,8 @@
+ /* End PBXCopyFilesBuildPhase section */
+ 
+ /* Begin PBXFileReference section */
++		5A5C2F5203E82EF20E6BE75F /* ZuckerschockWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockWidgets.swift; sourceTree = "<group>"; };
++		5A5C911AD14F5C87FECF59BF /* ZuckerschockWidgetGemeinsam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockWidgetGemeinsam.swift; sourceTree = "<group>"; };
+ 		5A5CF086674BF8475B8A71DC /* ZuckerschockHypoLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockHypoLiveActivity.swift; sourceTree = "<group>"; };
+ 		5A5C4931624412E5911E5892 /* ZuckerschockHypoGemeinsam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockHypoGemeinsam.swift; sourceTree = "<group>"; };
+ 		5A5CB3738D09088F135E6B77 /* ZuckerschockHypo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockHypo.swift; sourceTree = "<group>"; };
+@@ -1550,6 +1556,8 @@
+ 		5A5C00000000000000000001 /* Zuckerschock */ = {
+ 			isa = PBXGroup;
+ 			children = (
++				5A5C2F5203E82EF20E6BE75F /* ZuckerschockWidgets.swift */,
++				5A5C911AD14F5C87FECF59BF /* ZuckerschockWidgetGemeinsam.swift */,
+ 				5A5CF086674BF8475B8A71DC /* ZuckerschockHypoLiveActivity.swift */,
+ 				5A5C4931624412E5911E5892 /* ZuckerschockHypoGemeinsam.swift */,
+ 				5A5CB3738D09088F135E6B77 /* ZuckerschockHypo.swift */,
+@@ -3387,6 +3395,9 @@
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
++				5A5E339D3A8A26391EC01FB9 /* ZuckerschockTheme.swift in Sources */,
++				5A5E2F5203E82EF20E6BE75F /* ZuckerschockWidgets.swift in Sources */,
++				5A5E911AD14F5C87FECF59BF /* ZuckerschockWidgetGemeinsam.swift in Sources */,
+ 				5A5EF086674BF8475B8A71DC /* ZuckerschockHypoLiveActivity.swift in Sources */,
+ 				5A5E4931624412E5911E5892 /* ZuckerschockHypoGemeinsam.swift in Sources */,
+ 				14B1738128AEDC70006CCD7C /* StatusExtensionContext.swift in Sources */,
+@@ -3426,6 +3437,7 @@
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
++				5A5D911AD14F5C87FECF59BF /* ZuckerschockWidgetGemeinsam.swift in Sources */,
+ 				5A5D4931624412E5911E5892 /* ZuckerschockHypoGemeinsam.swift in Sources */,
+ 				5A5DB3738D09088F135E6B77 /* ZuckerschockHypo.swift in Sources */,
+ 				5A5DE0BE645A5ED073A43B30 /* ZuckerschockVorrat.swift in Sources */,
+diff --git a/Loop/Loop/Managers/DeeplinkManager.swift b/Loop/Loop/Managers/DeeplinkManager.swift
+index 86b17f6..dba4615 100644
+--- a/Loop/Loop/Managers/DeeplinkManager.swift
++++ b/Loop/Loop/Managers/DeeplinkManager.swift
+@@ -13,6 +13,9 @@ enum Deeplink: String, CaseIterable {
+     case bolus = "manual-bolus"
+     case preMeal = "pre-meal-preset"
+     case customPresets = "custom-presets"
++    // Zuckerschock
++    case fotoKH = "foto-kh"
++    case heute = "heute"
+     
+     init?(url: URL?) {
+         guard let url, let host = url.host, let deeplink = Deeplink.allCases.first(where: { $0.rawValue == host }) else {
+diff --git a/Loop/Loop/View Controllers/RootNavigationController.swift b/Loop/Loop/View Controllers/RootNavigationController.swift
+index b34d438..0aa623b 100644
+--- a/Loop/Loop/View Controllers/RootNavigationController.swift	
++++ b/Loop/Loop/View Controllers/RootNavigationController.swift	
+@@ -31,6 +31,10 @@ class RootNavigationController: UINavigationController {
+             statusTableViewController.presentBolusScreen()
+         case .customPresets:
+             statusTableViewController.presentCustomPresets()
++        case .fotoKH:
++            (viewControllers.first as? ZuckerschockTabController)?.fotoKH()
++        case .heute:
++            (viewControllers.first as? ZuckerschockTabController)?.heuteZeigen()
+         }
+     }
+ 
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+index 6c519e2..3e312f5 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+@@ -10,6 +10,7 @@
+ import Combine
+ import SwiftUI
+ import UIKit
++import WidgetKit
+ 
+ // MARK: - Tabs
+ 
+@@ -184,6 +185,8 @@ private struct ZSTherapieView: View {
+                     .background(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous).fill(ZSFarbe.flaeche1))
+                     .clipShape(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous))
+ 
++                    ZSWertVerbergenSchalter()
++
+                     Text("Alle Werte und Grenzen stellst du wie bisher in Loop ein. Zuckerschock ändert daran nichts.")
+                         .font(ZSSchrift.footnote)
+                         .foregroundStyle(ZSFarbe.text2)
+@@ -234,6 +237,26 @@ private struct ZSListenZeile: View {
+     }
+ }
+ 
++/// Datenschutz: Wert im gesperrten Zustand ausblenden (Widgets).
++private struct ZSWertVerbergenSchalter: View {
++    @AppStorage("Zuckerschock.wertVerbergen") private var verbergen = false
++
++    var body: some View {
++        Toggle(isOn: $verbergen) {
++            VStack(alignment: .leading, spacing: 2) {
++                Text("Wert gesperrt ausblenden")
++                    .font(ZSSchrift.body)
++                    .foregroundStyle(ZSFarbe.text)
++                Text("Widgets zeigen den Zucker erst nach dem Entsperren.")
++                    .font(ZSSchrift.subhead)
++                    .foregroundStyle(ZSFarbe.text2)
++            }
++        }
++        .padding(ZSMass.space4)
++        .background(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous).fill(ZSFarbe.flaeche1))
++    }
++}
++
+ /// Listenzeilen hellen beim Drücken auf, statt zu schrumpfen.
+ private struct ZSZeilenStil: ButtonStyle {
+     func makeBody(configuration: Configuration) -> some View {
+@@ -391,6 +414,79 @@ final class ZuckerschockTabController: UIViewController {
+         abo = auswahl.$tab
+             .removeDuplicates()
+             .sink { [weak self] tab in self?.wechseln(zu: tab) }
++
++        // Widgets: kleiner Datenstand in der App-Gruppe, bei jedem neuen Wert.
++        heuteModell.$stand
++            .combineLatest(vorrat.$stand, speicher.$mahlzeiten)
++            .debounce(for: .seconds(1), scheduler: DispatchQueue.main)
++            .sink { [weak self] heute, _, _ in self?.widgetsAktualisieren(heute) }
++            .store(in: &abos)
++    }
++
++    private var abos = Set<AnyCancellable>()
++
++    /// Öffnet die Kamera der Foto-KH (Kontrollzentrum, Action-Button).
++    func fotoKH() {
++        guard linkDarfWechseln else { return }
++        presentedViewController?.dismiss(animated: false)
++        auswahl.tab = .essen
++        essenSteuerung.anfrage = .kamera
++    }
++
++    func heuteZeigen() {
++        guard linkDarfWechseln else { return }
++        presentedViewController?.dismiss(animated: false)
++        auswahl.tab = .heute
++    }
++
++    /// Links von außen (Widget, Kontrollzentrum, andere Apps) wechseln nur, wenn höchstens eigene Zuckerschock-Blätter
++    /// offen sind. Loops Fenster (Bolus, KH-Eingabe, Pod-Einrichtung, Warnungen) und geöffnete Loop-Seiten bleiben unberührt.
++    private var linkDarfWechseln: Bool {
++        if (navigationController?.viewControllers.count ?? 1) > 1 { return false }
++        var offen = presentedViewController
++        while let blatt = offen {
++            guard blatt is ZSBlattHost else { return false }
++            offen = blatt.presentedViewController
++        }
++        return true
++    }
++
++    private func widgetsAktualisieren(_ heute: ZSHeuteStand?) {
++        let jetzt = Date()
++        let einheit = heute?.einheit ?? .milligramsPerDeciliter
++        let verlauf = (heute?.verlauf ?? []).filter { jetzt.timeIntervalSince($0.datum) <= 3 * 3600 }
++        let letzte = speicher.mahlzeiten.max { $0.datum < $1.datum }
++        let podsBis = vorrat.podsReichenBis(restAktuell: vorratQuelle.podRest)
++        let format = DateFormatter()
++        format.locale = Locale(identifier: "de_DE")
++        format.dateFormat = "EE, d. MMM"
++        let stand = ZSWidgetStand(
++            erstellt: jetzt,
++            mgdl: heute?.aktuell?.mgdl,
++            wertText: heute?.aktuell.map { ZSFormat.glukose($0.mgdl, einheit) } ?? "–",
++            einheitText: ZSFormat.einheit(einheit),
++            trendPfeil: heute?.trend?.pfeil ?? "",
++            aenderungText: heute?.aenderung15Min.map { ZSFormat.aenderung($0, einheit) },
++            wertDatum: heute?.aktuell?.datum,
++            zustand: heute?.aktuell.map { wert -> ZSWidgetStand.Zustand in
++                switch ZSGlukoseZustand(mgdl: wert.mgdl) {
++                case .tief: return .tief
++                case .ziel: return .ziel
++                case .hoch: return .hoch
++                }
++            },
++            insulinAktivText: heute?.insulinAktiv.map { ZSFormat.zahl($0, stellen: 2) },
++            khAktivText: heute?.khAktiv.map { ZSFormat.zahl($0, stellen: 0) },
++            kurve: verlauf.map(\.mgdl),
++            kurveSekundenVorher: verlauf.map { jetzt.timeIntervalSince($0.datum) },
++            letzteMahlzeit: letzte.map { "\($0.name) · \(ZSFormat.zahl($0.kh, stellen: 0)) g" },
++            vorratText: "\(vorrat.stand.pods) Pods · bis \(format.string(from: podsBis))",
++            loopAktiv: heute?.loop == .aktiv,
++            wertVerbergen: UserDefaults.standard.bool(forKey: "Zuckerschock.wertVerbergen"))
++        guard stand != ZSWidgetStand.lesen().map({ alt in var a = alt; a.erstellt = jetzt; return a }) else { return }
++        stand.schreiben()
++        WidgetCenter.shared.reloadTimelines(ofKind: ZSWidgetStand.kindSperr)
++        WidgetCenter.shared.reloadTimelines(ofKind: ZSWidgetStand.kindHome)
+     }
+ 
+     /// Zeigt eine SwiftUI-Ansicht als Blatt über allem; `schliessen` schließt sie sofort.
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockWidgetGemeinsam.swift b/Loop/Loop/Zuckerschock/ZuckerschockWidgetGemeinsam.swift
+new file mode 100644
+index 0000000..b69d648
+--- /dev/null
++++ b/Loop/Loop/Zuckerschock/ZuckerschockWidgetGemeinsam.swift
+@@ -0,0 +1,76 @@
++//
++//  ZuckerschockWidgetGemeinsam.swift
++//  Loop + Loop Widget Extension
++//
++//  Zuckerschock: kleiner Datenstand für Widgets. Die App schreibt ihn in die App-Gruppe,
++//  die Widgets lesen ihn nur. Werte immer mit Einheit, Trend und Alter.
++//
++
++import Foundation
++import LoopCore
++
++struct ZSWidgetStand: Codable, Equatable {
++    enum Zustand: String, Codable { case tief, ziel, hoch }
++
++    var erstellt: Date
++    var mgdl: Double?
++    var wertText: String
++    var einheitText: String
++    var trendPfeil: String
++    var aenderungText: String?
++    var wertDatum: Date?
++    var zustand: Zustand?
++    var insulinAktivText: String?
++    var khAktivText: String?
++    /// Letzte 3 Stunden, mg/dl, ältester zuerst; jeweils mit Sekunden vor `erstellt`.
++    var kurve: [Double]
++    var kurveSekundenVorher: [Double]
++    var letzteMahlzeit: String?
++    var vorratText: String?
++    var loopAktiv: Bool
++    /// Wert im gesperrten Zustand ausblenden (Einstellung in der App).
++    var wertVerbergen: Bool
++
++    static let schluessel = "Zuckerschock.WidgetStand"
++    static let kindSperr = "ZuckerschockSperrbildschirm"
++    static let kindHome = "ZuckerschockHome"
++
++    static func lesen() -> ZSWidgetStand? {
++        guard let daten = UserDefaults.appGroup?.data(forKey: schluessel) else { return nil }
++        let decoder = JSONDecoder()
++        decoder.dateDecodingStrategy = .secondsSince1970
++        return try? decoder.decode(ZSWidgetStand.self, from: daten)
++    }
++
++    func schreiben() {
++        let encoder = JSONEncoder()
++        encoder.dateEncodingStrategy = .secondsSince1970
++        guard let daten = try? encoder.encode(self) else { return }
++        UserDefaults.appGroup?.set(daten, forKey: Self.schluessel)
++    }
++
++    /// Älter als 10 Minuten?
++    func istAlt(am datum: Date) -> Bool {
++        guard let wertDatum else { return true }
++        return datum.timeIntervalSince(wertDatum) > 10 * 60
++    }
++
++    func alterText(am datum: Date) -> String? {
++        guard let wertDatum else { return nil }
++        let minuten = max(0, Int(datum.timeIntervalSince(wertDatum) / 60))
++        return minuten < 60 ? "vor \(minuten) Min" : "vor \(minuten / 60) Std"
++    }
++
++    static let beispiel = ZSWidgetStand(
++        erstellt: Date(), mgdl: 118, wertText: "118", einheitText: "mg/dl", trendPfeil: "→", aenderungText: "−2",
++        wertDatum: Date().addingTimeInterval(-120), zustand: .ziel, insulinAktivText: "1,35", khAktivText: "24",
++        kurve: [104, 108, 128, 156, 177, 180, 166, 137, 126, 119, 116, 117, 114, 118],
++        kurveSekundenVorher: (0..<14).map { Double(13 - $0) * 800 },
++        letzteMahlzeit: "Spaghetti Bolognese · 72 g", vorratText: "3 Pods · bis So, 8. Nov.", loopAktiv: true, wertVerbergen: false)
++}
++
++/// Öffnet die Kamera der Foto-KH (Kontrollzentrum, Action-Button, Widget).
++enum ZSDeeplink {
++    static let fotoKH = URL(string: "zuckerschock://foto-kh")!
++    static let heute = URL(string: "zuckerschock://heute")!
++}
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockWidgets.swift b/Loop/Loop/Zuckerschock/ZuckerschockWidgets.swift
+new file mode 100644
+index 0000000..c03f8af
+--- /dev/null
++++ b/Loop/Loop/Zuckerschock/ZuckerschockWidgets.swift
+@@ -0,0 +1,336 @@
++//
++//  ZuckerschockWidgets.swift
++//  Loop Widget Extension
++//
++//  Zuckerschock-Widgets: Sperrbildschirm (rund, rechteckig, inline), StandBy und Home (klein, mittel, groß),
++//  Kontrollzentrum „Foto-KH“. Überall: Wert, Einheit, Trend, Alter. Orange nur als kleiner Markenpunkt.
++//
++
++import AppIntents
++import SwiftUI
++import WidgetKit
++
++// MARK: - Zeitleiste
++
++struct ZSWidgetEintrag: TimelineEntry {
++    var date: Date
++    var stand: ZSWidgetStand?
++}
++
++struct ZSWidgetQuelle: TimelineProvider {
++    func placeholder(in context: Context) -> ZSWidgetEintrag {
++        ZSWidgetEintrag(date: Date(), stand: .beispiel)
++    }
++
++    func getSnapshot(in context: Context, completion: @escaping (ZSWidgetEintrag) -> Void) {
++        completion(ZSWidgetEintrag(date: Date(), stand: context.isPreview ? (ZSWidgetStand.lesen() ?? .beispiel) : ZSWidgetStand.lesen()))
++    }
++
++    func getTimeline(in context: Context, completion: @escaping (Timeline<ZSWidgetEintrag>) -> Void) {
++        let jetzt = Date()
++        let stand = ZSWidgetStand.lesen()
++        // Jede Minute ein Eintrag für die nächste halbe Stunde, damit das Alter mitläuft.
++        let eintraege = (0..<30).map { ZSWidgetEintrag(date: jetzt.addingTimeInterval(Double($0) * 60), stand: stand) }
++        completion(Timeline(entries: eintraege, policy: .after(jetzt.addingTimeInterval(30 * 60))))
++    }
++}
++
++// MARK: - Farben im Widget
++
++private enum ZSWFarbe {
++    static func zustand(_ zustand: ZSWidgetStand.Zustand?) -> Color {
++        switch zustand {
++        case .tief: return ZSFarbe.tief
++        case .hoch: return ZSFarbe.hoch
++        case .ziel: return ZSFarbe.ziel
++        case nil: return ZSFarbe.text3
++        }
++    }
++
++    static func wort(_ zustand: ZSWidgetStand.Zustand?) -> String {
++        switch zustand {
++        case .tief: return "Unter Ziel"
++        case .hoch: return "Über Ziel"
++        case .ziel: return "Im Ziel"
++        case nil: return "Kein Wert"
++        }
++    }
++}
++
++// MARK: - Sperrbildschirm
++
++struct ZSSperrWidget: Widget {
++    var body: some WidgetConfiguration {
++        StaticConfiguration(kind: ZSWidgetStand.kindSperr, provider: ZSWidgetQuelle()) { eintrag in
++            ZSSperrAnsicht(eintrag: eintrag)
++                .containerBackground(for: .widget) { Color.clear }
++                .widgetURL(ZSDeeplink.heute)
++        }
++        .configurationDisplayName("Zucker")
++        .description("Wert, Trend und Alter auf dem Sperrbildschirm.")
++        .supportedFamilies([.accessoryCircular, .accessoryRectangular, .accessoryInline])
++    }
++}
++
++private struct ZSSperrAnsicht: View {
++    var eintrag: ZSWidgetEintrag
++    @Environment(\.widgetFamily) private var familie
++
++    /// „Wert gesperrt ausblenden“ verbirgt das ganze Widget (Wert, Trend, Zustand, IOB), nicht nur die Zahl.
++    var body: some View {
++        inhalt.privacySensitive(eintrag.stand?.wertVerbergen ?? false)
++    }
++
++    @ViewBuilder
++    private var inhalt: some View {
++        let stand = eintrag.stand
++        let alt = stand?.istAlt(am: eintrag.date) ?? true
++        let verbergen = stand?.wertVerbergen ?? false
++
++        switch familie {
++        case .accessoryCircular:
++            ZStack {
++                AccessoryWidgetBackground()
++                VStack(spacing: -2) {
++                    Text(stand?.wertText ?? "–")
++                        .font(.system(size: 20, weight: .semibold, design: .rounded))
++                        .monospacedDigit()
++                        .minimumScaleFactor(0.6)
++                        .privacySensitive(verbergen)
++                    Text(alt ? (stand?.alterText(am: eintrag.date) ?? "") : (stand?.trendPfeil ?? ""))
++                        .font(.system(size: alt ? 10 : 14, weight: .semibold))
++                        .minimumScaleFactor(0.6)
++                }
++            }
++            .accessibilityElement(children: .combine)
++        case .accessoryInline:
++            Text(inlineText(stand: stand, alt: alt))
++                .privacySensitive(verbergen)
++        default:
++            HStack(spacing: 8) {
++                VStack(alignment: .leading, spacing: 0) {
++                    HStack(alignment: .firstTextBaseline, spacing: 3) {
++                        Text(stand?.wertText ?? "–")
++                            .font(.system(size: 26, weight: .semibold, design: .rounded))
++                            .monospacedDigit()
++                            .privacySensitive(verbergen)
++                        Text(stand?.trendPfeil ?? "")
++                            .font(.headline)
++                    }
++                    Text(alt ? (stand?.alterText(am: eintrag.date) ?? "kein Wert") : "\(stand?.einheitText ?? "") · \(ZSWFarbe.wort(stand?.zustand))")
++                        .font(.caption2.weight(.medium))
++                        .lineLimit(1)
++                }
++                ZSMiniKurve(werte: stand?.kurve ?? [], sekunden: stand?.kurveSekundenVorher ?? [], linie: .primary, flaeche: false)
++                    .frame(maxWidth: .infinity, maxHeight: .infinity)
++            }
++            .accessibilityElement(children: .combine)
++        }
++    }
++
++    private func inlineText(stand: ZSWidgetStand?, alt: Bool) -> String {
++        guard let stand else { return "Zuckerschock: kein Wert" }
++        var teile = ["\(stand.wertText) \(stand.trendPfeil)"]
++        if alt, let alter = stand.alterText(am: eintrag.date) { teile.append(alter) }
++        if let iob = stand.insulinAktivText { teile.append("IOB \(iob)") }
++        return teile.joined(separator: " · ")
++    }
++}
++
++// MARK: - Home und StandBy
++
++struct ZSHomeWidget: Widget {
++    var body: some WidgetConfiguration {
++        StaticConfiguration(kind: ZSWidgetStand.kindHome, provider: ZSWidgetQuelle()) { eintrag in
++            ZSHomeAnsicht(eintrag: eintrag)
++                .containerBackground(for: .widget) { ZSFarbe.grund }
++                .widgetURL(ZSDeeplink.heute)
++        }
++        .configurationDisplayName("Zuckerschock")
++        .description("Zucker, Kurve, aktives Insulin und KH, letzte Mahlzeit und Vorrat.")
++        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
++    }
++}
++
++private struct ZSHomeAnsicht: View {
++    var eintrag: ZSWidgetEintrag
++    @Environment(\.widgetFamily) private var familie
++    @Environment(\.widgetRenderingMode) private var darstellung
++
++    private var vollfarbig: Bool { darstellung == .fullColor }
++
++    var body: some View {
++        inhalt.privacySensitive(eintrag.stand?.wertVerbergen ?? false)
++    }
++
++    @ViewBuilder
++    private var inhalt: some View {
++        let stand = eintrag.stand
++        switch familie {
++        case .systemSmall:
++            klein(stand)
++        case .systemMedium:
++            HStack(spacing: 12) {
++                klein(stand)
++                    .frame(maxWidth: 120)
++                kurveMitKennzahlen(stand)
++            }
++        default:
++            VStack(alignment: .leading, spacing: 12) {
++                HStack(spacing: 12) {
++                    klein(stand)
++                        .frame(maxWidth: 130)
++                    kurveMitKennzahlen(stand)
++                }
++                .frame(maxHeight: .infinity)
++                Divider().overlay(ZSFarbe.haarlinie)
++                zeile("Letzte Mahlzeit", stand?.letzteMahlzeit ?? "noch keine")
++                zeile("Vorrat", stand?.vorratText ?? "nicht eingetragen")
++            }
++        }
++    }
++
++    /// Großer Wert; StandBy nutzt diese Größe und tönt nachts selbst rot.
++    private func klein(_ stand: ZSWidgetStand?) -> some View {
++        let alt = stand?.istAlt(am: eintrag.date) ?? true
++        return VStack(alignment: .leading, spacing: 2) {
++            HStack(spacing: 4) {
++                Circle()
++                    .fill(vollfarbig ? ZSFarbe.orange : Color.primary)
++                    .frame(width: 6, height: 6)
++                    .accessibilityHidden(true)
++                Text("Zucker")
++                    .font(.caption2.weight(.medium))
++                    .foregroundStyle(vollfarbig ? ZSFarbe.text2 : Color.secondary)
++            }
++            Spacer(minLength: 0)
++            HStack(alignment: .firstTextBaseline, spacing: 3) {
++                Text(stand?.wertText ?? "–")
++                    .font(.system(size: 48, weight: .semibold, design: .rounded))
++                    .monospacedDigit()
++                    .minimumScaleFactor(0.5)
++                    .lineLimit(1)
++                    .foregroundStyle(alt || !vollfarbig ? AnyShapeStyle(Color.primary.opacity(alt ? 0.6 : 1)) : AnyShapeStyle(ZSFarbe.text))
++                    .privacySensitive(stand?.wertVerbergen ?? false)
++                Text(stand?.trendPfeil ?? "")
++                    .font(.title3.weight(.semibold))
++                    .foregroundStyle(vollfarbig ? ZSFarbe.text : Color.primary)
++            }
++            Text(stand?.einheitText ?? "")
++                .font(.caption.weight(.medium))
++                .foregroundStyle(vollfarbig ? ZSFarbe.text2 : Color.secondary)
++            HStack(spacing: 4) {
++                if !alt {
++                    Circle()
++                        .fill(vollfarbig ? ZSWFarbe.zustand(stand?.zustand) : Color.primary)
++                        .frame(width: 7, height: 7)
++                }
++                Text(alt ? (stand?.alterText(am: eintrag.date) ?? "kein Wert") : ZSWFarbe.wort(stand?.zustand))
++                    .font(.caption.weight(.semibold))
++                    .foregroundStyle(vollfarbig ? (alt ? ZSFarbe.text3 : ZSWFarbe.zustand(stand?.zustand)) : Color.primary)
++            }
++        }
++        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
++        .accessibilityElement(children: .combine)
++    }
++
++    private func kurveMitKennzahlen(_ stand: ZSWidgetStand?) -> some View {
++        VStack(alignment: .leading, spacing: 6) {
++            ZSMiniKurve(werte: stand?.kurve ?? [], sekunden: stand?.kurveSekundenVorher ?? [],
++                        linie: vollfarbig ? ZSFarbe.orangeLinie : Color.primary, flaeche: vollfarbig)
++                .frame(maxHeight: .infinity)
++            HStack {
++                kennzahl("IE aktiv", stand?.insulinAktivText ?? "–")
++                Spacer()
++                kennzahl("KH aktiv", (stand?.khAktivText).map { "\($0) g" } ?? "–")
++            }
++        }
++    }
++
++    private func kennzahl(_ label: String, _ wert: String) -> some View {
++        VStack(alignment: .leading, spacing: 0) {
++            Text(wert)
++                .font(.system(.headline, design: .rounded))
++                .monospacedDigit()
++                .foregroundStyle(vollfarbig ? ZSFarbe.text : Color.primary)
++            Text(label)
++                .font(.caption2)
++                .foregroundStyle(vollfarbig ? ZSFarbe.text2 : Color.secondary)
++        }
++        .accessibilityElement(children: .combine)
++    }
++
++    private func zeile(_ label: String, _ wert: String) -> some View {
++        HStack {
++            Text(label)
++                .font(.caption)
++                .foregroundStyle(vollfarbig ? ZSFarbe.text2 : Color.secondary)
++            Spacer()
++            Text(wert)
++                .font(.caption.weight(.semibold))
++                .foregroundStyle(vollfarbig ? ZSFarbe.text : Color.primary)
++                .lineLimit(1)
++        }
++        .accessibilityElement(children: .combine)
++    }
++}
++
++/// Kleine Kurve der letzten 3 Stunden mit Zielband.
++private struct ZSMiniKurve: View {
++    var werte: [Double]
++    var sekunden: [Double]
++    var linie: Color
++    var flaeche: Bool
++
++    var body: some View {
++        GeometryReader { geo in
++            let r = CGRect(origin: .zero, size: geo.size)
++            let unten = min(60, (werte.min() ?? 60) - 10)
++            let oben = max(200, (werte.max() ?? 200) + 10)
++            let spanne = max(1, sekunden.max() ?? 10_800)
++            let punkt: (Int) -> CGPoint = { i in
++                let x = r.width * CGFloat(1 - sekunden[i] / spanne)
++                let y = r.height * CGFloat(1 - (werte[i] - unten) / (oben - unten))
++                return CGPoint(x: x, y: y)
++            }
++            ZStack(alignment: .topLeading) {
++                Rectangle()
++                    .fill(Color.primary.opacity(0.06))
++                    .frame(height: r.height * CGFloat((180 - 70) / (oben - unten)))
++                    .offset(y: r.height * CGFloat(1 - (180 - unten) / (oben - unten)))
++                if werte.count == sekunden.count, werte.count > 1 {
++                    if flaeche {
++                        Path { p in
++                            p.move(to: CGPoint(x: punkt(0).x, y: r.maxY))
++                            for i in werte.indices { p.addLine(to: punkt(i)) }
++                            p.addLine(to: CGPoint(x: punkt(werte.count - 1).x, y: r.maxY))
++                            p.closeSubpath()
++                        }
++                        .fill(LinearGradient(colors: [ZSFarbe.orange.opacity(0.3), ZSFarbe.orange.opacity(0)], startPoint: .top, endPoint: .bottom))
++                    }
++                    Path { p in
++                        p.move(to: punkt(0))
++                        for i in werte.indices.dropFirst() { p.addLine(to: punkt(i)) }
++                    }
++                    .stroke(linie, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
++                }
++            }
++        }
++        .accessibilityHidden(true)
++    }
++}
++
++// MARK: - Kontrollzentrum und Action-Button
++
++@available(iOS 18.0, *)
++struct ZSFotoKHControl: ControlWidget {
++    var body: some ControlWidgetConfiguration {
++        StaticControlConfiguration(kind: "ZuckerschockFotoKH") {
++            ControlWidgetButton(action: OpenURLIntent(ZSDeeplink.fotoKH)) {
++                Label("Foto-KH", systemImage: "camera")
++            }
++        }
++        .displayName("Foto-KH")
++        .description("Öffnet die Kamera und schätzt die KH deiner Mahlzeit.")
++    }
++}
