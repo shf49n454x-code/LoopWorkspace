@@ -624,7 +624,7 @@ index 0000000..db86ace
 +#endif
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 new file mode 100644
-index 0000000..2a1a3ef
+index 0000000..798b2e7
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 @@ -0,0 +1,702 @@
@@ -1073,7 +1073,7 @@ index 0000000..2a1a3ef
 +    var stand: ZSHeuteStand?
 +    var jetzt: Date
 +
-+    @State private var finger: ZSMesspunkt?
++    @State private var finger: ZSMesspunkt? = nil
 +
 +    private var punkte: [ZSMesspunkt] { stand?.verlauf ?? [] }
 +    private var zukunft: [ZSMesspunkt] { stand?.vorhersage ?? [] }
