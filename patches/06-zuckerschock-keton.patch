@@ -81,10 +81,10 @@ index 40de8df..46873f9 100644
              ZSKurvenKarte(stand: stand, jetzt: jetzt)
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockKeton.swift b/Loop/Loop/Zuckerschock/ZuckerschockKeton.swift
 new file mode 100644
-index 0000000..501fdf8
+index 0000000..5a28d10
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockKeton.swift
-@@ -0,0 +1,455 @@
+@@ -0,0 +1,456 @@
 +//
 +//  ZuckerschockKeton.swift
 +//  Loop
@@ -361,6 +361,7 @@ index 0000000..501fdf8
 +                    Text(anlass.text)
 +                        .font(ZSSchrift.subhead)
 +                        .foregroundStyle(ZSFarbe.text)
++                        .fixedSize(horizontal: false, vertical: true)
 +                }
 +                Spacer(minLength: 0)
 +            }
