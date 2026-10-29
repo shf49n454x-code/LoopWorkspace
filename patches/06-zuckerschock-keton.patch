@@ -1,0 +1,617 @@
+diff --git a/Loop/Loop.xcodeproj/project.pbxproj b/Loop/Loop.xcodeproj/project.pbxproj
+index 74fe670..7c61f29 100644
+--- a/Loop/Loop.xcodeproj/project.pbxproj
++++ b/Loop/Loop.xcodeproj/project.pbxproj
+@@ -7,6 +7,7 @@
+ 	objects = {
+ 
+ /* Begin PBXBuildFile section */
++		5A5D677C06E9236F42EEE6EA /* ZuckerschockKeton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C677C06E9236F42EEE6EA /* ZuckerschockKeton.swift */; };
+ 		5A5E339D3A8A26391EC01FB9 /* ZuckerschockTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C00000000000000000010 /* ZuckerschockTheme.swift */; };
+ 		5A5E2F5203E82EF20E6BE75F /* ZuckerschockWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C2F5203E82EF20E6BE75F /* ZuckerschockWidgets.swift */; };
+ 		5A5E911AD14F5C87FECF59BF /* ZuckerschockWidgetGemeinsam.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C911AD14F5C87FECF59BF /* ZuckerschockWidgetGemeinsam.swift */; };
+@@ -775,6 +776,7 @@
+ /* End PBXCopyFilesBuildPhase section */
+ 
+ /* Begin PBXFileReference section */
++		5A5C677C06E9236F42EEE6EA /* ZuckerschockKeton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockKeton.swift; sourceTree = "<group>"; };
+ 		5A5C2F5203E82EF20E6BE75F /* ZuckerschockWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockWidgets.swift; sourceTree = "<group>"; };
+ 		5A5C911AD14F5C87FECF59BF /* ZuckerschockWidgetGemeinsam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockWidgetGemeinsam.swift; sourceTree = "<group>"; };
+ 		5A5CF086674BF8475B8A71DC /* ZuckerschockHypoLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockHypoLiveActivity.swift; sourceTree = "<group>"; };
+@@ -1556,6 +1558,7 @@
+ 		5A5C00000000000000000001 /* Zuckerschock */ = {
+ 			isa = PBXGroup;
+ 			children = (
++				5A5C677C06E9236F42EEE6EA /* ZuckerschockKeton.swift */,
+ 				5A5C2F5203E82EF20E6BE75F /* ZuckerschockWidgets.swift */,
+ 				5A5C911AD14F5C87FECF59BF /* ZuckerschockWidgetGemeinsam.swift */,
+ 				5A5CF086674BF8475B8A71DC /* ZuckerschockHypoLiveActivity.swift */,
+@@ -3437,6 +3440,7 @@
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
++				5A5D677C06E9236F42EEE6EA /* ZuckerschockKeton.swift in Sources */,
+ 				5A5D911AD14F5C87FECF59BF /* ZuckerschockWidgetGemeinsam.swift in Sources */,
+ 				5A5D4931624412E5911E5892 /* ZuckerschockHypoGemeinsam.swift in Sources */,
+ 				5A5DB3738D09088F135E6B77 /* ZuckerschockHypo.swift in Sources */,
+diff --git a/Loop/Loop/Managers/LoopAppManager.swift b/Loop/Loop/Managers/LoopAppManager.swift
+index 158a5cf..ffb10b9 100644
+--- a/Loop/Loop/Managers/LoopAppManager.swift
++++ b/Loop/Loop/Managers/LoopAppManager.swift
+@@ -335,7 +335,9 @@ class LoopAppManager: NSObject {
+         let tabController = ZuckerschockTabController(statusTableViewController: statusTableViewController, heuteQuelle: heuteQuelle,
+                                                       essenQuelle: ZSLoopEssenQuelle(deviceManager: deviceDataManager), speicher: ZSSpeicher.shared,
+                                                       vorrat: ZSVorrat.shared, vorratQuelle: ZSLoopVorratQuelle(deviceManager: deviceDataManager, vorrat: ZSVorrat.shared),
+-                                                      hypoBegleiter: ZSHypoBegleiter(deviceManager: deviceDataManager, speicher: ZSSpeicher.shared))
++                                                      hypoBegleiter: ZSHypoBegleiter(deviceManager: deviceDataManager, speicher: ZSSpeicher.shared),
++                                                      keton: ZSKeton.shared)
++        tabController.ketonWaechter = ZSKetonWaechter(deviceManager: deviceDataManager, keton: ZSKeton.shared)
+         tabController.vorratWaechter = ZSVorratWaechter(deviceManager: deviceDataManager, vorrat: ZSVorrat.shared)
+         rootNavigationController?.setViewControllers([tabController], animated: true)
+ 
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
+index b9e1912..1c4d675 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
+@@ -26,11 +26,14 @@ struct ZSAktionen {
+     var hypo: () -> Void
+     /// Öffnet den Therapieplan.
+     var therapieplan: () -> Void
++    /// Öffnet den Keton-Check.
++    var keton: () -> Void
+ }
+ 
+ struct ZSHeuteView: View {
+     @ObservedObject var modell: ZSHeuteModell
+     @ObservedObject var vorrat: ZSVorrat
++    @ObservedObject var keton: ZSKeton
+     var aktionen: ZSAktionen
+ 
+     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+@@ -63,6 +66,10 @@ struct ZSHeuteView: View {
+                 .accessibilityHint("Öffnet den Unterzucker-Begleiter")
+             }
+ 
++            if let anlass = keton.anlass {
++                ZSKetonHinweis(anlass: anlass, messen: aktionen.keton)
++            }
++
+             ZSHeroKarte(stand: stand, jetzt: jetzt, gestapelt: dynamicTypeSize.isAccessibilitySize)
+ 
+             ZSKurvenKarte(stand: stand, jetzt: jetzt)
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockKeton.swift b/Loop/Loop/Zuckerschock/ZuckerschockKeton.swift
+new file mode 100644
+index 0000000..5a28d10
+--- /dev/null
++++ b/Loop/Loop/Zuckerschock/ZuckerschockKeton.swift
+@@ -0,0 +1,456 @@
++//
++//  ZuckerschockKeton.swift
++//  Loop
++//
++//  Zuckerschock: Keton-Check. Erkennt, wann Messen sinnvoll ist (über 250 mg/dl länger als 2 Std.,
++//  kein Abfall nach Korrektur, Pod-Alarm, Krank-Modus). Du trägst den Wert ein, die Ampel sagt,
++//  was zu tun ist. Keine Dosis, keine Marke in Warnungen.
++//
++
++import Combine
++import Foundation
++import HealthKit
++import LoopCore
++import LoopKit
++import LoopKitUI
++import SwiftUI
++import UserNotifications
++
++// MARK: - Modell
++
++struct ZSKetonWert: Codable, Identifiable, Equatable {
++    var id = UUID()
++    var datum: Date
++    var mmol: Double
++}
++
++enum ZSKetonAmpel: Equatable {
++    case normal, leicht, hoch, sehrHoch
++
++    /// <0,6 / 0,6–1,5 / >1,5 / >3,0 mmol/l
++    init(mmol: Double) {
++        if mmol > 3.0 {
++            self = .sehrHoch
++        } else if mmol > 1.5 {
++            self = .hoch
++        } else if mmol >= 0.6 {
++            self = .leicht
++        } else {
++            self = .normal
++        }
++    }
++
++    var titel: String {
++        switch self {
++        case .normal: return "Kein Hinweis auf Ketose"
++        case .leicht: return "Leicht erhöht"
++        case .hoch: return "Hoch"
++        case .sehrHoch: return "Sehr hoch"
++        }
++    }
++
++    /// Handlungstexte ohne Dosis. Mengen kommen aus Loop oder dem Plan des Diabetes-Teams.
++    var handlung: String {
++        switch self {
++        case .normal:
++            return "Weiter wie bisher. Bleibt der Zucker hoch, in 2 Stunden erneut messen."
++        case .leicht:
++            return "Viel Wasser trinken und in 2 Stunden erneut messen. Pod und Katheter prüfen. Bei Übelkeit oder Bauchschmerzen das Diabetes-Team anrufen."
++        case .hoch:
++            return "Pod jetzt prüfen und bei Zweifel wechseln. Korrigieren nach deinem Plan, viel trinken, in 1 bis 2 Stunden erneut messen. Diabetes-Team anrufen."
++        case .sehrHoch:
++            return "Gefahr einer Ketoazidose. Jetzt den Notruf 112 wählen oder sofort in die Klinik. Nicht allein bleiben."
++        }
++    }
++
++    var farbe: Color {
++        switch self {
++        case .normal: return ZSFarbe.ziel
++        case .leicht: return ZSFarbe.hoch
++        case .hoch, .sehrHoch: return ZSFarbe.tief
++        }
++    }
++
++    var dringend: Bool { self == .hoch || self == .sehrHoch }
++}
++
++enum ZSKetonAnlass: Equatable {
++    case langeHoch(seit: Date)
++    case keinAbfall(korrekturUm: Date)
++    case podAlarm(String)
++    case krank
++
++    var text: String {
++        switch self {
++        case .langeHoch: return "Über 250 mg/dl seit mehr als 2 Stunden."
++        case .keinAbfall: return "Kein Abfall 2 Stunden nach der Korrektur."
++        case .podAlarm(let meldung): return "Pod meldet: \(meldung)."
++        case .krank: return "Krank-Modus ist an. Alle 3 bis 4 Stunden messen."
++        }
++    }
++}
++
++/// Reine Regeln, ohne Seiteneffekte.
++enum ZSKetonRegeln {
++    static let grenze: Double = 250
++
++    /// Alle Werte der letzten 2 Stunden über 250 und die Zeit gut abgedeckt (mind. 18 Werte).
++    static func langeHoch(_ punkte: [ZSMesspunkt], jetzt: Date) -> Date? {
++        let fenster = punkte.filter { jetzt.timeIntervalSince($0.datum) <= .hours(2) }
++        guard fenster.count >= 18, fenster.allSatisfy({ $0.mgdl > grenze }),
++              let erster = fenster.min(by: { $0.datum < $1.datum }), jetzt.timeIntervalSince(erster.datum) >= .minutes(110) else {
++            return nil
++        }
++        return erster.datum
++    }
++
++    /// Ein Bolus bei über 250, und 2 bis 3 Stunden später ist der Zucker nicht um mindestens 30 mg/dl gefallen.
++    static func keinAbfall(punkte: [ZSMesspunkt], boli: [Date], jetzt: Date) -> Date? {
++        for bolus in boli.sorted(by: >) where jetzt.timeIntervalSince(bolus) >= .hours(2) && jetzt.timeIntervalSince(bolus) <= .hours(3) {
++            guard let davor = punkte.last(where: { $0.datum <= bolus && bolus.timeIntervalSince($0.datum) <= .minutes(15) }),
++                  davor.mgdl > grenze,
++                  let jetztWert = punkte.last(where: { jetzt.timeIntervalSince($0.datum) <= .minutes(15) }) else { continue }
++            if jetztWert.mgdl > davor.mgdl - 30 {
++                return bolus
++            }
++        }
++        return nil
++    }
++}
++
++// MARK: - Wächter
++
++final class ZSKeton: ObservableObject {
++    static let shared = ZSKeton()
++
++    @Published private(set) var werte: [ZSKetonWert] = []
++    @Published var krankModus = false { didSet { sichern() } }
++    @Published private(set) var anlass: ZSKetonAnlass?
++
++    private let datei: URL
++    private var abos = Set<AnyCancellable>()
++    private var letzteMitteilung: Date?
++
++    init(ordner: URL? = nil) {
++        let basis = ordner ?? (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first ?? FileManager.default.temporaryDirectory)
++        let verzeichnis = basis.appendingPathComponent("Zuckerschock", isDirectory: true)
++        try? FileManager.default.createDirectory(at: verzeichnis, withIntermediateDirectories: true)
++        datei = verzeichnis.appendingPathComponent("keton.json")
++        let decoder = JSONDecoder()
++        decoder.dateDecodingStrategy = .iso8601
++        if let daten = try? Data(contentsOf: datei), let gespeichert = try? decoder.decode(Gespeichert.self, from: daten) {
++            werte = gespeichert.werte
++            krankModus = gespeichert.krankModus
++        }
++    }
++
++    private struct Gespeichert: Codable {
++        var werte: [ZSKetonWert]
++        var krankModus: Bool
++    }
++
++    private func sichern() {
++        let encoder = JSONEncoder()
++        encoder.dateEncodingStrategy = .iso8601
++        guard let daten = try? encoder.encode(Gespeichert(werte: werte, krankModus: krankModus)) else { return }
++        try? daten.write(to: datei, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
++    }
++
++    func eintragen(_ mmol: Double, am datum: Date = Date()) {
++        werte.insert(ZSKetonWert(datum: datum, mmol: mmol), at: 0)
++        sichern()
++        // Nach einer Messung ruht der Hinweis, bis ein neuer Anlass kommt.
++        anlass = nil
++    }
++
++    func loeschen(_ wert: ZSKetonWert) {
++        werte.removeAll { $0.id == wert.id }
++        sichern()
++    }
++
++    /// Letzte Messung in den vergangenen 2 Stunden?
++    var kuerzlichGemessen: Bool {
++        guard let letzter = werte.first else { return false }
++        return Date().timeIntervalSince(letzter.datum) < .hours(2)
++    }
++
++    func setzeAnlass(_ neu: ZSKetonAnlass?) {
++        let vorher = anlass
++        anlass = kuerzlichGemessen ? nil : neu
++        if let neu = anlass, vorher == nil, Date().timeIntervalSince(letzteMitteilung ?? .distantPast) > .hours(3) {
++            letzteMitteilung = Date()
++            let inhalt = UNMutableNotificationContent()
++            inhalt.title = "Keton messen"
++            inhalt.body = neu.text
++            inhalt.sound = .default
++            inhalt.interruptionLevel = .timeSensitive
++            UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "Zuckerschock.Keton", content: inhalt, trigger: nil))
++        }
++    }
++}
++
++/// Prüft die Auslöser bei jedem Loop-Durchlauf. Liest nur.
++final class ZSKetonWaechter {
++    private let deviceManager: DeviceDataManager
++    private let keton: ZSKeton
++    private var abos = Set<AnyCancellable>()
++
++    init(deviceManager: DeviceDataManager, keton: ZSKeton) {
++        self.deviceManager = deviceManager
++        self.keton = keton
++        NotificationCenter.default.publisher(for: .LoopDataUpdated, object: deviceManager.loopManager)
++            .merge(with: keton.$krankModus.map { _ in Notification(name: .LoopDataUpdated) }.dropFirst())
++            .debounce(for: .seconds(2), scheduler: DispatchQueue.main)
++            .sink { [weak self] _ in self?.pruefen() }
++            .store(in: &abos)
++    }
++
++    func pruefen() {
++        let jetzt = Date()
++        if let highlight = deviceManager.pumpManager?.pumpStatusHighlight, highlight.state == .critical {
++            keton.setzeAnlass(.podAlarm(highlight.localizedMessage))
++            return
++        }
++        let gruppe = DispatchGroup()
++        var punkte: [ZSMesspunkt] = []
++        var boli: [Date] = []
++        gruppe.enter()
++        deviceManager.glucoseStore.getGlucoseSamples(start: jetzt.addingTimeInterval(-.hours(3.5)), end: nil) { ergebnis in
++            if case .success(let werte) = ergebnis {
++                punkte = werte.map { ZSMesspunkt(datum: $0.startDate, mgdl: $0.quantity.doubleValue(for: .milligramsPerDeciliter)) }.sorted { $0.datum < $1.datum }
++            }
++            gruppe.leave()
++        }
++        gruppe.enter()
++        deviceManager.doseStore.getNormalizedDoseEntries(start: jetzt.addingTimeInterval(-.hours(3.5)), end: nil) { ergebnis in
++            if case .success(let dosen) = ergebnis {
++                boli = dosen.filter { $0.type == .bolus }.map(\.startDate)
++            }
++            gruppe.leave()
++        }
++        gruppe.notify(queue: .main) { [weak self] in
++            guard let self else { return }
++            if let seit = ZSKetonRegeln.langeHoch(punkte, jetzt: jetzt) {
++                self.keton.setzeAnlass(.langeHoch(seit: seit))
++            } else if let bolus = ZSKetonRegeln.keinAbfall(punkte: punkte, boli: boli, jetzt: jetzt) {
++                self.keton.setzeAnlass(.keinAbfall(korrekturUm: bolus))
++            } else if self.keton.krankModus {
++                let faellig = self.keton.werte.first.map { jetzt.timeIntervalSince($0.datum) >= .hours(3) } ?? true
++                self.keton.setzeAnlass(faellig ? .krank : nil)
++            } else {
++                self.keton.setzeAnlass(nil)
++            }
++        }
++    }
++}
++
++#if targetEnvironment(simulator)
++extension ZSKeton {
++    static func vorschau(anlass: ZSKetonAnlass?) -> ZSKeton {
++        let keton = ZSKeton(ordner: FileManager.default.temporaryDirectory.appendingPathComponent("ZSVorschau-\(UUID().uuidString)"))
++        keton.werte = [ZSKetonWert(datum: Date().addingTimeInterval(-.days(3)), mmol: 0.4), ZSKetonWert(datum: Date().addingTimeInterval(-.days(9)), mmol: 1.1)]
++        keton.anlass = anlass
++        return keton
++    }
++}
++#endif
++
++// MARK: - Hinweis auf Heute (Bitte prüfen, ohne Marke)
++
++struct ZSKetonHinweis: View {
++    var anlass: ZSKetonAnlass
++    var messen: () -> Void
++
++    var body: some View {
++        VStack(alignment: .leading, spacing: ZSMass.space2) {
++            HStack(alignment: .top, spacing: ZSMass.space3) {
++                Image(systemName: "drop.triangle")
++                    .font(.title3)
++                    .foregroundStyle(ZSFarbe.hoch)
++                VStack(alignment: .leading, spacing: ZSMass.space1) {
++                    Text("Keton messen")
++                        .font(ZSSchrift.headline)
++                        .foregroundStyle(ZSFarbe.text)
++                    Text(anlass.text)
++                        .font(ZSSchrift.subhead)
++                        .foregroundStyle(ZSFarbe.text)
++                        .fixedSize(horizontal: false, vertical: true)
++                }
++                Spacer(minLength: 0)
++            }
++            Button("Wert eintragen", action: messen)
++                .font(ZSSchrift.headline)
++                .foregroundStyle(ZSFarbe.text)
++                .frame(maxWidth: .infinity, minHeight: ZSMass.tap)
++                .background(Capsule().strokeBorder(ZSFarbe.randSteuer, lineWidth: 1))
++        }
++        .padding(ZSMass.space4)
++        .background(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous).fill(ZSFarbe.flaeche1))
++        .accessibilityElement(children: .contain)
++    }
++}
++
++// MARK: - Eintragen und Ampel
++
++struct ZSKetonView: View {
++    @ObservedObject var keton: ZSKeton
++    var schliessen: () -> Void
++
++    @State private var eingabe: Double?
++    @State private var ergebnis: ZSKetonAmpel?
++
++    private static let datum: DateFormatter = {
++        let f = DateFormatter()
++        f.locale = Locale(identifier: "de_DE")
++        f.dateFormat = "d. MMM, HH:mm"
++        return f
++    }()
++
++    var body: some View {
++        VStack(spacing: 0) {
++            ZSBlattKopf(titel: "Keton-Check", abbrechen: schliessen)
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space6) {
++                    if let anlass = keton.anlass {
++                        Text(anlass.text)
++                            .font(ZSSchrift.subhead)
++                            .foregroundStyle(ZSFarbe.text2)
++                    }
++
++                    VStack(alignment: .leading, spacing: ZSMass.space3) {
++                        ZSEingabeFeld(titel: "Blut-Keton in mmol/l") {
++                            TextField("z. B. 0,8", value: $eingabe, format: .number.precision(.fractionLength(0...1)))
++                                .keyboardType(.decimalPad)
++                        }
++                        Button {
++                            guard let wert = eingabe, wert >= 0, wert < 15 else { return }
++                            keton.eintragen(wert)
++                            ergebnis = ZSKetonAmpel(mmol: wert)
++                        } label: {
++                            Text("Wert eintragen").font(ZSSchrift.headline)
++                        }
++                        .buttonStyle(ZSRandStil())
++                        .disabled(eingabe == nil)
++                    }
++
++                    if let ergebnis, let wert = keton.werte.first {
++                        ampelKarte(ergebnis, wert: wert.mmol)
++                    }
++
++                    ampelLegende
++
++                    Toggle(isOn: $keton.krankModus) {
++                        VStack(alignment: .leading, spacing: 2) {
++                            Text("Krank-Modus")
++                                .font(ZSSchrift.body)
++                                .foregroundStyle(ZSFarbe.text)
++                            Text("Erinnert alle 3 bis 4 Stunden ans Messen.")
++                                .font(ZSSchrift.subhead)
++                                .foregroundStyle(ZSFarbe.text2)
++                        }
++                    }
++                    .padding(ZSMass.space4)
++                    .background(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous).fill(ZSFarbe.flaeche1))
++
++                    if !keton.werte.isEmpty {
++                        VStack(alignment: .leading, spacing: 0) {
++                            ZSAbschnittTitel(text: "Bisherige Werte")
++                                .padding(.bottom, ZSMass.space2)
++                            ForEach(keton.werte.prefix(20)) { wert in
++                                HStack {
++                                    Text(Self.datum.string(from: wert.datum))
++                                        .font(ZSSchrift.subhead)
++                                        .foregroundStyle(ZSFarbe.text2)
++                                    Spacer()
++                                    Circle()
++                                        .fill(ZSKetonAmpel(mmol: wert.mmol).farbe)
++                                        .frame(width: 8, height: 8)
++                                    Text("\(ZSFormat.zahl(wert.mmol, stellen: 1)) mmol/l")
++                                        .zsZahl(.wertKlein)
++                                        .foregroundStyle(ZSFarbe.text)
++                                    Text(ZSKetonAmpel(mmol: wert.mmol).titel)
++                                        .font(ZSSchrift.caption)
++                                        .foregroundStyle(ZSFarbe.text2)
++                                        .frame(width: 96, alignment: .leading)
++                                }
++                                .frame(minHeight: ZSMass.tap)
++                                .accessibilityElement(children: .combine)
++                                .contextMenu {
++                                    Button("Löschen", role: .destructive) { keton.loeschen(wert) }
++                                }
++                            }
++                        }
++                    }
++
++                    Text("Die App rechnet keine Insulinmenge aus. Mengen kommen aus Loop oder aus dem Plan deines Diabetes-Teams.")
++                        .font(ZSSchrift.footnote)
++                        .foregroundStyle(ZSFarbe.text2)
++                }
++                .padding(ZSMass.space5)
++            }
++        }
++        .background(ZSFarbe.grund.ignoresSafeArea())
++        .environment(\.locale, Locale(identifier: "de_DE"))
++    }
++
++    /// Ergebnis: bei hoch und sehr hoch als dringende Warnkarte (tief-flaeche, Rand tief).
++    private func ampelKarte(_ ampel: ZSKetonAmpel, wert: Double) -> some View {
++        VStack(alignment: .leading, spacing: ZSMass.space2) {
++            HStack(spacing: ZSMass.space2) {
++                Image(systemName: ampel.dringend ? "exclamationmark.triangle.fill" : "circle.fill")
++                    .foregroundStyle(ampel.farbe)
++                Text("\(ampel.titel): \(ZSFormat.zahl(wert, stellen: 1)) mmol/l")
++                    .font(ZSSchrift.headline)
++                    .foregroundStyle(ZSFarbe.text)
++            }
++            Text(ampel.handlung)
++                .font(ZSSchrift.body)
++                .foregroundStyle(ZSFarbe.text)
++                .fixedSize(horizontal: false, vertical: true)
++            if ampel == .sehrHoch, let notruf = URL(string: "tel:112") {
++                Link(destination: notruf) {
++                    Text("112 anrufen")
++                        .font(ZSSchrift.headline)
++                        .foregroundStyle(ZSFarbe.text)
++                        .frame(maxWidth: .infinity, minHeight: ZSMass.tap)
++                        .background(Capsule().strokeBorder(ZSFarbe.tief, lineWidth: 1.5))
++                }
++            }
++        }
++        .padding(ZSMass.space4)
++        .background {
++            RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous)
++                .fill(ampel.dringend ? ZSFarbe.tiefFlaeche : ZSFarbe.flaeche1)
++            if ampel.dringend {
++                RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous)
++                    .strokeBorder(ZSFarbe.tief, lineWidth: 1.5)
++            }
++        }
++        .accessibilityElement(children: .combine)
++        .accessibilityAddTraits(ampel.dringend ? .isHeader : [])
++    }
++
++    private var ampelLegende: some View {
++        VStack(alignment: .leading, spacing: ZSMass.space2) {
++            ZSAbschnittTitel(text: "Ampel")
++            legende(.normal, "unter 0,6")
++            legende(.leicht, "0,6 bis 1,5")
++            legende(.hoch, "über 1,5")
++            legende(.sehrHoch, "über 3,0")
++        }
++    }
++
++    private func legende(_ ampel: ZSKetonAmpel, _ bereich: String) -> some View {
++        HStack(spacing: ZSMass.space2) {
++            Circle().fill(ampel.farbe).frame(width: 8, height: 8)
++            Text(bereich + " mmol/l")
++                .font(ZSSchrift.subhead.monospacedDigit())
++                .foregroundStyle(ZSFarbe.text)
++                .frame(width: 140, alignment: .leading)
++            Text(ampel.titel)
++                .font(ZSSchrift.subhead)
++                .foregroundStyle(ZSFarbe.text2)
++        }
++        .accessibilityElement(children: .combine)
++    }
++}
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+index 3e312f5..11a3665 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+@@ -181,6 +181,8 @@ private struct ZSTherapieView: View {
+                         ZSListenZeile(titel: "Therapieplan", untertitel: "Unterzucker-Plan, FPE, Spritz-Ess-Abstand", symbol: "list.clipboard", aktion: aktionen.therapieplan)
+                         Divider().overlay(ZSFarbe.haarlinie).padding(.leading, 57)
+                         ZSListenZeile(titel: "Unterzucker-Begleiter", untertitel: "Läuft von selbst, Rückblick", symbol: "heart.text.square", aktion: aktionen.hypo)
++                        Divider().overlay(ZSFarbe.haarlinie).padding(.leading, 57)
++                        ZSListenZeile(titel: "Keton-Check", untertitel: "Wert eintragen, Ampel, Krank-Modus", symbol: "drop.triangle", aktion: aktionen.keton)
+                     }
+                     .background(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous).fill(ZSFarbe.flaeche1))
+                     .clipShape(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous))
+@@ -304,6 +306,9 @@ final class ZuckerschockTabController: UIViewController {
+     /// Erkennt Pod-Wechsel im Hintergrund; lebt so lange wie die Oberfläche.
+     var vorratWaechter: ZSVorratWaechter?
+     private let hypoBegleiter: ZSHypoBegleiter
++    private let keton: ZSKeton
++    /// Prüft die Keton-Auslöser; lebt so lange wie die Oberfläche.
++    var ketonWaechter: ZSKetonWaechter?
+     private var kinder: [ZSTab: UIViewController] = [:]
+     private var aktuellerTab: ZSTab = .heute
+     private var abo: AnyCancellable?
+@@ -315,7 +320,7 @@ final class ZuckerschockTabController: UIViewController {
+     private static let leistenPlatz: CGFloat = ZSMass.leisteHoehe + ZSMass.space2 + ZSMass.space2
+ 
+     init(statusTableViewController: StatusTableViewController?, heuteQuelle: ZSHeuteQuelle, essenQuelle: ZSEssenQuelle, speicher: ZSSpeicher,
+-         vorrat: ZSVorrat, vorratQuelle: ZSVorratQuelle, hypoBegleiter: ZSHypoBegleiter) {
++         vorrat: ZSVorrat, vorratQuelle: ZSVorratQuelle, hypoBegleiter: ZSHypoBegleiter, keton: ZSKeton) {
+         self.statusTableViewController = statusTableViewController
+         self.heuteModell = ZSHeuteModell(quelle: heuteQuelle)
+         self.essenQuelle = essenQuelle
+@@ -323,6 +328,7 @@ final class ZuckerschockTabController: UIViewController {
+         self.vorrat = vorrat
+         self.vorratQuelle = vorratQuelle
+         self.hypoBegleiter = hypoBegleiter
++        self.keton = keton
+         super.init(nibName: nil, bundle: nil)
+     }
+ 
+@@ -369,9 +375,13 @@ final class ZuckerschockTabController: UIViewController {
+             therapieplan: { [weak self] in self?.blattZeigen { schliessen in
+                 guard let self else { return AnyView(EmptyView()) }
+                 return AnyView(ZSTherapieplanView(speicher: self.speicher, schliessen: schliessen))
++            } },
++            keton: { [weak self] in self?.blattZeigen { schliessen in
++                guard let self else { return AnyView(EmptyView()) }
++                return AnyView(ZSKetonView(keton: self.keton, schliessen: schliessen))
+             } })
+ 
+-        kinder[.heute] = gastgeber(ZSHeuteView(modell: heuteModell, vorrat: vorrat, aktionen: aktionen))
++        kinder[.heute] = gastgeber(ZSHeuteView(modell: heuteModell, vorrat: vorrat, keton: keton, aktionen: aktionen))
+         kinder[.essen] = gastgeber(ZSEssenView(speicher: speicher, steuerung: essenSteuerung, quelle: essenQuelle, aktionen: aktionen))
+         kinder[.verlauf] = statusTableViewController ?? gastgeber(ZSHinweisView(titel: "Verlauf", text: "Hier liegt in der App Loops gewohnte Ansicht mit allen Kurven."))
+         kinder[.therapie] = gastgeber(ZSTherapieView(aktionen: aktionen))
+@@ -602,7 +612,8 @@ enum ZSVorschau {
+         let tabs = ZuckerschockTabController(statusTableViewController: nil, heuteQuelle: ZSVorschauQuelle(szenario: szenario),
+                                              essenQuelle: ZSVorschauEssenQuelle(), speicher: ZSSpeicher.vorschau(),
+                                              vorrat: ZSVorrat.vorschau(), vorratQuelle: ZSVorschauVorratQuelle(),
+-                                             hypoBegleiter: hypoVorschau(umgebung))
++                                             hypoBegleiter: hypoVorschau(umgebung),
++                                             keton: ZSKeton.vorschau(anlass: umgebung["ZS_KETON"] == "hinweis" ? .langeHoch(seit: Date().addingTimeInterval(-.hours(2.5))) : nil))
+         let navigation = UINavigationController(rootViewController: tabs)
+         navigation.setNavigationBarHidden(true, animated: false)
+         if let name = umgebung["ZS_TAB"], let tab = ZSTab.allCases.first(where: { $0.titel.lowercased() == name.lowercased() }) {
+@@ -629,6 +640,8 @@ extension ZuckerschockTabController {
+             blattZeigen { schliessen in AnyView(ZSHypoView(begleiter: self.hypoBegleiter, schliessen: schliessen)) }
+         case "therapieplan":
+             blattZeigen { schliessen in AnyView(ZSTherapieplanView(speicher: self.speicher, schliessen: schliessen)) }
++        case "keton":
++            blattZeigen { schliessen in AnyView(ZSKetonView(keton: self.keton, schliessen: schliessen)) }
+         default:
+             break
+         }
