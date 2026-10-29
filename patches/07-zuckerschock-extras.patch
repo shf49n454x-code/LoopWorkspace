@@ -682,7 +682,7 @@ index 0000000..83a9e8a
 +    }
 +}
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
-index 46873f9..55edc90 100644
+index 1c4d675..dc2ee80 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 @@ -28,12 +28,18 @@ struct ZSAktionen {
