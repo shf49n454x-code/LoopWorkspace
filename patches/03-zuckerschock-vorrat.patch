@@ -1,0 +1,644 @@
+diff --git a/Loop/Loop.xcodeproj/project.pbxproj b/Loop/Loop.xcodeproj/project.pbxproj
+index 1fa4487..a3a4b79 100644
+--- a/Loop/Loop.xcodeproj/project.pbxproj
++++ b/Loop/Loop.xcodeproj/project.pbxproj
+@@ -7,6 +7,7 @@
+ 	objects = {
+ 
+ /* Begin PBXBuildFile section */
++		5A5DE0BE645A5ED073A43B30 /* ZuckerschockVorrat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CE0BE645A5ED073A43B30 /* ZuckerschockVorrat.swift */; };
+ 		5A5DDF207E1632618430FDA9 /* ZuckerschockEssenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CDF207E1632618430FDA9 /* ZuckerschockEssenView.swift */; };
+ 		5A5DAED0FCE6418FCD0A3420 /* ZuckerschockFotoKH.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CAED0FCE6418FCD0A3420 /* ZuckerschockFotoKH.swift */; };
+ 		5A5D8CAE5AEBC5D4D1E11ACF /* ZuckerschockEssenDaten.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C8CAE5AEBC5D4D1E11ACF /* ZuckerschockEssenDaten.swift */; };
+@@ -766,6 +767,7 @@
+ /* End PBXCopyFilesBuildPhase section */
+ 
+ /* Begin PBXFileReference section */
++		5A5CE0BE645A5ED073A43B30 /* ZuckerschockVorrat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockVorrat.swift; sourceTree = "<group>"; };
+ 		5A5CDF207E1632618430FDA9 /* ZuckerschockEssenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockEssenView.swift; sourceTree = "<group>"; };
+ 		5A5CAED0FCE6418FCD0A3420 /* ZuckerschockFotoKH.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockFotoKH.swift; sourceTree = "<group>"; };
+ 		5A5C8CAE5AEBC5D4D1E11ACF /* ZuckerschockEssenDaten.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockEssenDaten.swift; sourceTree = "<group>"; };
+@@ -1541,6 +1543,7 @@
+ 		5A5C00000000000000000001 /* Zuckerschock */ = {
+ 			isa = PBXGroup;
+ 			children = (
++				5A5CE0BE645A5ED073A43B30 /* ZuckerschockVorrat.swift */,
+ 				5A5CDF207E1632618430FDA9 /* ZuckerschockEssenView.swift */,
+ 				5A5CAED0FCE6418FCD0A3420 /* ZuckerschockFotoKH.swift */,
+ 				5A5C8CAE5AEBC5D4D1E11ACF /* ZuckerschockEssenDaten.swift */,
+@@ -3411,6 +3414,7 @@
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
++				5A5DE0BE645A5ED073A43B30 /* ZuckerschockVorrat.swift in Sources */,
+ 				5A5DDF207E1632618430FDA9 /* ZuckerschockEssenView.swift in Sources */,
+ 				5A5DAED0FCE6418FCD0A3420 /* ZuckerschockFotoKH.swift in Sources */,
+ 				5A5D8CAE5AEBC5D4D1E11ACF /* ZuckerschockEssenDaten.swift in Sources */,
+diff --git a/Loop/Loop/Managers/LoopAppManager.swift b/Loop/Loop/Managers/LoopAppManager.swift
+index b9dd628..0f13afe 100644
+--- a/Loop/Loop/Managers/LoopAppManager.swift
++++ b/Loop/Loop/Managers/LoopAppManager.swift
+@@ -333,7 +333,9 @@ class LoopAppManager: NSObject {
+         // Zuckerschock: Bubble-Menü mit Heute-Screen; Loops Startbildschirm lebt unverändert im Tab „Verlauf“.
+         let heuteQuelle = ZSLoopQuelle(deviceManager: deviceDataManager, automaticDosingStatus: automaticDosingStatus, onboardingManager: onboardingManager)
+         let tabController = ZuckerschockTabController(statusTableViewController: statusTableViewController, heuteQuelle: heuteQuelle,
+-                                                      essenQuelle: ZSLoopEssenQuelle(deviceManager: deviceDataManager), speicher: ZSSpeicher.shared)
++                                                      essenQuelle: ZSLoopEssenQuelle(deviceManager: deviceDataManager), speicher: ZSSpeicher.shared,
++                                                      vorrat: ZSVorrat.shared, vorratQuelle: ZSLoopVorratQuelle(deviceManager: deviceDataManager, vorrat: ZSVorrat.shared))
++        tabController.vorratWaechter = ZSVorratWaechter(deviceManager: deviceDataManager, vorrat: ZSVorrat.shared)
+         rootNavigationController?.setViewControllers([tabController], animated: true)
+ 
+         deviceDataManager.refreshDeviceData()
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
+index 0a54804..9ac9c86 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
+@@ -20,10 +20,13 @@ struct ZSAktionen {
+     var einstellungen: () -> Void
+     /// Öffnet Loops KH-Eingabe, vorausgefüllt mit Name, Menge und Wirkdauer.
+     var uebergeben: (ZSKHUebergabe) -> Void
++    /// Öffnet den Vorrat.
++    var vorrat: () -> Void
+ }
+ 
+ struct ZSHeuteView: View {
+     @ObservedObject var modell: ZSHeuteModell
++    @ObservedObject var vorrat: ZSVorrat
+     var aktionen: ZSAktionen
+ 
+     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+@@ -57,7 +60,11 @@ struct ZSHeuteView: View {
+             ZSKurvenKarte(stand: stand, jetzt: jetzt)
+                 .frame(minHeight: kurveFest ? 260 : 120, maxHeight: kurveFest ? 260 : .infinity)
+ 
+-            ZSGeraeteKarte(pumpe: stand?.pumpe, sensor: stand?.sensor, gestapelt: dynamicTypeSize.isAccessibilitySize)
++            Button(action: aktionen.vorrat) {
++                ZSGeraeteKarte(pumpe: stand?.pumpe, sensor: stand?.sensor, podsAufLager: vorrat.stand.pods, gestapelt: dynamicTypeSize.isAccessibilitySize)
++            }
++            .buttonStyle(.plain)
++            .accessibilityHint("Öffnet den Vorrat")
+ 
+             aktionsLeiste(moeglich: stand?.aktionenMoeglich ?? false)
+         }
+@@ -640,12 +647,22 @@ struct ZSKurve: View {
+ private struct ZSGeraeteKarte: View {
+     var pumpe: ZSGeraet?
+     var sensor: ZSGeraet?
++    var podsAufLager: Int
+     var gestapelt: Bool
+ 
++    /// Pumpe mit Lagerbestand aus dem Vorrat („38 IE übrig · 3 übrig“).
++    private var pumpeMitLager: ZSGeraet {
++        var geraet = pumpe ?? ZSGeraet(name: "Pumpe", anteil: nil, zustand: .ohne, detail: "nicht verbunden")
++        if geraet.zustand != .ohne {
++            geraet.detail = [geraet.detail, "\(podsAufLager) auf Lager"].compactMap { $0 }.joined(separator: " · ")
++        }
++        return geraet
++    }
++
+     var body: some View {
+         let layout = gestapelt ? AnyLayout(VStackLayout(spacing: ZSMass.space3)) : AnyLayout(HStackLayout(alignment: .top, spacing: ZSMass.space4))
+         layout {
+-            ZSGeraeteSpalte(geraet: pumpe ?? ZSGeraet(name: "Pumpe", anteil: nil, zustand: .ohne, detail: "nicht verbunden"))
++            ZSGeraeteSpalte(geraet: pumpeMitLager)
+             ZSGeraeteSpalte(geraet: sensor ?? ZSGeraet(name: "Sensor", anteil: nil, zustand: .ohne, detail: "nicht verbunden"))
+         }
+         .padding(.vertical, -ZSMass.space1)
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+index 66eaaf6..20f88d0 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+@@ -174,6 +174,8 @@ private struct ZSTherapieView: View {
+ 
+                     VStack(spacing: 0) {
+                         ZSListenZeile(titel: "Einstellungen", untertitel: "Therapie, Pumpe, Sensor, Dienste", symbol: "gearshape", marke: true, aktion: aktionen.einstellungen)
++                        Divider().overlay(ZSFarbe.haarlinie).padding(.leading, 57)
++                        ZSListenZeile(titel: "Vorrat", untertitel: "Pods, Sensoren, Insulin, Rezept", symbol: "shippingbox", aktion: aktionen.vorrat)
+                     }
+                     .background(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous).fill(ZSFarbe.flaeche1))
+                     .clipShape(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous))
+@@ -270,6 +272,10 @@ final class ZuckerschockTabController: UIViewController {
+     private let essenQuelle: ZSEssenQuelle
+     private let speicher: ZSSpeicher
+     private let essenSteuerung = ZSEssenSteuerung()
++    private let vorrat: ZSVorrat
++    private let vorratQuelle: ZSVorratQuelle
++    /// Erkennt Pod-Wechsel im Hintergrund; lebt so lange wie die Oberfläche.
++    var vorratWaechter: ZSVorratWaechter?
+     private var kinder: [ZSTab: UIViewController] = [:]
+     private var aktuellerTab: ZSTab = .heute
+     private var abo: AnyCancellable?
+@@ -280,11 +286,14 @@ final class ZuckerschockTabController: UIViewController {
+     /// Platz, den die Leiste unten belegt (Leiste + Abstand zum unteren Rand + Luft darüber).
+     private static let leistenPlatz: CGFloat = ZSMass.leisteHoehe + ZSMass.space2 + ZSMass.space2
+ 
+-    init(statusTableViewController: StatusTableViewController?, heuteQuelle: ZSHeuteQuelle, essenQuelle: ZSEssenQuelle, speicher: ZSSpeicher) {
++    init(statusTableViewController: StatusTableViewController?, heuteQuelle: ZSHeuteQuelle, essenQuelle: ZSEssenQuelle, speicher: ZSSpeicher,
++         vorrat: ZSVorrat, vorratQuelle: ZSVorratQuelle) {
+         self.statusTableViewController = statusTableViewController
+         self.heuteModell = ZSHeuteModell(quelle: heuteQuelle)
+         self.essenQuelle = essenQuelle
+         self.speicher = speicher
++        self.vorrat = vorrat
++        self.vorratQuelle = vorratQuelle
+         super.init(nibName: nil, bundle: nil)
+     }
+ 
+@@ -319,9 +328,13 @@ final class ZuckerschockTabController: UIViewController {
+             uebergeben: { [weak self] uebergabe in
+                 // Loops eigene KH-Eingabe, vorausgefüllt. Dort prüfen, speichern, Loop schlägt den Bolus vor.
+                 self?.statusTableViewController?.presentCarbEntryScreen(uebergabe.aktivitaet)
+-            })
++            },
++            vorrat: { [weak self] in self?.blattZeigen { schliessen in
++                guard let self else { return AnyView(EmptyView()) }
++                return AnyView(ZSVorratView(vorrat: self.vorrat, quelle: self.vorratQuelle, schliessen: schliessen))
++            } })
+ 
+-        kinder[.heute] = gastgeber(ZSHeuteView(modell: heuteModell, aktionen: aktionen))
++        kinder[.heute] = gastgeber(ZSHeuteView(modell: heuteModell, vorrat: vorrat, aktionen: aktionen))
+         kinder[.essen] = gastgeber(ZSEssenView(speicher: speicher, steuerung: essenSteuerung, quelle: essenQuelle, aktionen: aktionen))
+         kinder[.verlauf] = statusTableViewController ?? gastgeber(ZSHinweisView(titel: "Verlauf", text: "Hier liegt in der App Loops gewohnte Ansicht mit allen Kurven."))
+         kinder[.therapie] = gastgeber(ZSTherapieView(aktionen: aktionen))
+@@ -366,6 +379,18 @@ final class ZuckerschockTabController: UIViewController {
+             .sink { [weak self] tab in self?.wechseln(zu: tab) }
+     }
+ 
++    /// Zeigt eine SwiftUI-Ansicht als Blatt über allem; `schliessen` schließt sie sofort.
++    func blattZeigen(_ inhalt: (@escaping () -> Void) -> AnyView) {
++        let host = ZSBlattHost(rootView: AnyView(EmptyView()))
++        host.rootView = inhalt { [weak host] in host?.dismiss(animated: true) }
++        host.view.backgroundColor = ZSFarbe.uiGrund
++        if let sheet = host.sheetPresentationController {
++            sheet.prefersGrabberVisible = true
++            sheet.detents = [.large()]
++        }
++        (presentedViewController ?? self).present(host, animated: true)
++    }
++
+     private func gastgeber<V: View>(_ inhalt: V) -> UIViewController {
+         let host = UIHostingController(rootView: inhalt)
+         host.view.backgroundColor = ZSFarbe.uiGrund
+@@ -455,13 +480,17 @@ enum ZSVorschau {
+         let umgebung = ProcessInfo.processInfo.environment
+         let szenario = ZSVorschauQuelle.Szenario(rawValue: umgebung["ZS_SZENARIO"] ?? "") ?? .normal
+         let tabs = ZuckerschockTabController(statusTableViewController: nil, heuteQuelle: ZSVorschauQuelle(szenario: szenario),
+-                                             essenQuelle: ZSVorschauEssenQuelle(), speicher: ZSSpeicher.vorschau())
++                                             essenQuelle: ZSVorschauEssenQuelle(), speicher: ZSSpeicher.vorschau(),
++                                             vorrat: ZSVorrat.vorschau(), vorratQuelle: ZSVorschauVorratQuelle())
+         let navigation = UINavigationController(rootViewController: tabs)
+         navigation.setNavigationBarHidden(true, animated: false)
+         if let name = umgebung["ZS_TAB"], let tab = ZSTab.allCases.first(where: { $0.titel.lowercased() == name.lowercased() }) {
+             tabs.loadViewIfNeeded()
+             tabs.vorschauTab(tab)
+         }
++        if let blatt = umgebung["ZS_BLATT"] {
++            DispatchQueue.main.asyncAfter(deadline: .now() + 1) { tabs.vorschauBlatt(blatt) }
++        }
+         return navigation
+     }
+ }
+@@ -470,5 +499,18 @@ extension ZuckerschockTabController {
+     fileprivate func vorschauTab(_ tab: ZSTab) {
+         auswahl.tab = tab
+     }
++
++    fileprivate func vorschauBlatt(_ name: String) {
++        switch name {
++        case "vorrat":
++            blattZeigen { schliessen in AnyView(ZSVorratView(vorrat: self.vorrat, quelle: self.vorratQuelle, schliessen: schliessen)) }
++        default:
++            break
++        }
++    }
+ }
+ #endif
++
++/// Ein Blatt, das Zuckerschock selbst zeigt. Nur solche Blätter dürfen Links von außen schließen;
++/// Loops eigene Fenster (Bolus, KH, Pod-Einrichtung, Warnungen) bleiben unberührt.
++final class ZSBlattHost: UIHostingController<AnyView> {}
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift b/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
+new file mode 100644
+index 0000000..672945a
+--- /dev/null
++++ b/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
+@@ -0,0 +1,419 @@
++//
++//  ZuckerschockVorrat.swift
++//  Loop
++//
++//  Zuckerschock: Vorrat. Pods zählen bei jedem Pod-Wechsel automatisch herunter,
++//  Sensoren und Insulin trägst du ein. Dazu Reichweite, Rezept- und Liefer-Hinweise.
++//  Liest nur aus Loop (Laufzeit von Pod und Sensor, gelieferte Tagesmenge), steuert nichts.
++//
++
++import Combine
++import Foundation
++import LoopKit
++import LoopKitUI
++import SwiftUI
++import UserNotifications
++
++// MARK: - Modell
++
++enum ZSVorratArt: String, Codable, CaseIterable, Identifiable {
++    case pods, sensoren, insulin, zubehoer
++
++    var id: String { rawValue }
++
++    var titel: String {
++        switch self {
++        case .pods: return "Pods"
++        case .sensoren: return "Sensoren"
++        case .insulin: return "Insulin"
++        case .zubehoer: return "Zubehör"
++        }
++    }
++}
++
++struct ZSVorratStand: Codable, Equatable {
++    var pods = 0
++    var sensoren = 0
++    /// Ampullen oder Pens.
++    var insulin = 0
++    var insulinIEJeStueck: Double = 1000
++    var zubehoer = ""
++
++    /// Laufzeit je Stück in Tagen.
++    var tageJePod: Double = 3
++    var tageJeSensor: Double = 10
++
++    /// Ab dieser Reichweite (Tage) erinnert die App an das Folgerezept.
++    var rezeptHinweisAbTagen = 21
++
++    var rezeptAngefragtAm: Date?
++    var lieferungErwartetAm: Date?
++
++    /// Zuletzt automatisch erkannte Wechsel.
++    var letzterPodWechsel: Date?
++    var letzterSensorWechsel: Date?
++    var letzterHinweis: Date?
++}
++
++final class ZSVorrat: ObservableObject {
++    static let shared = ZSVorrat()
++
++    @Published var stand: ZSVorratStand { didSet { sichern() } }
++
++    private let datei: URL
++
++    init(ordner: URL? = nil) {
++        let basis = ordner ?? (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first ?? FileManager.default.temporaryDirectory)
++        let ordner = basis.appendingPathComponent("Zuckerschock", isDirectory: true)
++        try? FileManager.default.createDirectory(at: ordner, withIntermediateDirectories: true)
++        datei = ordner.appendingPathComponent("vorrat.json")
++        let decoder = JSONDecoder()
++        decoder.dateDecodingStrategy = .iso8601
++        stand = (try? Data(contentsOf: datei)).flatMap { try? decoder.decode(ZSVorratStand.self, from: $0) } ?? ZSVorratStand()
++    }
++
++    private func sichern() {
++        let encoder = JSONEncoder()
++        encoder.dateEncodingStrategy = .iso8601
++        guard let daten = try? encoder.encode(stand) else { return }
++        try? daten.write(to: datei, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
++    }
++
++    // MARK: Reichweite
++
++    /// Bis wann reichen die Pods: Lager × Laufzeit + Rest des aktuellen Pods.
++    func podsReichenBis(restAktuell: TimeInterval?, jetzt: Date = Date()) -> Date {
++        jetzt.addingTimeInterval(Double(stand.pods) * stand.tageJePod * 86_400 + (restAktuell ?? 0))
++    }
++
++    func sensorenReichenBis(restAktuell: TimeInterval?, jetzt: Date = Date()) -> Date {
++        jetzt.addingTimeInterval(Double(stand.sensoren) * stand.tageJeSensor * 86_400 + (restAktuell ?? 0))
++    }
++
++    /// Insulin-Reichweite in Tagen aus Lager und der durchschnittlichen Tagesmenge, die Loop geliefert hat.
++    func insulinTage(tagesmenge: Double?) -> Double? {
++        guard let tagesmenge, tagesmenge > 0 else { return nil }
++        return Double(stand.insulin) * stand.insulinIEJeStueck / tagesmenge
++    }
++
++    // MARK: Wechsel
++
++    func podGewechselt(am datum: Date = Date()) {
++        stand.pods = max(0, stand.pods - 1)
++        stand.letzterPodWechsel = datum
++    }
++
++    func sensorGewechselt(am datum: Date = Date()) {
++        stand.sensoren = max(0, stand.sensoren - 1)
++        stand.letzterSensorWechsel = datum
++    }
++}
++
++// MARK: - Quelle (nur lesend aus Loop)
++
++protocol ZSVorratQuelle: AnyObject {
++    /// Verbleibende Laufzeit des aktuellen Pods bzw. Sensors, aus dem Fortschritt, den das Gerät meldet.
++    var podRest: TimeInterval? { get }
++    var sensorRest: TimeInterval? { get }
++    /// Durchschnittlich von Loop gelieferte IE pro Tag (letzte 7 Tage).
++    func tagesmenge(_ fertig: @escaping (Double?) -> Void)
++}
++
++final class ZSLoopVorratQuelle: ZSVorratQuelle {
++    private let deviceManager: DeviceDataManager
++    private let vorrat: ZSVorrat
++
++    init(deviceManager: DeviceDataManager, vorrat: ZSVorrat) {
++        self.deviceManager = deviceManager
++        self.vorrat = vorrat
++    }
++
++    var podRest: TimeInterval? {
++        guard let anteil = deviceManager.pumpManager?.pumpLifecycleProgress?.percentComplete else { return nil }
++        return max(0, 1 - anteil) * vorrat.stand.tageJePod * 86_400
++    }
++
++    var sensorRest: TimeInterval? {
++        guard let anteil = (deviceManager.cgmManager as? CGMManagerUI)?.cgmLifecycleProgress?.percentComplete else { return nil }
++        return max(0, 1 - anteil) * vorrat.stand.tageJeSensor * 86_400
++    }
++
++    func tagesmenge(_ fertig: @escaping (Double?) -> Void) {
++        deviceManager.doseStore.getTotalUnitsDelivered(since: Date().addingTimeInterval(-.days(7))) { ergebnis in
++            var wert: Double?
++            if case .success(let gesamt) = ergebnis {
++                wert = gesamt.value / 7
++            }
++            DispatchQueue.main.async { fertig(wert) }
++        }
++    }
++}
++
++#if targetEnvironment(simulator)
++final class ZSVorschauVorratQuelle: ZSVorratQuelle {
++    var podRest: TimeInterval? { .hours(18) }
++    var sensorRest: TimeInterval? { .days(3) }
++    func tagesmenge(_ fertig: @escaping (Double?) -> Void) { fertig(38) }
++}
++
++extension ZSVorrat {
++    static func vorschau() -> ZSVorrat {
++        let vorrat = ZSVorrat(ordner: FileManager.default.temporaryDirectory.appendingPathComponent("ZSVorschau-\(UUID().uuidString)"))
++        vorrat.stand = ZSVorratStand(pods: 3, sensoren: 2, insulin: 2, insulinIEJeStueck: 1000, zubehoer: "Pod-Pflaster, Alkoholtupfer",
++                                     rezeptAngefragtAm: Date().addingTimeInterval(-.days(28)),
++                                     letzterPodWechsel: Date().addingTimeInterval(-.hours(54)))
++        return vorrat
++    }
++}
++#endif
++
++// MARK: - Wächter: erkennt Pod-Wechsel und erinnert an das Rezept
++
++/// Beobachtet Loops Pod-Laufzeit. Springt sie von „fast verbraucht“ auf „neu“, war das ein Pod-Wechsel.
++final class ZSVorratWaechter {
++    private let deviceManager: DeviceDataManager
++    private let vorrat: ZSVorrat
++    private var abos = Set<AnyCancellable>()
++    private let speicherSchluessel = "Zuckerschock.letzterPodAnteil"
++
++    init(deviceManager: DeviceDataManager, vorrat: ZSVorrat) {
++        self.deviceManager = deviceManager
++        self.vorrat = vorrat
++
++        let center = NotificationCenter.default
++        Publishers.Merge3(
++            center.publisher(for: .LoopDataUpdated, object: deviceManager.loopManager).map { _ in () },
++            center.publisher(for: .PumpManagerChanged, object: deviceManager).map { _ in () },
++            center.publisher(for: .PumpEventsAdded, object: deviceManager).map { _ in () })
++            .receive(on: DispatchQueue.main)
++            .sink { [weak self] in self?.pruefen() }
++            .store(in: &abos)
++    }
++
++    private var letzterAnteil: Double? {
++        get { UserDefaults.standard.object(forKey: speicherSchluessel) as? Double }
++        set { UserDefaults.standard.set(newValue, forKey: speicherSchluessel) }
++    }
++
++    func pruefen(jetzt: Date = Date()) {
++        if let anteil = deviceManager.pumpManager?.pumpLifecycleProgress?.percentComplete {
++            if let vorher = letzterAnteil, ZSVorratWaechter.istWechsel(vorher: vorher, jetzt: anteil),
++               jetzt.timeIntervalSince(vorrat.stand.letzterPodWechsel ?? .distantPast) > .hours(12) {
++                vorrat.podGewechselt(am: jetzt)
++            }
++            letzterAnteil = anteil
++        }
++        hinweisFallsNoetig(jetzt: jetzt)
++    }
++
++    /// Ein Wechsel: vorher mindestens ein Drittel verbraucht, jetzt fast neu.
++    static func istWechsel(vorher: Double, jetzt: Double) -> Bool {
++        vorher >= 0.33 && jetzt <= 0.1 && jetzt < vorher
++    }
++
++    private func hinweisFallsNoetig(jetzt: Date) {
++        let stand = vorrat.stand
++        guard stand.rezeptAngefragtAm.map({ jetzt.timeIntervalSince($0) > .days(30) }) ?? true else { return }
++        guard jetzt.timeIntervalSince(stand.letzterHinweis ?? .distantPast) > .days(1) else { return }
++        let restPod = deviceManager.pumpManager?.pumpLifecycleProgress.map { max(0, 1 - $0.percentComplete) * stand.tageJePod * 86_400 }
++        let tage = vorrat.podsReichenBis(restAktuell: restPod, jetzt: jetzt).timeIntervalSince(jetzt) / 86_400
++        guard tage < Double(stand.rezeptHinweisAbTagen) else { return }
++
++        vorrat.stand.letzterHinweis = jetzt
++        let inhalt = UNMutableNotificationContent()
++        inhalt.title = "Pods reichen noch etwa \(Int(tage.rounded())) Tage"
++        inhalt.body = stand.pods == 0 ? "Ohne Pods wird's eng. Nachbestellen?" : "Zeit für das Folgerezept."
++        inhalt.sound = .default
++        let anfrage = UNNotificationRequest(identifier: "Zuckerschock.Vorrat.Rezept", content: inhalt, trigger: nil)
++        UNUserNotificationCenter.current().add(anfrage)
++    }
++}
++
++// MARK: - Ansicht
++
++struct ZSVorratView: View {
++    @ObservedObject var vorrat: ZSVorrat
++    var quelle: ZSVorratQuelle
++    var schliessen: () -> Void
++
++    @State private var tagesmenge: Double?
++
++    private static let datum: DateFormatter = {
++        let f = DateFormatter()
++        f.locale = Locale(identifier: "de_DE")
++        f.dateFormat = "EE, d. MMM"
++        return f
++    }()
++
++    var body: some View {
++        let podsBis = vorrat.podsReichenBis(restAktuell: quelle.podRest)
++        let sensorenBis = vorrat.sensorenReichenBis(restAktuell: quelle.sensorRest)
++        let podTage = podsBis.timeIntervalSinceNow / 86_400
++
++        VStack(spacing: 0) {
++            ZSBlattKopf(titel: "Vorrat", abbrechen: schliessen)
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space6) {
++                    VStack(alignment: .leading, spacing: ZSMass.space2) {
++                        Text("Pods reichen bis")
++                            .font(ZSSchrift.subhead)
++                            .foregroundStyle(ZSFarbe.text2)
++                        Text(Self.datum.string(from: podsBis))
++                            .zsZahl(.wertGross)
++                            .foregroundStyle(ZSFarbe.text)
++                        Text("\(vorrat.stand.pods) auf Lager\(quelle.podRest.map { " + aktueller Pod (noch \(Int(($0 / 3600).rounded())) Std.)" } ?? "") · etwa \(max(0, Int(podTage.rounded()))) Tage")
++                            .font(ZSSchrift.subhead)
++                            .foregroundStyle(ZSFarbe.text2)
++                        Text("Zählt bei jedem Pod-Wechsel automatisch mit.")
++                            .font(ZSSchrift.footnote)
++                            .foregroundStyle(ZSFarbe.text2)
++                    }
++                    .zsKarte(hero: true)
++
++                    if vorrat.stand.pods == 0 {
++                        Text("Ohne Pods wird's eng. Nachbestellen?")
++                            .font(ZSSchrift.headline)
++                            .foregroundStyle(ZSFarbe.text)
++                    }
++
++                    if podTage < Double(vorrat.stand.rezeptHinweisAbTagen) {
++                        rezeptHinweis
++                    }
++
++                    VStack(spacing: 0) {
++                        ZSVorratZeile(titel: "Pods", untertitel: "je Pod \(ZSFormat.zahl(vorrat.stand.tageJePod, stellen: 0)) Tage", anzahl: $vorrat.stand.pods, einheit: "Stück")
++                        trenner
++                        ZSVorratZeile(titel: "Sensoren", untertitel: "aktueller bis \(Self.datum.string(from: Date().addingTimeInterval(quelle.sensorRest ?? 0))), reichen bis \(Self.datum.string(from: sensorenBis))", anzahl: $vorrat.stand.sensoren, einheit: "Stück")
++                        trenner
++                        ZSVorratZeile(titel: "Insulin", untertitel: insulinText, anzahl: $vorrat.stand.insulin, einheit: "Stück")
++                    }
++                    .background(RoundedRectangle(cornerRadius: ZSMass.radiusKarte, style: .continuous).fill(ZSFarbe.flaeche1))
++
++                    HStack(spacing: ZSMass.space3) {
++                        Button("Sensor gewechselt") { vorrat.sensorGewechselt() }
++                            .buttonStyle(ZSRandStil())
++                        Button("Pod von Hand abziehen") { vorrat.podGewechselt() }
++                            .buttonStyle(ZSRandStil())
++                    }
++                    .font(ZSSchrift.subhead.weight(.semibold))
++
++                    VStack(alignment: .leading, spacing: ZSMass.space3) {
++                        ZSAbschnittTitel(text: "Rezept und Lieferung")
++                        datumZeile("Folgerezept angefragt", wert: $vorrat.stand.rezeptAngefragtAm)
++                        datumZeile("Lieferung erwartet", wert: $vorrat.stand.lieferungErwartetAm)
++                        ZSEingabeFeld(titel: "Zubehör, Notiz") {
++                            TextField("z. B. Pod-Pflaster", text: $vorrat.stand.zubehoer)
++                        }
++                        Stepper("Rezept-Hinweis ab \(vorrat.stand.rezeptHinweisAbTagen) Tagen Reichweite", value: $vorrat.stand.rezeptHinweisAbTagen, in: 7...60)
++                            .font(ZSSchrift.subhead)
++                            .foregroundStyle(ZSFarbe.text)
++                        Text("Mails mit Rezepten und Lieferungen kommen später über deinen eigenen Server (n8n).")
++                            .font(ZSSchrift.footnote)
++                            .foregroundStyle(ZSFarbe.text2)
++                    }
++                    .zsKarte()
++                }
++                .padding(ZSMass.space5)
++            }
++        }
++        .background(ZSFarbe.grund.ignoresSafeArea())
++        .onAppear { quelle.tagesmenge { tagesmenge = $0 } }
++    }
++
++    private var trenner: some View {
++        Divider().overlay(ZSFarbe.haarlinie).padding(.leading, ZSMass.space4)
++    }
++
++    private var insulinText: String {
++        if let tage = vorrat.insulinTage(tagesmenge: tagesmenge) {
++            return "\(ZSFormat.zahl(vorrat.stand.insulinIEJeStueck, stellen: 0)) IE je Stück, reicht etwa \(Int(tage)) Tage bei \(ZSFormat.zahl(tagesmenge ?? 0, stellen: 0)) IE am Tag"
++        }
++        return "\(ZSFormat.zahl(vorrat.stand.insulinIEJeStueck, stellen: 0)) IE je Stück"
++    }
++
++    private var rezeptHinweis: some View {
++        VStack(alignment: .leading, spacing: ZSMass.space2) {
++            Label("Folgerezept fehlt vielleicht", systemImage: "questionmark.circle")
++                .font(ZSSchrift.headline)
++                .foregroundStyle(ZSFarbe.text)
++            Text(vorrat.stand.rezeptAngefragtAm.map { "Zuletzt angefragt am \(Self.datum.string(from: $0))" } ?? "Noch kein Rezept angefragt.")
++                .font(ZSSchrift.subhead)
++                .foregroundStyle(ZSFarbe.text2)
++            HStack(spacing: ZSMass.space3) {
++                Button("Rezept angefragt") { vorrat.stand.rezeptAngefragtAm = Date() }
++                    .buttonStyle(ZSRandStil())
++                Button("Schon erledigt") { vorrat.stand.rezeptAngefragtAm = Date() }
++                    .buttonStyle(ZSRandStil())
++            }
++            .font(ZSSchrift.subhead.weight(.semibold))
++        }
++        .zsKarte()
++    }
++
++    private func datumZeile(_ titel: String, wert: Binding<Date?>) -> some View {
++        HStack {
++            Text(titel)
++                .font(ZSSchrift.body)
++                .foregroundStyle(ZSFarbe.text)
++            Spacer()
++            if let datum = wert.wrappedValue {
++                DatePicker("", selection: Binding(get: { datum }, set: { wert.wrappedValue = $0 }), displayedComponents: .date)
++                    .labelsHidden()
++                Button {
++                    wert.wrappedValue = nil
++                } label: {
++                    Image(systemName: "xmark.circle.fill")
++                        .foregroundStyle(ZSFarbe.text3)
++                }
++                .accessibilityLabel("\(titel) löschen")
++            } else {
++                Button("Eintragen") { wert.wrappedValue = Date() }
++                    .foregroundStyle(ZSFarbe.orangeText)
++            }
++        }
++        .frame(minHeight: ZSMass.tap)
++    }
++}
++
++private struct ZSVorratZeile: View {
++    var titel: String
++    var untertitel: String
++    @Binding var anzahl: Int
++    var einheit: String
++
++    var body: some View {
++        HStack(spacing: ZSMass.space3) {
++            VStack(alignment: .leading, spacing: 2) {
++                Text(titel)
++                    .font(ZSSchrift.body)
++                    .foregroundStyle(ZSFarbe.text)
++                Text(untertitel)
++                    .font(ZSSchrift.subhead)
++                    .foregroundStyle(ZSFarbe.text2)
++                    .fixedSize(horizontal: false, vertical: true)
++            }
++            Spacer(minLength: ZSMass.space2)
++            Stepper(value: $anzahl, in: 0...99) {
++                HStack(alignment: .firstTextBaseline, spacing: ZSMass.space1) {
++                    Text("\(anzahl)")
++                        .zsZahl(.wertKlein)
++                        .foregroundStyle(ZSFarbe.text)
++                    Text(einheit)
++                        .zsZahl(.einheit)
++                        .foregroundStyle(ZSFarbe.text2)
++                }
++            }
++            .fixedSize()
++        }
++        .padding(.horizontal, ZSMass.space4)
++        .padding(.vertical, ZSMass.space3)
++        .accessibilityElement(children: .combine)
++        .accessibilityAdjustableAction { richtung in
++            switch richtung {
++            case .increment: anzahl = min(99, anzahl + 1)
++            case .decrement: anzahl = max(0, anzahl - 1)
++            @unknown default: break
++            }
++        }
++    }
++}

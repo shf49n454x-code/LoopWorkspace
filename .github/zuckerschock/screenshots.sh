@@ -81,8 +81,10 @@ for eintrag in "${GERAETE[@]}"; do
     for blatt in rezept rueckblick standard manuell einstellungen; do
       aufnehmen "$udid" "$name-dark-large-essen-$blatt" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_TAB=essen SIMCTL_CHILD_ZS_ESSEN_BLATT=$blatt
     done
+    aufnehmen "$udid" "$name-dark-large-vorrat" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_BLATT=vorrat
     xcrun simctl ui "$udid" appearance light
     aufnehmen "$udid" "$name-light-large-essen" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_TAB=essen
+    aufnehmen "$udid" "$name-light-large-vorrat" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_BLATT=vorrat
     xcrun simctl ui "$udid" appearance dark
     xcrun simctl terminate "$udid" "$BUNDLE" || true
     # Home-Bildschirm mit App-Icon
