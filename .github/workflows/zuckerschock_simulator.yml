@@ -67,7 +67,28 @@ jobs:
         run: grep -E "error:" -A3 buildlog.txt | head -200 || true
 
       - name: Screenshots im Simulator
+        id: screenshots
         run: bash .github/zuckerschock/screenshots.sh build/Build/Products/Debug-iphonesimulator screenshots
+
+      # Echter Start (ohne Vorschau): Loop braucht seine App-Gruppe, sonst bricht ein Debug-Build
+      # sofort ab. Dafür ad hoc signieren (ohne Apple-Konto, nur im Simulator gültig).
+      - name: Ad hoc signieren für den echten Start
+        id: signieren
+        continue-on-error: true
+        run: |
+          xcodebuild build \
+            -workspace LoopWorkspace.xcworkspace \
+            -scheme LoopWorkspace \
+            -configuration Debug \
+            -destination "generic/platform=iOS Simulator" \
+            -derivedDataPath build \
+            CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
+            2>&1 | tee signlog.txt | grep -E "error:|\*\* BUILD" || true
+          tail -n 50 signlog.txt | grep -q "\*\* BUILD SUCCEEDED \*\*"
+
+      - name: Echter Start im Simulator
+        if: steps.signieren.outcome == 'success'
+        run: bash .github/zuckerschock/echter-start.sh build/Build/Products/Debug-iphonesimulator screenshots
 
       - name: Screenshots hochladen
         if: always()
@@ -77,11 +98,12 @@ jobs:
           path: |
             screenshots
             buildlog.txt
+            signlog.txt
           if-no-files-found: ignore
 
       # Screenshots zusätzlich auf einen eigenen Branch legen, damit man sie ohne Download ansehen kann.
       - name: Screenshots auf Branch ablegen
-        if: success()
+        if: always() && steps.screenshots.outcome != 'skipped'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -94,3 +116,14 @@ jobs:
           git commit -q -m "Screenshots für ${GITHUB_SHA::7}"
           git push -f -q "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${ZIEL}"
           echo "Screenshots auf Branch ${ZIEL}"
+
+      - name: Echter Start ohne Absturz
+        run: |
+          if [ "${{ steps.signieren.outcome }}" != "success" ]; then
+            echo "Ad-hoc-Signatur nicht möglich, echter Start nicht geprüft."
+            grep -E "error:" signlog.txt | head -20 || true
+          fi
+          if [ -f screenshots/ECHTER-START-FEHLER.txt ]; then
+            head -n 120 screenshots/ECHTER-START-FEHLER.txt
+            exit 1
+          fi

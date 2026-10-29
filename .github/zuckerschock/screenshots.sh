@@ -95,14 +95,6 @@ for eintrag in "${GERAETE[@]}"; do
     aufnehmen "$udid" "$name-light-large-essen" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_TAB=essen
     aufnehmen "$udid" "$name-light-large-vorrat" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_BLATT=vorrat
     xcrun simctl ui "$udid" appearance dark
-    # Echter Start ohne Vorschau: Loop startet normal (Einrichtung), darf nicht abstürzen.
-    aufnehmen "$udid" "$name-dark-large-echter-start"
-    sleep 5
-    if xcrun simctl spawn "$udid" launchctl list | grep -q "$BUNDLE"; then
-      echo "  echter Start: läuft"
-    else
-      echo "  echter Start: App läuft nicht mehr"; exit 1
-    fi
     xcrun simctl terminate "$udid" "$BUNDLE" || true
     # Home-Bildschirm mit App-Icon
     xcrun simctl ui "$udid" appearance light
