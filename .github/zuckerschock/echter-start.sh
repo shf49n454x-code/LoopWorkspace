@@ -1,0 +1,37 @@
+#!/bin/bash
+# Startet die ad hoc signierte App normal (ohne Vorschau) und prüft, dass sie nach 10 Sekunden noch läuft.
+# Aufruf: echter-start.sh <Products-Ordner> <Zielordner>
+set -euo pipefail
+PRODUKTE="$1"
+ZIEL="$2"
+mkdir -p "$ZIEL"
+APP="$PRODUKTE/Loop.app"
+BUNDLE=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Info.plist")
+LAUFZEIT=$(xcrun simctl list runtimes -j | python3 -c '
+import json, sys
+r = [x for x in json.load(sys.stdin)["runtimes"] if x.get("platform") == "iOS" and x.get("isAvailable")]
+r.sort(key=lambda x: [int(p) for p in x["version"].split(".")], reverse=True)
+print(r[0]["identifier"])')
+udid=$(xcrun simctl create "ZS Echter Start" com.apple.CoreSimulator.SimDeviceType.iPhone-16 "$LAUFZEIT")
+xcrun simctl boot "$udid"
+xcrun simctl bootstatus "$udid" -b > /dev/null
+xcrun simctl ui "$udid" appearance dark
+xcrun simctl install "$udid" "$APP"
+xcrun simctl launch "$udid" "$BUNDLE" > /dev/null
+sleep 12
+xcrun simctl io "$udid" screenshot --type=png "$ZIEL/iPhone-16-dark-echter-start.png" > /dev/null
+if xcrun simctl spawn "$udid" launchctl list | grep -q "$BUNDLE"; then
+  echo "Echter Start: App läuft"
+else
+  echo "Echter Start: App läuft nicht mehr"
+  {
+    echo "Die App lief 12 Sekunden nach dem normalen Start nicht mehr."
+    echo
+    echo "== Simulator-Log (Prozess Loop)"
+    xcrun simctl spawn "$udid" log show --last 3m --style compact --predicate 'process == "Loop"' 2>/dev/null | tail -n 300
+  } > "$ZIEL/ECHTER-START-FEHLER.txt"
+  for bericht in "$HOME"/Library/Logs/DiagnosticReports/Loop*; do
+    [ -e "$bericht" ] && cp "$bericht" "$ZIEL/" || true
+  done
+fi
+xcrun simctl shutdown "$udid" || true
