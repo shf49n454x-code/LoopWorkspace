@@ -50,7 +50,7 @@ index b9dd628..0f13afe 100644
  
          deviceDataManager.refreshDeviceData()
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
-index dc4a692..ff1415a 100644
+index c6811ad..c9dedf2 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 @@ -20,10 +20,13 @@ struct ZSAktionen {
@@ -80,7 +80,7 @@ index dc4a692..ff1415a 100644
  
              aktionsLeiste(moeglich: stand?.aktionenMoeglich ?? false)
          }
-@@ -632,12 +639,22 @@ struct ZSKurve: View {
+@@ -637,12 +644,22 @@ struct ZSKurve: View {
  private struct ZSGeraeteKarte: View {
      var pumpe: ZSGeraet?
      var sensor: ZSGeraet?
