@@ -1913,7 +1913,7 @@ index 0000000..35726eb
 +    }
 +}
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
-index 1ba70c2..c6811ad 100644
+index 3e0a226..d871e33 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 @@ -10,14 +10,16 @@ import LoopCore

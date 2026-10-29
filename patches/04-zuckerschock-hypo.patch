@@ -91,7 +91,7 @@ index 0f13afe..158a5cf 100644
          // TODO: Until these notifications are converted to use the new alert system, they shall still show in the foreground
          case LoopNotificationCategory.bolusFailure.rawValue,
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
-index c9dedf2..582b0c2 100644
+index 0ddb989..40de8df 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 @@ -22,6 +22,10 @@ struct ZSAktionen {
@@ -120,10 +120,10 @@ index c9dedf2..582b0c2 100644
              ZSHeroKarte(stand: stand, jetzt: jetzt, gestapelt: dynamicTypeSize.isAccessibilitySize)
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift b/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
 new file mode 100644
-index 0000000..ef334c1
+index 0000000..06f6f40
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
-@@ -0,0 +1,585 @@
+@@ -0,0 +1,584 @@
 +//
 +//  ZuckerschockHypo.swift
 +//  Loop
@@ -197,6 +197,8 @@ index 0000000..ef334c1
 +    private let datei: URL
 +    private var abos = Set<AnyCancellable>()
 +    private var aktivitaet: Any?
++    /// Nur für die Vorschau: Nachtfarben unabhängig von der Uhrzeit.
++    var nachtErzwingen = false
 +    /// Liefert den neuesten Wert: mg/dl, Datum, Trend.
 +    private let neuesterWert: () -> (mgdl: Double, datum: Date, trend: GlucoseTrend?)?
 +    private let einheit: () -> HKUnit
@@ -339,7 +341,7 @@ index 0000000..ef334c1
 +            warteBis: gegessenUm?.addingTimeInterval(.minutes(Double(ZSHypoRegeln.warteMinuten(speicher.plan)))),
 +            gegessenAnzahl: episode.gegessen.count,
 +            mengeText: ZSHypoRegeln.mengeText(speicher.plan),
-+            nachts: ZSHypoFarbe.istNacht(jetzt),
++            nachts: nachtErzwingen || ZSHypoFarbe.istNacht(jetzt),
 +            wiederImZiel: false)
 +        if neu != zustand {
 +            zustand = neu
@@ -458,11 +460,8 @@ index 0000000..ef334c1
 +        ]
 +        begleiter.aktiv = ZSHypoEpisode(start: jetzt.addingTimeInterval(-.minutes(6)), tiefsterWert: 62,
 +                                        gegessen: gegessenVorMinuten.map { [jetzt.addingTimeInterval(-.minutes($0))] } ?? [], plaettchenJeMal: 5)
++        begleiter.nachtErzwingen = nachts
 +        begleiter.aktualisieren(jetzt: jetzt)
-+        if nachts, var stand = begleiter.zustand {
-+            stand.nachts = true
-+            begleiter.zustand = stand
-+        }
 +        return begleiter
 +    }
 +}
@@ -532,7 +531,7 @@ index 0000000..ef334c1
 +        }
 +
 +        HStack(spacing: ZSMass.space4) {
-+            ZSHypoRing(gegessenUm: stand.gegessenUm, warteBis: stand.warteBis, nachts: nachts, groesse: 88)
++            ZSHypoRing(gegessenUm: stand.gegessenUm, warteBis: stand.warteBis, nachts: nachts, groesse: 88, inApp: true)
 +            VStack(alignment: .leading, spacing: ZSMass.space1) {
 +                if let warteBis = stand.warteBis, warteBis > Date() {
 +                    Text("Warte noch bis \(ZSHypoRing.uhrzeit(warteBis))")
@@ -711,10 +710,10 @@ index 0000000..ef334c1
 +}
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHypoGemeinsam.swift b/Loop/Loop/Zuckerschock/ZuckerschockHypoGemeinsam.swift
 new file mode 100644
-index 0000000..fa3113a
+index 0000000..29653b4
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHypoGemeinsam.swift
-@@ -0,0 +1,122 @@
+@@ -0,0 +1,134 @@
 +//
 +//  ZuckerschockHypoGemeinsam.swift
 +//  Loop + Loop Widget Extension
@@ -798,21 +797,33 @@ index 0000000..fa3113a
 +    var warteBis: Date?
 +    var nachts: Bool
 +    var groesse: CGFloat = 56
++    /// In der App zeichnet der Ring sich selbst; in Widget und Live Activity übernimmt das System den Fortschritt.
++    var inApp = false
 +
 +    var body: some View {
 +        ZStack {
 +            Circle()
 +                .stroke(ZSHypoFarbe.text2(nachts: nachts).opacity(0.3), lineWidth: groesse * 0.1)
 +            if let gegessenUm, let warteBis, warteBis > gegessenUm {
-+                ProgressView(timerInterval: gegessenUm...warteBis, countsDown: true) {
-+                    EmptyView()
-+                } currentValueLabel: {
-+                    EmptyView()
++                if inApp {
++                    TimelineView(.periodic(from: .now, by: 1)) { kontext in
++                        let rest = warteBis.timeIntervalSince(kontext.date) / warteBis.timeIntervalSince(gegessenUm)
++                        Circle()
++                            .trim(from: 0, to: CGFloat(min(max(rest, 0), 1)))
++                            .stroke(ZSHypoFarbe.text(nachts: nachts), style: StrokeStyle(lineWidth: groesse * 0.1, lineCap: .round))
++                            .rotationEffect(.degrees(-90))
++                    }
++                } else {
++                    ProgressView(timerInterval: gegessenUm...warteBis, countsDown: true) {
++                        EmptyView()
++                    } currentValueLabel: {
++                        EmptyView()
++                    }
++                    .progressViewStyle(.circular)
++                    .tint(ZSHypoFarbe.text(nachts: nachts))
++                    .labelsHidden()
++                    .frame(width: groesse, height: groesse)
 +                }
-+                .progressViewStyle(.circular)
-+                .tint(ZSHypoFarbe.text(nachts: nachts))
-+                .labelsHidden()
-+                .frame(width: groesse, height: groesse)
 +                Text(timerInterval: gegessenUm...warteBis, countsDown: true, showsHours: false)
 +                    .font(.system(size: groesse * 0.24, weight: .semibold, design: .rounded))
 +                    .monospacedDigit()

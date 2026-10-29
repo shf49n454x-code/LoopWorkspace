@@ -624,10 +624,10 @@ index 0000000..db86ace
 +#endif
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 new file mode 100644
-index 0000000..1ba70c2
+index 0000000..3e0a226
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
-@@ -0,0 +1,707 @@
+@@ -0,0 +1,722 @@
 +//
 +//  ZuckerschockHeuteView.swift
 +//  Loop
@@ -1292,18 +1292,16 @@ index 0000000..1ba70c2
 +
 +    var body: some View {
 +        VStack(alignment: .leading, spacing: ZSMass.space2) {
-+            HStack(alignment: .firstTextBaseline, spacing: ZSMass.space2) {
-+                Text(geraet.name)
-+                    .font(ZSSchrift.subhead.weight(.semibold))
-+                    .foregroundStyle(ZSFarbe.text)
-+                    .lineLimit(1)
-+                Spacer(minLength: 0)
-+                if let detail = geraet.detail {
-+                    Text(detail)
-+                        .font(ZSSchrift.caption)
-+                        .foregroundStyle(geraet.zustand == .bald || geraet.zustand == .jetzt ? farbe : ZSFarbe.text2)
-+                        .lineLimit(1)
-+                        .minimumScaleFactor(0.8)
++            // Passt der Zusatz nicht neben den Namen, steht er darunter statt abgeschnitten.
++            ViewThatFits(in: .horizontal) {
++                HStack(alignment: .firstTextBaseline, spacing: ZSMass.space2) {
++                    name
++                    Spacer(minLength: 0)
++                    detailText
++                }
++                VStack(alignment: .leading, spacing: 2) {
++                    name
++                    detailText
 +                }
 +            }
 +            GeometryReader { geo in
@@ -1322,6 +1320,23 @@ index 0000000..1ba70c2
 +        .accessibilityElement(children: .ignore)
 +        .accessibilityLabel(geraet.name)
 +        .accessibilityValue(barrierefreiWert)
++    }
++
++    private var name: some View {
++        Text(geraet.name)
++            .font(ZSSchrift.subhead.weight(.semibold))
++            .foregroundStyle(ZSFarbe.text)
++            .lineLimit(1)
++    }
++
++    @ViewBuilder
++    private var detailText: some View {
++        if let detail = geraet.detail {
++            Text(detail)
++                .font(ZSSchrift.caption)
++                .foregroundStyle(geraet.zustand == .bald || geraet.zustand == .jetzt ? farbe : ZSFarbe.text2)
++                .lineLimit(1)
++        }
 +    }
 +
 +    private var barrierefreiWert: String {
