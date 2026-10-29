@@ -91,10 +91,10 @@ index 7d072c5..b9dd628 100644
          deviceDataManager.refreshDeviceData()
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockEssenDaten.swift b/Loop/Loop/Zuckerschock/ZuckerschockEssenDaten.swift
 new file mode 100644
-index 0000000..dba556d
+index 0000000..a0adb58
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockEssenDaten.swift
-@@ -0,0 +1,350 @@
+@@ -0,0 +1,351 @@
 +//
 +//  ZuckerschockEssenDaten.swift
 +//  Loop
@@ -320,7 +320,8 @@ index 0000000..dba556d
 +        guard let neu = neu?.trimmingCharacters(in: .whitespacesAndNewlines), !neu.isEmpty else { return }
 +        var eintrag = basis
 +        eintrag[kSecValueData as String] = Data(neu.utf8)
-+        eintrag[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
++        // Nur lesbar, solange das iPhone entsperrt ist; nie in iCloud oder auf andere Geräte.
++        eintrag[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
 +        SecItemAdd(eintrag as CFDictionary, nil)
 +    }
 +}
