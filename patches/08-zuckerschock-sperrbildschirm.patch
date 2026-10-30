@@ -1,0 +1,1350 @@
+diff --git a/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift b/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift
+index b288c71..3dd4ce6 100644
+--- a/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift	
++++ b/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift	
+@@ -88,164 +88,26 @@ struct GlucoseLiveActivityConfiguration: Widget {
+     private func fullLockScreenView(
+         context: ActivityViewContext<GlucoseActivityAttributes>
+     ) -> some View {
+-        ZStack {
+-            VStack {
+-                if context.attributes.mode == .large {
+-                    HStack(spacing: 15) {
+-                        loopIcon(context)
+-                        if context.attributes.addPredictiveLine {
+-                            ChartView(
+-                                glucoseSamples: context.state.glucoseSamples,
+-                                predicatedGlucose: context.state
+-                                    .predicatedGlucose,
+-                                predicatedStartDate: context.state
+-                                    .predicatedStartDate,
+-                                predicatedInterval: context.state
+-                                    .predicatedInterval,
+-                                useLimits: context.attributes.useLimits,
+-                                lowerLimit: context.state.isMmol
+-                                ? context.attributes.lowerLimitChartMmol
+-                                : context.attributes.lowerLimitChartMg,
+-                                upperLimit: context.state.isMmol
+-                                ? context.attributes.upperLimitChartMmol
+-                                : context.attributes.upperLimitChartMg,
+-                                glucoseRanges: context.state.glucoseRanges,
+-                                preset: context.state.preset,
+-                                yAxisMarks: context.state.yAxisMarks
+-                            )
+-                            .frame(height: 85)
+-                        } else {
+-                            ChartView(
+-                                glucoseSamples: context.state.glucoseSamples,
+-                                useLimits: context.attributes.useLimits,
+-                                lowerLimit: context.state.isMmol
+-                                ? context.attributes.lowerLimitChartMmol
+-                                : context.attributes.lowerLimitChartMg,
+-                                upperLimit: context.state.isMmol
+-                                ? context.attributes.upperLimitChartMmol
+-                                : context.attributes.upperLimitChartMg,
+-                                glucoseRanges: context.state.glucoseRanges,
+-                                preset: context.state.preset,
+-                                yAxisMarks: context.state.yAxisMarks
+-                            )
+-                            .frame(height: 85)
+-                        }
+-                    }
+-                }
+-                
+-                HStack {
+-                    bottomSpacer(border: false)
+-                    
+-                    let endIndex = context.state.bottomRow.endIndex - 1
+-                    ForEach(
+-                        Array(context.state.bottomRow.enumerated()),
+-                        id: \.element
+-                    ) { (index, item) in
+-                        switch item.type {
+-                        case .generic:
+-                            bottomItemGeneric(
+-                                title: item.label,
+-                                value: item.value,
+-                                unit: LocalizedString(
+-                                    item.unit,
+-                                    comment: "No comment"
+-                                )
+-                            )
+-                            
+-                        case .basal:
+-                            BasalViewActivity(
+-                                percent: item.percentage,
+-                                rate: item.rate
+-                            )
+-                            
+-                        case .currentBg:
+-                            bottomItemCurrentBG(
+-                                value: item.value,
+-                                trend: item.trend,
+-                                context: context
+-                            )
+-                        }
+-                        
+-                        if index != endIndex {
+-                            bottomSpacer(border: true)
+-                        }
+-                    }
+-                    
+-                    bottomSpacer(border: false)
+-                }
+-            }
+-            if context.state.ended {
+-                VStack {
+-                    Spacer()
+-                    HStack {
+-                        Spacer()
+-                        Text(
+-                            NSLocalizedString(
+-                                "Open the app to update the widget",
+-                                comment: "No comment"
+-                            )
+-                        )
+-                        Spacer()
+-                    }
+-                    Spacer()
+-                }
+-                .background(.ultraThinMaterial.opacity(0.8))
+-                .padding(.all, -15)
+-            }
+-        }
+-        .privacySensitive()
+-        .padding(.all, 15)
+-        .background(BackgroundStyle.background.opacity(0.4))
+-        .activityBackgroundTint(Color.clear)
++        // Zuckerschock-Optik
++        ZSGlukoseSperrAnsicht(d: zsDarstellung(context))
++            .activityBackgroundTint(ZSFarbe.flaeche1)
++            .activitySystemActionForegroundColor(ZSFarbe.text)
++    }
++
++    private func zsDarstellung(_ context: ActivityViewContext<GlucoseActivityAttributes>) -> ZSGlukoseDarstellung {
++        ZSGlukoseDarstellung(
++            stand: context.state,
++            mitKurve: context.attributes.mode == .large,
++            mitPrognose: context.attributes.addPredictiveLine,
++            veraltet: context.isStale
++        )
+     }
+ 
+     @ViewBuilder
+     private func compactLockScreenView(
+         context: ActivityViewContext<GlucoseActivityAttributes>
+     ) -> some View {
+-        let glucoseFormatter = NumberFormatter.glucoseFormatter(
+-            for: context.state.isMmol
+-                ? HKUnit.millimolesPerLiter
+-                : HKUnit.milligramsPerDeciliter
+-        )
+-        let unit = context.state.isMmol
+-            ? HKUnit.millimolesPerLiter.localizedShortUnitString
+-            : HKUnit.milligramsPerDeciliter.localizedShortUnitString
+-        
+-        let glucoseColor = !context.attributes.useLimits ? .primary : getGlucoseColor(context: context)
+-        let currentBG = (glucoseFormatter.string(from: context.state.currentGlucose) ?? "??") + getArrowImage(context.state.trendType)
+-        let eventualBG = formatEventualBG(value: context.state.eventualGlucose, formatter: glucoseFormatter)
+-        
+-        HStack(spacing: 10) {
+-            loopIcon(context, size: 24)
+-            
+-            HStack(alignment: .top) {
+-                VStack(alignment: .leading) {
+-                    Text(currentBG)
+-                        .font(.headline)
+-                        .foregroundStyle(glucoseColor)
+-                    Text(context.state.delta + " " + unit)
+-                        .font(.caption2)
+-                        .foregroundStyle(Color(white: 0.7))
+-                }
+-                
+-                Spacer()
+-                
+-                VStack(alignment: .trailing) {
+-                    Text(eventualBG)
+-                        .font(.headline)
+-                        .foregroundStyle(.primary)
+-                    
+-                    Text(unit)
+-                        .font(.caption2)
+-                        .foregroundStyle(Color(white: 0.7))
+-                }
+-            }
+-        }
+-        .frame(maxWidth: .infinity, maxHeight: .infinity)  // Allow HStack to use full available width
+-        .privacySensitive()
+-        .padding(.all, 14)
+-        .background(Color.clear)
++        ZSGlukoseKleinAnsicht(d: zsDarstellung(context))
+     }
+     
+     private func formatEventualBG(value: Double?, formatter: NumberFormatter) -> String {
+@@ -261,98 +123,30 @@ struct GlucoseLiveActivityConfiguration: Widget {
+     private func dynamicIslandView(
+         context: ActivityViewContext<GlucoseActivityAttributes>
+     ) -> DynamicIsland {
+-        let glucoseFormatter = NumberFormatter.glucoseFormatter(
+-            for: context.state.isMmol
+-                ? HKUnit.millimolesPerLiter : HKUnit.milligramsPerDeciliter
+-        )
+-
++        let d = zsDarstellung(context)
+         return DynamicIsland {
+             DynamicIslandExpandedRegion(.leading) {
+-                HStack(alignment: .center) {
+-                    loopIcon(context)
+-                        .frame(width: 40, height: 40, alignment: .trailing)
+-                    Spacer()
+-                    Text(
+-                        "\(glucoseFormatter.string(from: context.state.currentGlucose) ?? "??")\(getArrowImage(context.state.trendType))"
+-                    )
+-                    .foregroundStyle(getGlucoseColor(context: context))
+-                    .font(.headline)
+-                    .fontWeight(.heavy)
+-                }
++                ZSGlukoseWertBlock(d: d, gross: false)
++                    .padding(.leading, 4)
+             }
+             DynamicIslandExpandedRegion(.trailing) {
+-                HStack {
+-                    Text(context.state.delta)
+-                        .foregroundStyle(Color(white: 0.9))
+-                        .font(.headline)
+-                    Text(
+-                        context.state.isMmol
+-                            ? HKUnit.millimolesPerLiter.localizedShortUnitString
+-                            : HKUnit.milligramsPerDeciliter
+-                                .localizedShortUnitString
+-                    )
+-                    .foregroundStyle(Color(white: 0.7))
+-                    .font(.subheadline)
+-                }
++                ZSLoopPunkt(d: d)
++                    .padding(.trailing, 4)
+             }
+             DynamicIslandExpandedRegion(.bottom) {
+-                if context.attributes.addPredictiveLine {
+-                    ChartView(
+-                        glucoseSamples: context.state.glucoseSamples,
+-                        predicatedGlucose: context.state.predicatedGlucose,
+-                        predicatedStartDate: context.state.predicatedStartDate,
+-                        predicatedInterval: context.state.predicatedInterval,
+-                        useLimits: context.attributes.useLimits,
+-                        lowerLimit: context.state.isMmol
+-                            ? context.attributes.lowerLimitChartMmol
+-                            : context.attributes.lowerLimitChartMg,
+-                        upperLimit: context.state.isMmol
+-                            ? context.attributes.upperLimitChartMmol
+-                            : context.attributes.upperLimitChartMg,
+-                        glucoseRanges: context.state.glucoseRanges,
+-                        preset: context.state.preset,
+-                        yAxisMarks: context.state.yAxisMarks
+-                    )
+-                    .frame(height: 75)
+-                } else {
+-                    ChartView(
+-                        glucoseSamples: context.state.glucoseSamples,
+-                        useLimits: context.attributes.useLimits,
+-                        lowerLimit: context.state.isMmol
+-                            ? context.attributes.lowerLimitChartMmol
+-                            : context.attributes.lowerLimitChartMg,
+-                        upperLimit: context.state.isMmol
+-                            ? context.attributes.upperLimitChartMmol
+-                            : context.attributes.upperLimitChartMg,
+-                        glucoseRanges: context.state.glucoseRanges,
+-                        preset: context.state.preset,
+-                        yAxisMarks: context.state.yAxisMarks
+-                    )
+-                    .frame(height: 75)
++                if d.mitKurve {
++                    ZSGlukoseKurve(d: d, achsen: true)
++                        .frame(height: 72)
+                 }
+             }
+         } compactLeading: {
+-            Text(
+-                "\(glucoseFormatter.string(from: context.state.currentGlucose) ?? "??")\(getArrowImage(context.state.trendType))"
+-            )
+-            .foregroundStyle(
+-                getGlucoseColor(context: context)
+-            )
+-            .minimumScaleFactor(0.1)
++            ZSGlukoseInselWert(d: d)
+         } compactTrailing: {
+-            Text(context.state.delta)
+-                .foregroundStyle(Color(white: 0.9))
+-                .minimumScaleFactor(0.1)
++            ZSGlukoseInselAenderung(d: d)
+         } minimal: {
+-            Text(
+-                glucoseFormatter.string(from: context.state.currentGlucose)
+-                    ?? "??"
+-            )
+-            .foregroundStyle(
+-                getGlucoseColor(context: context)
+-            )
+-            .minimumScaleFactor(0.1)
++            ZSGlukoseInselWert(d: d)
+         }
++        .keylineTint(d.zustandFarbe)
+     }
+ 
+     @ViewBuilder
+diff --git a/Loop/Loop.xcodeproj/project.pbxproj b/Loop/Loop.xcodeproj/project.pbxproj
+index 9557589..7a37333 100644
+--- a/Loop/Loop.xcodeproj/project.pbxproj
++++ b/Loop/Loop.xcodeproj/project.pbxproj
+@@ -7,6 +7,8 @@
+ 	objects = {
+ 
+ /* Begin PBXBuildFile section */
++		5A5EDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift */; };
++		5A5DDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift */; };
+ 		5A5DCEE2DDE1AF0F65F574D9 /* ZuckerschockBericht.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CCEE2DDE1AF0F65F574D9 /* ZuckerschockBericht.swift */; };
+ 		5A5DE734B88CFFE8B0E834CC /* ZuckerschockStellen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CE734B88CFFE8B0E834CC /* ZuckerschockStellen.swift */; };
+ 		5A5D2AC134184974CF5DCDB6 /* ZuckerschockAngehoerige.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5C2AC134184974CF5DCDB6 /* ZuckerschockAngehoerige.swift */; };
+@@ -780,6 +782,7 @@
+ /* End PBXCopyFilesBuildPhase section */
+ 
+ /* Begin PBXFileReference section */
++		5A5CDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockGlukoseAktivitaet.swift; sourceTree = "<group>"; };
+ 		5A5CCEE2DDE1AF0F65F574D9 /* ZuckerschockBericht.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockBericht.swift; sourceTree = "<group>"; };
+ 		5A5CE734B88CFFE8B0E834CC /* ZuckerschockStellen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockStellen.swift; sourceTree = "<group>"; };
+ 		5A5C2AC134184974CF5DCDB6 /* ZuckerschockAngehoerige.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockAngehoerige.swift; sourceTree = "<group>"; };
+@@ -1566,6 +1569,7 @@
+ 		5A5C00000000000000000001 /* Zuckerschock */ = {
+ 			isa = PBXGroup;
+ 			children = (
++				5A5CDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift */,
+ 				5A5CCEE2DDE1AF0F65F574D9 /* ZuckerschockBericht.swift */,
+ 				5A5CE734B88CFFE8B0E834CC /* ZuckerschockStellen.swift */,
+ 				5A5C2AC134184974CF5DCDB6 /* ZuckerschockAngehoerige.swift */,
+@@ -3410,6 +3414,7 @@
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
++				5A5EDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift in Sources */,
+ 				5A5E339D3A8A26391EC01FB9 /* ZuckerschockTheme.swift in Sources */,
+ 				5A5E2F5203E82EF20E6BE75F /* ZuckerschockWidgets.swift in Sources */,
+ 				5A5E911AD14F5C87FECF59BF /* ZuckerschockWidgetGemeinsam.swift in Sources */,
+@@ -3452,6 +3457,7 @@
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
++				5A5DDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift in Sources */,
+ 				5A5DCEE2DDE1AF0F65F574D9 /* ZuckerschockBericht.swift in Sources */,
+ 				5A5DE734B88CFFE8B0E834CC /* ZuckerschockStellen.swift in Sources */,
+ 				5A5D2AC134184974CF5DCDB6 /* ZuckerschockAngehoerige.swift in Sources */,
+diff --git a/Loop/Loop/Managers/Live Activity/LiveActivityManager.swift b/Loop/Loop/Managers/Live Activity/LiveActivityManager.swift
+index 5d9122c..772a23f 100644
+--- a/Loop/Loop/Managers/Live Activity/LiveActivityManager.swift	
++++ b/Loop/Loop/Managers/Live Activity/LiveActivityManager.swift	
+@@ -203,7 +203,8 @@ class LiveActivityManager : LiveActivityManagerProxy {
+             
+             await self.activity?.update(ActivityContent(
+                 state: state,
+-                staleDate: Date.now.addingTimeInterval(.hours(1))
++                // Zuckerschock: ab 10 Minuten gilt der Wert als alt; die Anzeige zeigt dann sein Alter.
++                staleDate: currentGlucose.startDate.addingTimeInterval(.minutes(10))
+             ))
+         }
+     }
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockAngehoerige.swift b/Loop/Loop/Zuckerschock/ZuckerschockAngehoerige.swift
+index 7a6f61e..2eff560 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockAngehoerige.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockAngehoerige.swift
+@@ -209,7 +209,9 @@ struct ZSHomeAssistantView: View {
+ 
+     var body: some View {
+         VStack(spacing: 0) {
+-            ZSBlattKopf(titel: "Home Assistant", abbrechen: schliessen)
++            ZSBlattKopf(titel: "Home Assistant", abbrechen: schliessen, speichern: {
++                if sichern() { schliessen() }
++            })
+             ScrollView {
+                 VStack(alignment: .leading, spacing: ZSMass.space4) {
+                     Text("Bei Unterzucker ruft die App einen Webhook in deinem Home Assistant auf, zum Beispiel um ein Licht rot blinken zu lassen. Ereignisse: unterzucker, wieder_im_ziel.")
+@@ -245,7 +247,7 @@ struct ZSHomeAssistantView: View {
+                         .font(ZSSchrift.body)
+                         .foregroundStyle(ZSFarbe.text)
+                     HStack(spacing: ZSMass.space3) {
+-                        Button("Sichern") { sichern() }
++                        Button("Speichern") { sichern() }
+                             .buttonStyle(ZSRandStil())
+                         Button("Testalarm senden") {
+                             guard sichern() else { return }
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockBericht.swift b/Loop/Loop/Zuckerschock/ZuckerschockBericht.swift
+index ea72a11..cf2643c 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockBericht.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockBericht.swift
+@@ -249,7 +249,7 @@ struct ZSBerichtView: View {
+ 
+     var body: some View {
+         VStack(spacing: 0) {
+-            ZSBlattKopf(titel: "Arztbericht", abbrechen: schliessen)
++            ZSBlattKopf(titel: "Arztbericht", art: .fertig, abbrechen: schliessen)
+             ScrollView {
+                 VStack(alignment: .leading, spacing: ZSMass.space4) {
+                     Picker("Zeitraum", selection: $tage) {
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift b/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift
+index afa9cb3..430529d 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift
+@@ -430,22 +430,48 @@ struct ZSAufhellStil: ButtonStyle {
+ }
+ 
+ /// Kopfzeile eines Blatts: „Abbrechen“ schließt sofort, auch während einer Analyse.
++/// Kopf eines Blatts. Drei Formen:
++/// - Ablauf (Essen eintragen): links „Abbrechen“.
++/// - Einstellung mit Entwurf: links „Abbrechen“, rechts „Speichern“.
++/// - Ansicht oder sofort gespeichert: rechts „Fertig“.
+ struct ZSBlattKopf: View {
++    enum Art { case abbrechen, fertig }
++
+     var titel: String
++    var art: Art = .abbrechen
+     var abbrechen: () -> Void
++    var speichern: (() -> Void)? = nil
++    var speichernAktiv = true
+ 
+     var body: some View {
+         ZStack {
+             Text(titel)
+                 .font(ZSSchrift.title3)
+                 .foregroundStyle(ZSFarbe.text)
++                .lineLimit(1)
++                .minimumScaleFactor(0.8)
++                .padding(.horizontal, 96)
+                 .accessibilityAddTraits(.isHeader)
+             HStack {
+-                Button("Abbrechen", action: abbrechen)
+-                    .font(ZSSchrift.body)
+-                    .foregroundStyle(ZSFarbe.orangeText)
+-                    .frame(minHeight: ZSMass.tap)
++                if art == .abbrechen {
++                    Button("Abbrechen", action: abbrechen)
++                        .font(ZSSchrift.body)
++                        .foregroundStyle(ZSFarbe.orangeText)
++                        .frame(minHeight: ZSMass.tap)
++                }
+                 Spacer()
++                if let speichern {
++                    Button("Speichern", action: speichern)
++                        .font(ZSSchrift.headline)
++                        .foregroundStyle(speichernAktiv ? ZSFarbe.orangeText : ZSFarbe.text3)
++                        .frame(minHeight: ZSMass.tap)
++                        .disabled(!speichernAktiv)
++                } else if art == .fertig {
++                    Button("Fertig", action: abbrechen)
++                        .font(ZSSchrift.headline)
++                        .foregroundStyle(ZSFarbe.orangeText)
++                        .frame(minHeight: ZSMass.tap)
++                }
+             }
+         }
+         .padding(.horizontal, ZSMass.space5)
+@@ -588,10 +614,10 @@ private struct ZSSchaetzungBlatt: View {
+ 
+     var body: some View {
+         VStack(spacing: 0) {
+-            ZSBlattKopf(titel: "Schätzung") {
++            ZSBlattKopf(titel: "Schätzung", abbrechen: {
+                 aufgabe?.cancel()
+                 abbrechen()
+-            }
++            })
+             ScrollView {
+                 VStack(alignment: .leading, spacing: ZSMass.space4) {
+                     Image(uiImage: bild)
+@@ -1000,7 +1026,9 @@ private struct ZSRezeptBearbeitenBlatt: View {
+ 
+     var body: some View {
+         VStack(spacing: 0) {
+-            ZSBlattKopf(titel: rezept.name.isEmpty ? "Neues Rezept" : "Rezept bearbeiten", abbrechen: abbrechen)
++            ZSBlattKopf(titel: rezept.name.isEmpty ? "Neues Rezept" : "Rezept bearbeiten", abbrechen: abbrechen,
++                        speichern: { sichern(rezept) },
++                        speichernAktiv: !rezept.name.trimmingCharacters(in: .whitespaces).isEmpty)
+             ScrollView {
+                 VStack(alignment: .leading, spacing: ZSMass.space4) {
+                     ZSEingabeFeld(titel: "Name") {
+@@ -1047,7 +1075,7 @@ private struct ZSRezeptBearbeitenBlatt: View {
+                     Button {
+                         sichern(rezept)
+                     } label: {
+-                        Text("Rezept sichern").font(ZSSchrift.headline)
++                        Text("Rezept speichern").font(ZSSchrift.headline)
+                     }
+                     .buttonStyle(ZSDruckStil(art: .primaer))
+                     .disabled(rezept.name.trimmingCharacters(in: .whitespaces).isEmpty)
+@@ -1229,7 +1257,13 @@ private struct ZSEssenEinstellungenBlatt: View {
+ 
+     var body: some View {
+         VStack(spacing: 0) {
+-            ZSBlattKopf(titel: "Foto-KH und FPE", abbrechen: schliessen)
++            ZSBlattKopf(titel: "Foto-KH und FPE", abbrechen: schliessen, speichern: {
++                if !schluessel.trimmingCharacters(in: .whitespaces).isEmpty {
++                    ZSSchluessel.setzen(schluessel)
++                }
++                speicher.plan.khJeFPE = faktor.flatMap { $0 > 0 ? $0 : nil }
++                schliessen()
++            })
+             ScrollView {
+                 VStack(alignment: .leading, spacing: ZSMass.space6) {
+                     VStack(alignment: .leading, spacing: ZSMass.space3) {
+@@ -1253,7 +1287,7 @@ private struct ZSEssenEinstellungenBlatt: View {
+                                     .textInputAutocapitalization(.never)
+                                     .autocorrectionDisabled()
+                             }
+-                            Button("Schlüssel sichern") {
++                            Button("Schlüssel speichern") {
+                                 ZSSchluessel.setzen(schluessel)
+                                 schluessel = ""
+                                 hatSchluessel = ZSSchluessel.wert != nil
+@@ -1277,7 +1311,7 @@ private struct ZSEssenEinstellungenBlatt: View {
+                             TextField("leer lassen, wenn nicht festgelegt", value: $faktor, format: .number)
+                                 .keyboardType(.decimalPad)
+                         }
+-                        Button("Wert sichern") {
++                        Button("Wert speichern") {
+                             speicher.plan.khJeFPE = faktor.flatMap { $0 > 0 ? $0 : nil }
+                         }
+                         .font(ZSSchrift.headline)
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
+new file mode 100644
+index 0000000..471471c
+--- /dev/null
++++ b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
+@@ -0,0 +1,586 @@
++//
++//  ZuckerschockGlukoseAktivitaet.swift
++//  Loop + Loop Widget Extension
++//
++//  Zuckerschock-Optik für Loops eigene Live-Aktivität (Sperrbildschirm, Dynamic Island, Watch/CarPlay).
++//  Nur Darstellung der Werte, die Loop schon schickt. Keine Berechnung, keine Taste.
++//  Zielbereich wie in der App: 70–180 mg/dl. Ab 10 Minuten zeigt der Wert sein Alter.
++//  Unter Ziel: kein Orange, nur ruhiges Rot.
++//
++
++import HealthKit
++import LoopCore
++import LoopKit
++import SwiftUI
++import Charts
++
++@available(iOS 16.2, *)
++struct ZSGlukoseDarstellung {
++    var stand: GlucoseActivityAttributes.ContentState
++    var mitKurve: Bool
++    var mitPrognose: Bool
++    /// Vom System gemeldet (staleDate) oder älter als 10 Minuten zum Zeitpunkt der Darstellung.
++    var alt: Bool
++
++    enum Zustand { case tief, ziel, hoch }
++
++    init(stand: GlucoseActivityAttributes.ContentState, mitKurve: Bool, mitPrognose: Bool, veraltet: Bool, jetzt: Date = Date()) {
++        self.stand = stand
++        self.mitKurve = mitKurve
++        self.mitPrognose = mitPrognose
++        self.alt = veraltet || jetzt.timeIntervalSince(stand.date) > 10 * 60
++    }
++
++    var unteresZiel: Double { stand.isMmol ? 3.9 : 70 }
++    var oberesZiel: Double { stand.isMmol ? 10.0 : 180 }
++
++    var zustand: Zustand? {
++        guard !stand.ended else { return nil }
++        let wert = stand.currentGlucose
++        if wert < unteresZiel { return .tief }
++        if wert > oberesZiel { return .hoch }
++        return .ziel
++    }
++
++    var istTief: Bool { zustand == .tief }
++
++    var wertText: String {
++        guard !stand.ended else { return "–" }
++        let einheit: HKUnit = stand.isMmol ? .millimolesPerLiter : .milligramsPerDeciliter
++        return NumberFormatter.glucoseFormatter(for: einheit).string(from: stand.currentGlucose) ?? "–"
++    }
++
++    var einheitText: String { stand.isMmol ? "mmol/l" : "mg/dl" }
++
++    var trendPfeil: String {
++        switch stand.trendType {
++        case .upUpUp: return "↑↑"
++        case .upUp: return "↑"
++        case .up: return "↗"
++        case .flat: return "→"
++        case .down: return "↘"
++        case .downDown: return "↓"
++        case .downDownDown: return "↓↓"
++        case .none: return ""
++        }
++    }
++
++    var aenderungText: String? {
++        let d = stand.delta.trimmingCharacters(in: .whitespaces)
++        return d.isEmpty ? nil : d
++    }
++
++    var zustandWort: String {
++        switch zustand {
++        case .tief: return "Unter Ziel"
++        case .hoch: return "Über Ziel"
++        case .ziel: return "Im Ziel"
++        case nil: return "Kein Wert"
++        }
++    }
++
++    var zustandFarbe: Color {
++        if alt { return ZSFarbe.text3 }
++        switch zustand {
++        case .tief: return ZSFarbe.tief
++        case .hoch: return ZSFarbe.hoch
++        case .ziel: return ZSFarbe.ziel
++        case nil: return ZSFarbe.text3
++        }
++    }
++
++    /// Wertfarbe: normal Text, alt gedimmt, unter Ziel rot.
++    var wertFarbe: Color {
++        if alt { return ZSFarbe.text3 }
++        return istTief ? ZSFarbe.tief : ZSFarbe.text
++    }
++
++    /// Kurvenfarbe: Marken-Orange, unter Ziel und bei altem Wert neutral.
++    var linienFarbe: Color {
++        (istTief || alt) ? ZSFarbe.text2 : ZSFarbe.orangeLinie
++    }
++
++    var loopFarbe: Color {
++        var frische: LoopCompletionFreshness = .stale
++        if let zuletzt = stand.lastCompleted {
++            frische = LoopCompletionFreshness(age: abs(min(0, zuletzt.timeIntervalSinceNow)))
++        }
++        switch frische {
++        case .fresh: return ZSFarbe.ziel
++        case .aging: return ZSFarbe.hoch
++        case .stale: return ZSFarbe.tief
++        }
++    }
++
++    struct Kennzahl: Hashable {
++        var wert: String
++        var label: String
++    }
++
++    /// Loops untere Zeile in Zuckerschock-Worten; der aktuelle Wert steht schon groß da.
++    var kennzahlen: [Kennzahl] {
++        stand.bottomRow.compactMap { eintrag in
++            switch eintrag.type {
++            case .currentBg:
++                return nil
++            case .basal:
++                let rate = eintrag.rate.formatted(.number.precision(.fractionLength(0...2)).locale(Locale(identifier: "de_DE")))
++                return Kennzahl(wert: "\(rate) IE/h", label: "Basal")
++            case .generic:
++                switch eintrag.unit {
++                case "U": return Kennzahl(wert: eintrag.value, label: "IE aktiv")
++                case "g": return Kennzahl(wert: "\(eintrag.value) g", label: "KH aktiv")
++                default: break
++                }
++                switch eintrag.label {
++                case BottomRowConfiguration.eventualBg.name(): return Kennzahl(wert: eintrag.value, label: "Prognose")
++                case BottomRowConfiguration.deltaBg.name(): return Kennzahl(wert: eintrag.value, label: "Änderung")
++                case BottomRowConfiguration.updatedAt.name(): return Kennzahl(wert: eintrag.value, label: "Stand")
++                default: return Kennzahl(wert: eintrag.value + eintrag.unit, label: eintrag.label)
++                }
++            }
++        }
++    }
++
++    static func uhrzeit(_ datum: Date) -> String {
++        datum.formatted(.dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits).locale(Locale(identifier: "de_DE")))
++    }
++}
++
++// MARK: - Sperrbildschirm
++
++@available(iOS 16.2, *)
++struct ZSGlukoseSperrAnsicht: View {
++    var d: ZSGlukoseDarstellung
++
++    var body: some View {
++        ZStack {
++            VStack(alignment: .leading, spacing: 10) {
++                if d.mitKurve {
++                    HStack(alignment: .top, spacing: 12) {
++                        ZSGlukoseWertBlock(d: d, gross: true)
++                            .frame(width: 112, alignment: .leading)
++                        ZSGlukoseKurve(d: d, achsen: true)
++                            .frame(height: 86)
++                    }
++                    if !d.kennzahlen.isEmpty {
++                        Rectangle().fill(ZSFarbe.haarlinie).frame(height: 1)
++                        kennzahlZeile
++                    }
++                } else {
++                    HStack(alignment: .center, spacing: 12) {
++                        ZSGlukoseWertBlock(d: d, gross: true)
++                        Spacer(minLength: 4)
++                        kennzahlZeile
++                    }
++                }
++            }
++            .opacity(d.stand.ended ? 0.25 : 1)
++
++            if d.stand.ended {
++                Text("App öffnen, um die Anzeige zu aktualisieren.")
++                    .font(.footnote.weight(.semibold))
++                    .foregroundStyle(ZSFarbe.text)
++                    .multilineTextAlignment(.center)
++            }
++        }
++        .padding(14)
++        .privacySensitive()
++    }
++
++    private var kennzahlZeile: some View {
++        HStack(alignment: .firstTextBaseline, spacing: 0) {
++            ForEach(Array(d.kennzahlen.enumerated()), id: \.offset) { index, k in
++                if index > 0 { Spacer(minLength: 8) }
++                VStack(alignment: .leading, spacing: 0) {
++                    Text(k.wert)
++                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
++                        .monospacedDigit()
++                        .foregroundStyle(ZSFarbe.text)
++                        .lineLimit(1)
++                        .minimumScaleFactor(0.7)
++                    Text(k.label)
++                        .font(.caption2)
++                        .foregroundStyle(ZSFarbe.text2)
++                        .lineLimit(1)
++                }
++                .accessibilityElement(children: .combine)
++            }
++            Spacer(minLength: 8)
++            ZSLoopPunkt(d: d)
++        }
++    }
++}
++
++/// Markenpunkt, Wert, Trend, Einheit/Änderung und Zustand oder Alter.
++@available(iOS 16.2, *)
++struct ZSGlukoseWertBlock: View {
++    var d: ZSGlukoseDarstellung
++    var gross: Bool
++
++    var body: some View {
++        VStack(alignment: .leading, spacing: 1) {
++            HStack(spacing: 4) {
++                if !d.istTief {
++                    Circle()
++                        .fill(ZSFarbe.orange)
++                        .frame(width: 6, height: 6)
++                        .accessibilityHidden(true)
++                }
++                Text("Zucker")
++                    .font(.caption2.weight(.medium))
++                    .foregroundStyle(ZSFarbe.text2)
++            }
++            HStack(alignment: .firstTextBaseline, spacing: 3) {
++                Text(d.wertText)
++                    .font(.system(size: gross ? 40 : 30, weight: .semibold, design: .rounded))
++                    .monospacedDigit()
++                    .lineLimit(1)
++                    .minimumScaleFactor(0.6)
++                    .foregroundStyle(d.wertFarbe)
++                Text(d.trendPfeil)
++                    .font(.title3.weight(.semibold))
++                    .foregroundStyle(d.wertFarbe)
++            }
++            Text([d.einheitText, d.aenderungText].compactMap { $0 }.joined(separator: " · "))
++                .font(.caption.weight(.medium))
++                .foregroundStyle(ZSFarbe.text2)
++                .lineLimit(1)
++            ZSGlukoseZustandZeile(d: d)
++        }
++        .accessibilityElement(children: .combine)
++    }
++}
++
++/// „Im Ziel · 07:41“ oder, ab 10 Minuten, „vor 12 Min.“ (läuft von selbst weiter).
++@available(iOS 16.2, *)
++struct ZSGlukoseZustandZeile: View {
++    var d: ZSGlukoseDarstellung
++
++    var body: some View {
++        HStack(spacing: 4) {
++            if d.alt {
++                Image(systemName: "clock")
++                    .font(.caption2.weight(.semibold))
++                (Text("vor ") + Text(d.stand.date, style: .relative))
++                    .font(.caption.weight(.semibold))
++                    .lineLimit(1)
++                    .minimumScaleFactor(0.7)
++            } else {
++                Circle()
++                    .fill(d.zustandFarbe)
++                    .frame(width: 7, height: 7)
++                    .accessibilityHidden(true)
++                // Der Zustand geht vor; die Uhrzeit nur, wenn Platz ist.
++                ViewThatFits(in: .horizontal) {
++                    HStack(spacing: 4) {
++                        Text(d.zustandWort)
++                            .font(.caption.weight(.semibold))
++                        Text("· \(ZSGlukoseDarstellung.uhrzeit(d.stand.date))")
++                            .font(.caption)
++                            .foregroundStyle(ZSFarbe.text3)
++                    }
++                    .fixedSize()
++                    Text(d.zustandWort)
++                        .font(.caption.weight(.semibold))
++                        .lineLimit(1)
++                }
++            }
++        }
++        .foregroundStyle(d.alt ? ZSFarbe.text2 : d.zustandFarbe)
++    }
++}
++
++/// Kleiner Ring: Loop geschlossen (voll) oder offen (Lücke), Farbe nach letzter Ausführung.
++@available(iOS 16.2, *)
++struct ZSLoopPunkt: View {
++    var d: ZSGlukoseDarstellung
++
++    var body: some View {
++        HStack(spacing: 4) {
++            Circle()
++                .trim(from: d.stand.isCloseLoop ? 0 : 0.2, to: 1)
++                .stroke(d.loopFarbe, lineWidth: 2.5)
++                .rotationEffect(.degrees(-126))
++                .frame(width: 12, height: 12)
++            Text("Loop")
++                .font(.caption2.weight(.medium))
++                .foregroundStyle(ZSFarbe.text2)
++        }
++        .accessibilityElement(children: .ignore)
++        .accessibilityLabel(d.stand.isCloseLoop ? "Loop geschlossen" : "Loop offen")
++    }
++}
++
++// MARK: - Kurve
++
++@available(iOS 16.2, *)
++struct ZSGlukoseKurve: View {
++    var d: ZSGlukoseDarstellung
++    var achsen: Bool
++
++    private struct Punkt: Identifiable {
++        var id: Date { x }
++        var x: Date
++        var y: Double
++    }
++
++    private var messwerte: [Punkt] {
++        d.stand.glucoseSamples.map { Punkt(x: $0.x, y: $0.y) }
++    }
++
++    private var prognose: [Punkt] {
++        guard d.mitPrognose, let start = d.stand.predicatedStartDate else { return [] }
++        let schritt = d.stand.predicatedInterval ?? 5 * 60
++        let ende = start.addingTimeInterval(3 * 60 * 60)
++        return d.stand.predicatedGlucose.enumerated().compactMap { i, y in
++            let x = start.addingTimeInterval(schritt * Double(i))
++            return x <= ende ? Punkt(x: x, y: y) : nil
++        }
++    }
++
++    private var bereich: ClosedRange<Double> {
++        let alle = messwerte.map(\.y) + prognose.map(\.y)
++        let marken = d.stand.yAxisMarks
++        let unten = min(marken.first ?? d.unteresZiel, (alle.min() ?? d.unteresZiel), d.unteresZiel)
++        let oben = max(marken.last ?? d.oberesZiel, (alle.max() ?? d.oberesZiel), d.oberesZiel)
++        return unten...max(oben, unten + 1)
++    }
++
++    var body: some View {
++        let start = messwerte.first?.x ?? Date().addingTimeInterval(-3 * 60 * 60)
++        let ende = prognose.last?.x ?? max(messwerte.last?.x ?? Date(), Date())
++        ZStack(alignment: .topTrailing) {
++            Chart {
++                RectangleMark(
++                    xStart: .value("Start", start),
++                    xEnd: .value("Ende", ende),
++                    yStart: .value("Ziel unten", d.unteresZiel),
++                    yEnd: .value("Ziel oben", d.oberesZiel)
++                )
++                .foregroundStyle(ZSFarbe.text.opacity(0.07))
++
++                ForEach(messwerte) { p in
++                    AreaMark(x: .value("Zeit", p.x), yStart: .value("Boden", bereich.lowerBound), yEnd: .value("Zucker", p.y))
++                        .foregroundStyle(LinearGradient(colors: [d.linienFarbe.opacity(0.28), d.linienFarbe.opacity(0)], startPoint: .top, endPoint: .bottom))
++                        .interpolationMethod(.monotone)
++                }
++                ForEach(messwerte) { p in
++                    LineMark(x: .value("Zeit", p.x), y: .value("Zucker", p.y), series: .value("Reihe", "Messung"))
++                        .foregroundStyle(d.linienFarbe)
++                        .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
++                        .interpolationMethod(.monotone)
++                }
++                if let letzter = messwerte.last {
++                    PointMark(x: .value("Zeit", letzter.x), y: .value("Zucker", letzter.y))
++                        .foregroundStyle(d.linienFarbe)
++                        .symbolSize(28)
++                }
++                ForEach(prognose) { p in
++                    LineMark(x: .value("Zeit", p.x), y: .value("Zucker", p.y), series: .value("Reihe", "Prognose"))
++                        .foregroundStyle(ZSFarbe.text3)
++                        .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 4]))
++                }
++            }
++            .chartLegend(.hidden)
++            .chartYScale(domain: bereich)
++            .chartXScale(domain: start...max(ende, start.addingTimeInterval(60)))
++            .chartYAxis {
++                AxisMarks(position: .leading, values: [d.unteresZiel, d.oberesZiel]) { _ in
++                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 3]))
++                        .foregroundStyle(ZSFarbe.haarlinie)
++                    AxisValueLabel()
++                        .font(.caption2)
++                        .foregroundStyle(ZSFarbe.text3)
++                }
++            }
++            .chartXAxis {
++                AxisMarks(values: .stride(by: .hour)) { _ in
++                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [2, 3]))
++                        .foregroundStyle(ZSFarbe.haarlinie)
++                    AxisValueLabel(format: .dateTime.hour(.twoDigits(amPM: .omitted)).locale(Locale(identifier: "de_DE")))
++                        .font(.caption2)
++                        .foregroundStyle(ZSFarbe.text3)
++                }
++            }
++            .chartXAxis(achsen ? .visible : .hidden)
++            .chartYAxis(achsen ? .visible : .hidden)
++
++            if let preset = d.stand.preset, preset.endDate > Date() {
++                Text(preset.title)
++                    .font(.caption2.weight(.semibold))
++                    .foregroundStyle(ZSFarbe.text2)
++                    .padding(.horizontal, 6)
++                    .padding(.vertical, 2)
++                    .background(Capsule().fill(ZSFarbe.flaeche2))
++            }
++        }
++        .accessibilityHidden(true)
++    }
++}
++
++// MARK: - Watch und CarPlay (klein)
++
++@available(iOS 16.2, *)
++struct ZSGlukoseKleinAnsicht: View {
++    var d: ZSGlukoseDarstellung
++
++    var body: some View {
++        HStack(alignment: .center, spacing: 8) {
++            VStack(alignment: .leading, spacing: 0) {
++                HStack(alignment: .firstTextBaseline, spacing: 2) {
++                    Text(d.wertText)
++                        .font(.system(.title3, design: .rounded).weight(.semibold))
++                        .monospacedDigit()
++                    Text(d.trendPfeil)
++                        .font(.headline)
++                }
++                .foregroundStyle(d.wertFarbe)
++                Text([d.einheitText, d.aenderungText].compactMap { $0 }.joined(separator: " · "))
++                    .font(.caption2)
++                    .foregroundStyle(ZSFarbe.text2)
++                    .lineLimit(1)
++            }
++            Spacer(minLength: 4)
++            ZSGlukoseZustandZeile(d: d)
++        }
++        .frame(maxWidth: .infinity, maxHeight: .infinity)
++        .padding(12)
++        .privacySensitive()
++    }
++}
++
++// MARK: - Vorschau (nur Simulator, für Screenshots)
++
++#if targetEnvironment(simulator)
++@available(iOS 16.2, *)
++enum ZSGlukoseBeispiel {
++    /// art: „normal“, „hoch“, „tief“, „alt“, „zeile“ (ohne Kurve).
++    static func darstellung(_ art: String) -> ZSGlukoseDarstellung {
++        let jetzt = Date()
++        let alt = art == "alt"
++        let messzeit = alt ? jetzt.addingTimeInterval(-23 * 60) : jetzt.addingTimeInterval(-2 * 60)
++        let basis: [Double]
++        let wert: Double
++        let trend: GlucoseTrend
++        let delta: String
++        switch art {
++        case "hoch":
++            basis = [132, 138, 146, 158, 171, 182, 190, 197, 203, 209, 214, 216]
++            wert = 216; trend = .up; delta = "+5"
++        case "tief":
++            basis = [118, 112, 104, 97, 90, 84, 79, 75, 71, 68, 65, 62]
++            wert = 62; trend = .down; delta = "−3"
++        default:
++            basis = [104, 108, 128, 156, 177, 180, 166, 152, 141, 132, 126, 124]
++            wert = 124; trend = .flat; delta = "−2"
++        }
++        // 3 Stunden, alle 5 Minuten, weich zwischen den Stützwerten.
++        let anzahl = 36
++        let proben: [GlucoseSampleAttributes] = (0..<anzahl).map { i in
++            let t = Double(i) / Double(anzahl - 1) * Double(basis.count - 1)
++            let k = min(Int(t), basis.count - 2)
++            let y = basis[k] + (basis[k + 1] - basis[k]) * (t - Double(k))
++            return GlucoseSampleAttributes(x: messzeit.addingTimeInterval(-Double(anzahl - 1 - i) * 300), y: y.rounded())
++        }
++        let prognose: [Double] = (0..<24).map { i in
++            switch art {
++            case "hoch": return 216 - Double(i) * 2.5
++            case "tief": return 62 + Double(i) * 1.5
++            default: return 124 - Double(i) * 0.4
++            }
++        }
++        let zeile: [BottomRowItem] = [
++            .generic(label: BottomRowConfiguration.iob.name(), value: "1,35", unit: "U"),
++            .generic(label: BottomRowConfiguration.cob.name(), value: "24", unit: "g"),
++            .basal(rate: 0.85, percentage: 0.1),
++            .currentBg(label: BottomRowConfiguration.currentBg.name(), value: "\(Int(wert))", trend: trend),
++        ]
++        let stand = GlucoseActivityAttributes.ContentState(
++            date: messzeit, ended: false, preset: nil, glucoseRanges: [],
++            currentGlucose: wert, eventualGlucose: prognose.last, trendType: trend, delta: delta, isMmol: false,
++            isCloseLoop: true, lastCompleted: alt ? jetzt.addingTimeInterval(-21 * 60) : jetzt.addingTimeInterval(-60),
++            bottomRow: zeile, glucoseSamples: proben, predicatedGlucose: prognose,
++            predicatedStartDate: messzeit, predicatedInterval: 300, yAxisMarks: [40, 100, 160, 220])
++        return ZSGlukoseDarstellung(stand: stand, mitKurve: art != "zeile", mitPrognose: true, veraltet: alt, jetzt: jetzt)
++    }
++}
++
++/// Nachgestellter Sperrbildschirm mit mehreren Zuständen der Live-Aktivität und der Dynamic Island.
++@available(iOS 16.2, *)
++struct ZSGlukoseAktivitaetVorschau: View {
++    var schliessen: () -> Void
++
++    var body: some View {
++        ScrollView {
++            VStack(spacing: 12) {
++                Text("9:41")
++                    .font(.system(size: 72, weight: .semibold, design: .rounded))
++                    .foregroundStyle(ZSFarbe.text)
++                    .padding(.top, 8)
++                ForEach(["normal", "alt", "tief", "zeile"], id: \.self) { art in
++                    ZSGlukoseSperrAnsicht(d: ZSGlukoseBeispiel.darstellung(art))
++                        .background(ZSFarbe.flaeche1, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
++                }
++                insel(ZSGlukoseBeispiel.darstellung("hoch"))
++            }
++            .padding(.horizontal, 12)
++            .padding(.bottom, 24)
++        }
++        .background(LinearGradient(colors: [ZSFarbe.flaeche3, ZSFarbe.grund], startPoint: .top, endPoint: .bottom).ignoresSafeArea())
++        .onTapGesture(perform: schliessen)
++    }
++
++    /// Kompakte Dynamic Island wie auf dem iPhone 16.
++    private func insel(_ d: ZSGlukoseDarstellung) -> some View {
++        HStack {
++            ZSGlukoseInselWert(d: d)
++            Spacer(minLength: 60)
++            ZSGlukoseInselAenderung(d: d)
++        }
++        .padding(.horizontal, 18)
++        .frame(width: 250, height: 37)
++        .background(Capsule().fill(Color.black))
++        .environment(\.colorScheme, .dark)
++    }
++}
++#endif
++
++// MARK: - Dynamic Island
++
++@available(iOS 16.2, *)
++struct ZSGlukoseInselWert: View {
++    var d: ZSGlukoseDarstellung
++
++    var body: some View {
++        HStack(spacing: 1) {
++            Text(d.wertText)
++                .monospacedDigit()
++            Text(d.trendPfeil)
++        }
++        .font(.system(.body, design: .rounded).weight(.semibold))
++        .foregroundStyle(d.alt ? ZSFarbe.text3 : d.zustandFarbe)
++        .minimumScaleFactor(0.5)
++        .lineLimit(1)
++    }
++}
++
++@available(iOS 16.2, *)
++struct ZSGlukoseInselAenderung: View {
++    var d: ZSGlukoseDarstellung
++
++    var body: some View {
++        Group {
++            if d.alt {
++                Image(systemName: "clock")
++            } else {
++                Text(d.aenderungText ?? "")
++                    .monospacedDigit()
++            }
++        }
++        .font(.system(.body, design: .rounded).weight(.medium))
++        .foregroundStyle(ZSFarbe.text2)
++        .minimumScaleFactor(0.5)
++        .lineLimit(1)
++    }
++}
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHinweise.swift b/Loop/Loop/Zuckerschock/ZuckerschockHinweise.swift
+index 562cde0..7294cd1 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockHinweise.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHinweise.swift
+@@ -339,7 +339,7 @@ struct ZSModiView: View {
+ 
+     var body: some View {
+         VStack(spacing: 0) {
+-            ZSBlattKopf(titel: "Modi", abbrechen: schliessen)
++            ZSBlattKopf(titel: "Modi", art: .fertig, abbrechen: schliessen)
+             ScrollView {
+                 VStack(alignment: .leading, spacing: ZSMass.space4) {
+                     Text("Modi geben dir passende Hinweise. Sie ändern nichts an Loops Dosierung. Ziele und Voreinstellungen stellst du in Loop ein.")
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift b/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
+index adc6ba1..eb4f5d6 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
+@@ -554,7 +554,10 @@ struct ZSTherapieplanView: View {
+ 
+     var body: some View {
+         VStack(spacing: 0) {
+-            ZSBlattKopf(titel: "Therapieplan", abbrechen: schliessen)
++            ZSBlattKopf(titel: "Therapieplan", abbrechen: schliessen, speichern: {
++                speicher.plan = plan
++                schliessen()
++            })
+             ScrollView {
+                 VStack(alignment: .leading, spacing: ZSMass.space6) {
+                     Text("Trag hier die Werte ein, die dein Diabetes-Team mit dir festgelegt hat. Leere Felder zeigt die App ohne Zahl an.")
+@@ -594,7 +597,7 @@ struct ZSTherapieplanView: View {
+                         speicher.plan = plan
+                         schliessen()
+                     } label: {
+-                        Text("Plan sichern").font(ZSSchrift.headline)
++                        Text("Plan speichern").font(ZSSchrift.headline)
+                     }
+                     .buttonStyle(ZSDruckStil(art: .primaer))
+ 
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockKeton.swift b/Loop/Loop/Zuckerschock/ZuckerschockKeton.swift
+index 5a28d10..9e03c36 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockKeton.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockKeton.swift
+@@ -308,7 +308,7 @@ struct ZSKetonView: View {
+ 
+     var body: some View {
+         VStack(spacing: 0) {
+-            ZSBlattKopf(titel: "Keton-Check", abbrechen: schliessen)
++            ZSBlattKopf(titel: "Keton-Check", art: .fertig, abbrechen: schliessen)
+             ScrollView {
+                 VStack(alignment: .leading, spacing: ZSMass.space6) {
+                     if let anlass = keton.anlass {
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockStellen.swift b/Loop/Loop/Zuckerschock/ZuckerschockStellen.swift
+index 5116c61..4a95035 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockStellen.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockStellen.swift
+@@ -63,8 +63,18 @@ final class ZSStellen: ObservableObject {
+         eintraege = (try? Data(contentsOf: datei)).flatMap { try? decoder.decode([ZSStellenEintrag].self, from: $0) } ?? []
+     }
+ 
++    /// Wie lange ein Eintrag noch durch Antippen einer anderen Stelle korrigiert wird (Vertipper).
++    static let korrekturFenster: TimeInterval = 60 * 60
++
++    /// Trägt die Stelle des neuen Pods ein. Innerhalb einer Stunde nach dem letzten Eintrag
++    /// ersetzt ein erneutes Antippen diesen Eintrag, statt einen zweiten Pod einzutragen.
+     func eintragen(_ stelle: ZSStelle, am datum: Date = Date()) {
+-        eintraege.insert(ZSStellenEintrag(stelle: stelle, datum: datum), at: 0)
++        if let letzter = eintraege.first, datum.timeIntervalSince(letzter.datum) < Self.korrekturFenster {
++            guard letzter.stelle != stelle else { return }
++            eintraege[0] = ZSStellenEintrag(stelle: stelle, datum: letzter.datum)
++        } else {
++            eintraege.insert(ZSStellenEintrag(stelle: stelle, datum: datum), at: 0)
++        }
+         let encoder = JSONEncoder()
+         encoder.dateEncodingStrategy = .iso8601
+         try? encoder.encode(eintraege).write(to: datei, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+@@ -80,6 +90,12 @@ final class ZSStellen: ObservableObject {
+     }
+ 
+     var aktuell: ZSStellenEintrag? { eintraege.first }
++
++    /// Noch korrigierbar (letzter Eintrag jünger als eine Stunde)?
++    var korrigierbar: Bool {
++        guard let aktuell else { return false }
++        return Date().timeIntervalSince(aktuell.datum) < Self.korrekturFenster
++    }
+ }
+ 
+ #if targetEnvironment(simulator)
+@@ -105,7 +121,7 @@ struct ZSStellenView: View {
+ 
+     var body: some View {
+         VStack(spacing: 0) {
+-            ZSBlattKopf(titel: "Stellen-Karte", abbrechen: schliessen)
++            ZSBlattKopf(titel: "Stellen-Karte", art: .fertig, abbrechen: schliessen)
+             ScrollView {
+                 VStack(alignment: .leading, spacing: ZSMass.space6) {
+                     VStack(alignment: .leading, spacing: ZSMass.space1) {
+@@ -127,6 +143,8 @@ struct ZSStellenView: View {
+                     }
+                     .frame(height: 300)
+ 
++                    legende
++
+                     VStack(alignment: .leading, spacing: 0) {
+                         ZSAbschnittTitel(text: "Wo sitzt der neue Pod?")
+                             .padding(.bottom, ZSMass.space2)
+@@ -154,6 +172,13 @@ struct ZSStellenView: View {
+                             .buttonStyle(ZSAufhellStil())
+                             Divider().overlay(ZSFarbe.haarlinie)
+                         }
++                        Text(stellen.korrigierbar
++                             ? "Vertippt? Tippe einfach die richtige Stelle an. Das geht bis eine Stunde nach dem Eintrag."
++                             : "Antippen trägt die Stelle des neuen Pods ein.")
++                            .font(ZSSchrift.footnote)
++                            .foregroundStyle(ZSFarbe.text2)
++                            .fixedSize(horizontal: false, vertical: true)
++                            .padding(.top, ZSMass.space3)
+                     }
+                 }
+                 .padding(ZSMass.space5)
+@@ -180,9 +205,17 @@ struct ZSStellenView: View {
+                     }
+                 }
+             }
+-            Text(titel)
+-                .font(ZSSchrift.caption)
+-                .foregroundStyle(ZSFarbe.text3)
++            // Vorn ist die linke Körperseite rechts im Bild, hinten links.
++            HStack {
++                Text(seite == 0 ? "R" : "L")
++                Spacer()
++                Text(titel)
++                Spacer()
++                Text(seite == 0 ? "L" : "R")
++            }
++            .font(ZSSchrift.caption)
++            .foregroundStyle(ZSFarbe.text3)
++            .padding(.horizontal, ZSMass.space2)
+         }
+         .accessibilityElement(children: .ignore)
+         .accessibilityLabel("Körperskizze \(titel)")
+@@ -195,11 +228,50 @@ struct ZSStellenView: View {
+             Circle()
+                 .fill(frisch ? ZSFarbe.text3 : ZSFarbe.text)
+                 .frame(width: 14, height: 14)
+-            if stelle == stellen.vorschlag {
++            if stelle == stellen.aktuell?.stelle {
++                Circle()
++                    .strokeBorder(ZSFarbe.text, lineWidth: 2.5)
++                    .frame(width: 26, height: 26)
++            } else if stelle == stellen.vorschlag {
+                 Circle()
+-                    .strokeBorder(ZSFarbe.orange, lineWidth: 2.5)
++                    .strokeBorder(ZSFarbe.orange, style: StrokeStyle(lineWidth: 2.5, dash: [4, 3]))
+                     .frame(width: 26, height: 26)
+             }
+         }
+     }
++
++    /// Erklärt die Punkte: Pod jetzt, Vorschlag, frei, kürzlich benutzt.
++    private var legende: some View {
++        let eintraege: [(String, AnyView)] = [
++            ("Pod jetzt", AnyView(ZStack {
++                Circle().fill(ZSFarbe.text3).frame(width: 8, height: 8)
++                Circle().strokeBorder(ZSFarbe.text, lineWidth: 2).frame(width: 16, height: 16)
++            })),
++            ("Vorschlag", AnyView(ZStack {
++                Circle().fill(ZSFarbe.text).frame(width: 8, height: 8)
++                Circle().strokeBorder(ZSFarbe.orange, style: StrokeStyle(lineWidth: 2, dash: [3, 2])).frame(width: 16, height: 16)
++            })),
++            ("frei", AnyView(Circle().fill(ZSFarbe.text).frame(width: 10, height: 10))),
++            ("kürzlich", AnyView(Circle().fill(ZSFarbe.text3).frame(width: 10, height: 10))),
++        ]
++        return ViewThatFits(in: .horizontal) {
++            HStack(spacing: ZSMass.space4) {
++                ForEach(eintraege, id: \.0) { text, symbol in legendenPunkt(text, symbol) }
++            }
++            VStack(alignment: .leading, spacing: ZSMass.space2) {
++                ForEach(eintraege, id: \.0) { text, symbol in legendenPunkt(text, symbol) }
++            }
++        }
++        .frame(maxWidth: .infinity)
++        .accessibilityElement(children: .combine)
++    }
++
++    private func legendenPunkt(_ text: String, _ symbol: AnyView) -> some View {
++        HStack(spacing: ZSMass.space1) {
++            symbol.frame(width: 16, height: 16)
++            Text(text)
++                .font(ZSSchrift.caption)
++                .foregroundStyle(ZSFarbe.text2)
++        }
++    }
+ }
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+index 4d5d9c8..7b63145 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+@@ -8,6 +8,7 @@
+ //
+ 
+ import Combine
++import LoopKitUI
+ import SwiftUI
+ import UIKit
+ import WidgetKit
+@@ -453,8 +454,12 @@ final class ZuckerschockTabController: UIViewController {
+                 self.blattZeigen { schliessen in
+                     AnyView(NavigationStack {
+                         AlertManagementView(checker: status.alertPermissionsChecker, alertMuter: status.alertMuter)
+-                            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Fertig", action: schliessen) } }
+-                    })
++                            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig", action: schliessen) } }
++                    }
++                    // Wie Loops Einstellungen: Die Live-Aktivitäts-Seite braucht die Glukose-Einheit,
++                    // sonst stürzt sie beim Öffnen ab.
++                    .environmentObject(status.deviceManager.displayGlucosePreference)
++                    .environment(\.appName, Bundle.main.bundleDisplayName))
+                 }
+             })
+ 
+@@ -745,6 +750,10 @@ extension ZuckerschockTabController {
+             blattZeigen { schliessen in AnyView(ZSAngehoerigeView(modell: self.heuteModell, begleiter: self.hypoBegleiter, schliessen: schliessen)) }
+         case "stellen":
+             blattZeigen { schliessen in AnyView(ZSStellenView(stellen: self.stellen, nachEintrag: {}, schliessen: schliessen)) }
++        case "sperrbildschirm":
++            if #available(iOS 16.2, *) {
++                blattZeigen { schliessen in AnyView(ZSGlukoseAktivitaetVorschau(schliessen: schliessen)) }
++            }
+         default:
+             break
+         }
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift b/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
+index 31e80cd..c26130f 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
+@@ -254,7 +254,7 @@ struct ZSVorratView: View {
+         let podTage = podsBis.timeIntervalSinceNow / 86_400
+ 
+         VStack(spacing: 0) {
+-            ZSBlattKopf(titel: "Vorrat", abbrechen: schliessen)
++            ZSBlattKopf(titel: "Vorrat", art: .fertig, abbrechen: schliessen)
+             ScrollView {
+                 VStack(alignment: .leading, spacing: ZSMass.space6) {
+                     VStack(alignment: .leading, spacing: ZSMass.space2) {
