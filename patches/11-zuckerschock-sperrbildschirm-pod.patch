@@ -1,8 +1,8 @@
 diff --git a/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift b/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift
-index 2dfaceb..9641d9a 100644
+index 2dfaceb..7855089 100644
 --- a/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift	
 +++ b/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift	
-@@ -97,10 +97,12 @@ struct GlucoseLiveActivityConfiguration: Widget {
+@@ -97,10 +97,13 @@ struct GlucoseLiveActivityConfiguration: Widget {
      private func zsDarstellung(_ context: ActivityViewContext<GlucoseActivityAttributes>) -> ZSGlukoseDarstellung {
          ZSGlukoseDarstellung(
              stand: context.state,
@@ -14,11 +14,12 @@ index 2dfaceb..9641d9a 100644
 -            veraltet: context.isStale
 +            veraltet: context.isStale,
 +            podIE: ZSWidgetStand.lesen()?.podRestIE,
-+            podEnde: ZSWidgetStand.lesen()?.podEnde
++            podEnde: ZSWidgetStand.lesen()?.podEnde,
++            sensorEnde: ZSWidgetStand.lesen()?.sensorEnde
          )
      }
  
-@@ -137,10 +139,8 @@ struct GlucoseLiveActivityConfiguration: Widget {
+@@ -137,10 +140,8 @@ struct GlucoseLiveActivityConfiguration: Widget {
                  }
              }
              DynamicIslandExpandedRegion(.bottom) {
@@ -31,11 +32,47 @@ index 2dfaceb..9641d9a 100644
              }
          } compactLeading: {
              ZSGlukoseInselWert(d: d)
+diff --git a/Loop/Loop.xcodeproj/project.pbxproj b/Loop/Loop.xcodeproj/project.pbxproj
+index 84ea304..27d0d79 100644
+--- a/Loop/Loop.xcodeproj/project.pbxproj
++++ b/Loop/Loop.xcodeproj/project.pbxproj
+@@ -7,6 +7,7 @@
+ 	objects = {
+ 
+ /* Begin PBXBuildFile section */
++		5A5DC1C8BDDA7A557A4C7090 /* ZuckerschockReklamation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CC1C8BDDA7A557A4C7090 /* ZuckerschockReklamation.swift */; };
+ 		5A5DB19FD0CF4095D3012D51 /* ZuckerschockZielzeit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CB19FD0CF4095D3012D51 /* ZuckerschockZielzeit.swift */; };
+ 		5A5EDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift */; };
+ 		5A5DDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift */; };
+@@ -783,6 +784,7 @@
+ /* End PBXCopyFilesBuildPhase section */
+ 
+ /* Begin PBXFileReference section */
++		5A5CC1C8BDDA7A557A4C7090 /* ZuckerschockReklamation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockReklamation.swift; sourceTree = "<group>"; };
+ 		5A5CB19FD0CF4095D3012D51 /* ZuckerschockZielzeit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockZielzeit.swift; sourceTree = "<group>"; };
+ 		5A5CDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockGlukoseAktivitaet.swift; sourceTree = "<group>"; };
+ 		5A5CCEE2DDE1AF0F65F574D9 /* ZuckerschockBericht.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockBericht.swift; sourceTree = "<group>"; };
+@@ -1571,6 +1573,7 @@
+ 		5A5C00000000000000000001 /* Zuckerschock */ = {
+ 			isa = PBXGroup;
+ 			children = (
++				5A5CC1C8BDDA7A557A4C7090 /* ZuckerschockReklamation.swift */,
+ 				5A5CB19FD0CF4095D3012D51 /* ZuckerschockZielzeit.swift */,
+ 				5A5CDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift */,
+ 				5A5CCEE2DDE1AF0F65F574D9 /* ZuckerschockBericht.swift */,
+@@ -3460,6 +3463,7 @@
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
++				5A5DC1C8BDDA7A557A4C7090 /* ZuckerschockReklamation.swift in Sources */,
+ 				5A5DB19FD0CF4095D3012D51 /* ZuckerschockZielzeit.swift in Sources */,
+ 				5A5DDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift in Sources */,
+ 				5A5DCEE2DDE1AF0F65F574D9 /* ZuckerschockBericht.swift in Sources */,
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
-index edb8498..0a6991e 100644
+index edb8498..6939afd 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
-@@ -24,11 +24,37 @@ struct ZSGlukoseDarstellung {
+@@ -24,13 +24,41 @@ struct ZSGlukoseDarstellung {
  
      enum Zustand { case tief, ziel, hoch }
  
@@ -43,10 +80,11 @@ index edb8498..0a6991e 100644
 +    /// Pod: Rest-Insulin (falls gemeldet) und Ende der Laufzeit, aus dem Stand, den die App für Widgets schreibt.
 +    var podIE: Double?
 +    var podEnde: Date?
++    var sensorEnde: Date?
 +    var jetzt: Date
 +
 +    init(stand: GlucoseActivityAttributes.ContentState, mitKurve: Bool, mitPrognose: Bool, veraltet: Bool, jetzt: Date = Date(),
-+         podIE: Double? = nil, podEnde: Date? = nil) {
++         podIE: Double? = nil, podEnde: Date? = nil, sensorEnde: Date? = nil) {
          self.stand = stand
          self.mitKurve = mitKurve
          self.mitPrognose = mitPrognose
@@ -54,6 +92,18 @@ index edb8498..0a6991e 100644
 +        self.jetzt = jetzt
 +        self.podIE = podIE
 +        self.podEnde = podEnde
++        self.sensorEnde = sensorEnde
+     }
+ 
++    /// „heute 18:30“, „morgen 16:00“, „Sa. 16:00“ oder „abgelaufen“.
++    func endeText(_ ende: Date?) -> String? {
++        guard let ende else { return nil }
++        if ende <= jetzt { return "abgelaufen" }
++        let k = Calendar.current
++        let uhr = Self.uhrzeit(ende)
++        if k.isDateInToday(ende) { return "heute \(uhr)" }
++        if k.isDateInTomorrow(ende) { return "morgen \(uhr)" }
++        return "\(ende.formatted(.dateTime.weekday(.abbreviated).locale(Locale(identifier: "de_DE")))) \(uhr)"
 +    }
 +
 +    /// „38 IE“ (nur wenn der Pod den Rest meldet).
@@ -61,20 +111,11 @@ index edb8498..0a6991e 100644
 +        podIE.map { "\($0.formatted(.number.precision(.fractionLength(0)).locale(Locale(identifier: "de_DE")))) IE" }
 +    }
 +
-+    /// „bis heute 18:30“, „bis morgen 16:00“, „bis Sa. 16:00“.
-+    var podEndeText: String? {
-+        guard let podEnde else { return nil }
-+        let k = Calendar.current
-+        let uhr = Self.uhrzeit(podEnde)
-+        if podEnde <= jetzt { return "abgelaufen" }
-+        if k.isDateInToday(podEnde) { return "bis heute \(uhr)" }
-+        if k.isDateInTomorrow(podEnde) { return "bis morgen \(uhr)" }
-+        let tag = podEnde.formatted(.dateTime.weekday(.abbreviated).locale(Locale(identifier: "de_DE")))
-+        return "bis \(tag) \(uhr)"
-     }
- 
++
      var unteresZiel: Double { stand.isMmol ? 3.9 : 70 }
-@@ -164,16 +190,15 @@ struct ZSGlukoseSperrAnsicht: View {
+     var oberesZiel: Double { stand.isMmol ? 10.0 : 180 }
+ 
+@@ -164,16 +192,15 @@ struct ZSGlukoseSperrAnsicht: View {
          ZStack {
              VStack(alignment: .leading, spacing: 10) {
                  if d.mitKurve {
@@ -97,29 +138,46 @@ index edb8498..0a6991e 100644
                  } else {
                      HStack(alignment: .center, spacing: 12) {
                          ZSGlukoseWertBlock(d: d, gross: true)
-@@ -216,6 +241,21 @@ struct ZSGlukoseSperrAnsicht: View {
+@@ -216,11 +243,38 @@ struct ZSGlukoseSperrAnsicht: View {
              Spacer(minLength: 8)
              if !d.loopFrisch {
                  ZSLoopPunkt(d: d)
 +                    .padding(.trailing, 8)
 +            }
-+            if d.podIEText != nil || d.podEndeText != nil {
-+                VStack(alignment: .trailing, spacing: 0) {
-+                    Text(d.podIEText ?? "Pod")
-+                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
-+                        .monospacedDigit()
-+                        .foregroundStyle(ZSFarbe.text)
-+                    Text(d.podIEText == nil ? (d.podEndeText ?? "") : "Pod \(d.podEndeText ?? "")")
-+                        .font(.caption2)
-+                        .foregroundStyle(ZSFarbe.text2)
-+                }
-+                .lineLimit(1)
-+                .minimumScaleFactor(0.8)
-+                .accessibilityElement(children: .combine)
++            // Wann Pod und Sensor zu Ende sind, als Uhrzeit; beim Pod die Rest-IE, wenn er sie meldet.
++            if let pod = d.endeText(d.podEnde) ?? d.podIEText {
++                geraet(wert: pod, label: d.podIEText.map { d.podEnde == nil ? "Pod" : "Pod · \($0)" } ?? "Pod")
++            }
++            if let sensor = d.endeText(d.sensorEnde) {
++                geraet(wert: sensor, label: "Sensor")
++                    .padding(.leading, 12)
              }
          }
      }
-@@ -360,7 +400,13 @@ struct ZSGlukoseKurve: View {
+ }
+ 
++@available(iOS 16.2, *)
++extension ZSGlukoseSperrAnsicht {
++    func geraet(wert: String, label: String) -> some View {
++        VStack(alignment: .trailing, spacing: 0) {
++            Text(wert)
++                .font(.system(.subheadline, design: .rounded).weight(.semibold))
++                .monospacedDigit()
++                .foregroundStyle(ZSFarbe.text)
++            Text(label)
++                .font(.caption2)
++                .foregroundStyle(ZSFarbe.text2)
++        }
++        .lineLimit(1)
++        .minimumScaleFactor(0.75)
++        .accessibilityElement(children: .combine)
++    }
++}
++
+ /// Markenpunkt, Wert, Trend, Einheit/Änderung und Zustand oder Alter.
+ @available(iOS 16.2, *)
+ struct ZSGlukoseWertBlock: View {
+@@ -360,7 +414,13 @@ struct ZSGlukoseKurve: View {
                      yStart: .value("Ziel unten", d.unteresZiel),
                      yEnd: .value("Ziel oben", d.oberesZiel)
                  )
@@ -134,21 +192,405 @@ index edb8498..0a6991e 100644
  
                  ForEach(messwerte) { p in
                      AreaMark(x: .value("Zeit", p.x), yStart: .value("Boden", bereich.lowerBound), yEnd: .value("Zucker", p.y))
-@@ -504,7 +550,8 @@ enum ZSGlukoseBeispiel {
+@@ -504,7 +564,9 @@ enum ZSGlukoseBeispiel {
              isCloseLoop: true, lastCompleted: alt ? jetzt.addingTimeInterval(-21 * 60) : jetzt.addingTimeInterval(-60),
              bottomRow: zeile, glucoseSamples: proben, predicatedGlucose: prognose,
              predicatedStartDate: messzeit, predicatedInterval: 300, yAxisMarks: [40, 100, 160, 220])
 -        return ZSGlukoseDarstellung(stand: stand, mitKurve: false, mitPrognose: true, veraltet: alt, jetzt: jetzt)
 +        return ZSGlukoseDarstellung(stand: stand, mitKurve: true, mitPrognose: true, veraltet: alt, jetzt: jetzt,
-+                                    podIE: art == "hoch" ? nil : 38, podEnde: jetzt.addingTimeInterval(28.5 * 3600))
++                                    podIE: art == "hoch" ? nil : 38, podEnde: jetzt.addingTimeInterval(28.5 * 3600),
++                                    sensorEnde: jetzt.addingTimeInterval(4.2 * 86_400))
      }
  }
  
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
+index 96094a0..bd5cda1 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
+@@ -35,6 +35,8 @@ struct ZSAktionen {
+     var alarme: () -> Void
+     /// Öffnet „Zeit im Ziel“ (Ringe, Kalender, Muster).
+     var zielzeit: () -> Void = {}
++    /// Öffnet „Pod reklamieren“.
++    var reklamation: () -> Void = {}
+ }
+ 
+ struct ZSHeuteView: View {
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockReklamation.swift b/Loop/Loop/Zuckerschock/ZuckerschockReklamation.swift
+new file mode 100644
+index 0000000..18b383e
+--- /dev/null
++++ b/Loop/Loop/Zuckerschock/ZuckerschockReklamation.swift
+@@ -0,0 +1,344 @@
++//
++//  ZuckerschockReklamation.swift
++//  Loop
++//
++//  Zuckerschock: Pod reklamieren. Fehlerart wählen, Etikett fotografieren (LOT und SN werden auf dem iPhone
++//  gelesen), dann öffnet sich die Mail-App fertig ausgefüllt. Die App sendet nie selbst.
++//  Persönliche Angaben bleiben auf dem iPhone (Datei mit Dateischutz).
++//
++
++import MessageUI
++import SwiftUI
++import UIKit
++import Vision
++
++// MARK: - Angaben
++
++struct ZSReklamationsDaten: Codable, Equatable {
++    var name = ""
++    var kundennummer = ""
++    var anschrift = ""
++    var telefon = ""
++    /// Aus den deutschen Omnipod-Bedienungsanleitungen; änderbar.
++    var empfaenger = "omnipod-DE@insulet.com"
++}
++
++final class ZSReklamationsSpeicher: ObservableObject {
++    static let shared = ZSReklamationsSpeicher()
++
++    @Published var daten: ZSReklamationsDaten { didSet { sichern() } }
++    private let datei: URL
++
++    init(ordner: URL? = nil) {
++        let basis = ordner ?? (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first ?? FileManager.default.temporaryDirectory)
++        let verzeichnis = basis.appendingPathComponent("Zuckerschock", isDirectory: true)
++        try? FileManager.default.createDirectory(at: verzeichnis, withIntermediateDirectories: true)
++        datei = verzeichnis.appendingPathComponent("reklamation.json")
++        daten = (try? Data(contentsOf: datei)).flatMap { try? JSONDecoder().decode(ZSReklamationsDaten.self, from: $0) } ?? ZSReklamationsDaten()
++    }
++
++    private func sichern() {
++        guard let inhalt = try? JSONEncoder().encode(daten) else { return }
++        try? inhalt.write(to: datei, options: [.atomic, .completeFileProtection])
++    }
++}
++
++enum ZSPodFehler: String, CaseIterable, Identifiable {
++    case alarm = "Pod-Alarm (Dauerton, Pod-Fehler)"
++    case aktivierung = "Aktivierung fehlgeschlagen"
++    case verschluss = "Verschluss (Okklusion)"
++    case kanuele = "Kanüle nicht richtig gesetzt"
++    case pflaster = "Pflaster hält nicht"
++    case sonstiges = "Sonstiges"
++
++    var id: String { rawValue }
++}
++
++// MARK: - Etikett lesen (auf dem Gerät)
++
++enum ZSEtikett {
++    /// Liest LOT und SN aus einem Foto der Pod-Verpackung. Vision läuft auf dem iPhone, nichts wird verschickt.
++    static func lesen(_ bild: UIImage, fertig: @escaping (_ lot: String?, _ sn: String?) -> Void) {
++        guard let cg = bild.cgImage else { fertig(nil, nil); return }
++        let anfrage = VNRecognizeTextRequest { anfrage, _ in
++            let zeilen = (anfrage.results as? [VNRecognizedTextObservation] ?? []).compactMap { $0.topCandidates(1).first?.string }
++            let ergebnis = auswerten(zeilen)
++            DispatchQueue.main.async { fertig(ergebnis.lot, ergebnis.sn) }
++        }
++        anfrage.recognitionLevel = .accurate
++        anfrage.usesLanguageCorrection = false
++        DispatchQueue.global(qos: .userInitiated).async {
++            let handler = VNImageRequestHandler(cgImage: cg, orientation: ausrichtung(bild.imageOrientation), options: [:])
++            do { try handler.perform([anfrage]) } catch { DispatchQueue.main.async { fertig(nil, nil) } }
++        }
++    }
++
++    /// Sucht „LOT …“ und „SN …“ sowie die GS1-Kennungen (10) und (21).
++    static func auswerten(_ zeilen: [String]) -> (lot: String?, sn: String?) {
++        let text = zeilen.joined(separator: " ").uppercased()
++        func finde(_ muster: [String]) -> String? {
++            for m in muster {
++                guard let regex = try? NSRegularExpression(pattern: m) else { continue }
++                let bereich = NSRange(text.startIndex..., in: text)
++                if let treffer = regex.firstMatch(in: text, range: bereich), treffer.numberOfRanges > 1,
++                   let r = Range(treffer.range(at: 1), in: text) {
++                    return String(text[r])
++                }
++            }
++            return nil
++        }
++        let lot = finde([#"\(10\)\s*([A-Z0-9-]{3,20})"#, #"\bLOT\b[\s:#.]*([A-Z0-9-]{3,20})"#])
++        let sn = finde([#"\(21\)\s*([A-Z0-9-]{3,20})"#, #"\b(?:SN|S/N)\b[\s:#.]*([A-Z0-9-]{3,20})"#])
++        return (lot, sn)
++    }
++
++    private static func ausrichtung(_ o: UIImage.Orientation) -> CGImagePropertyOrientation {
++        switch o {
++        case .up: return .up
++        case .down: return .down
++        case .left: return .left
++        case .right: return .right
++        case .upMirrored: return .upMirrored
++        case .downMirrored: return .downMirrored
++        case .leftMirrored: return .leftMirrored
++        case .rightMirrored: return .rightMirrored
++        @unknown default: return .up
++        }
++    }
++}
++
++// MARK: - Mail
++
++struct ZSMailBlatt: UIViewControllerRepresentable {
++    var empfaenger: String
++    var betreff: String
++    var text: String
++    var fertig: () -> Void
++
++    func makeUIViewController(context: Context) -> MFMailComposeViewController {
++        let mail = MFMailComposeViewController()
++        mail.mailComposeDelegate = context.coordinator
++        mail.setToRecipients([empfaenger])
++        mail.setSubject(betreff)
++        mail.setMessageBody(text, isHTML: false)
++        return mail
++    }
++
++    func updateUIViewController(_ uiViewController: MFMailComposeViewController, context: Context) {}
++
++    func makeCoordinator() -> Koordinator { Koordinator(fertig: fertig) }
++
++    final class Koordinator: NSObject, MFMailComposeViewControllerDelegate {
++        let fertig: () -> Void
++        init(fertig: @escaping () -> Void) { self.fertig = fertig }
++
++        func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
++            fertig()
++        }
++    }
++}
++
++// MARK: - Blatt
++
++struct ZSReklamationView: View {
++    @ObservedObject var speicher: ZSReklamationsSpeicher
++    /// Wann der Pod aktiviert wurde (letzter erkannter Wechsel), falls bekannt.
++    var podAktiviert: Date?
++    var schliessen: () -> Void
++
++    @State private var fehler: ZSPodFehler = .alarm
++    @State private var zeitpunkt = Date()
++    @State private var bemerkung = ""
++    @State private var lot = ""
++    @State private var sn = ""
++    @State private var kameraOffen = false
++    @State private var liest = false
++    @State private var etikettHinweis: String?
++    @State private var mailOffen = false
++
++    private static func datum(_ d: Date) -> String {
++        d.formatted(.dateTime.day().month(.twoDigits).year().hour().minute().locale(Locale(identifier: "de_DE")))
++    }
++
++    var betreff: String {
++        var teile = ["Pod-Reklamation, Bitte um Ersatz"]
++        if !lot.isEmpty { teile.append("LOT \(lot)") }
++        if !speicher.daten.kundennummer.isEmpty { teile.append("Kundennr. \(speicher.daten.kundennummer)") }
++        return teile.joined(separator: " · ")
++    }
++
++    var mailText: String {
++        let d = speicher.daten
++        var zeilen: [String] = []
++        zeilen.append("Sehr geehrte Damen und Herren,")
++        zeilen.append("")
++        zeilen.append("am \(Self.datum(zeitpunkt)) Uhr ist mein Omnipod-Pod ausgefallen: \(fehler.rawValue).")
++        if !bemerkung.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
++            zeilen.append(bemerkung.trimmingCharacters(in: .whitespacesAndNewlines))
++        }
++        zeilen.append("")
++        zeilen.append("Angaben zum Pod:")
++        zeilen.append("- LOT: \(lot.isEmpty ? "–" : lot)")
++        zeilen.append("- SN: \(sn.isEmpty ? "–" : sn)")
++        if let podAktiviert { zeilen.append("- Aktiviert am: \(Self.datum(podAktiviert)) Uhr") }
++        zeilen.append("- Ausfall am: \(Self.datum(zeitpunkt)) Uhr")
++        zeilen.append("")
++        zeilen.append("Ich bitte um kostenlosen Ersatz für diesen Pod. Den Pod bewahre ich auf und schicke ihn auf Wunsch gern zurück.")
++        zeilen.append("")
++        zeilen.append("Meine Angaben:")
++        if !d.name.isEmpty { zeilen.append("Name: \(d.name)") }
++        if !d.kundennummer.isEmpty { zeilen.append("Kundennummer: \(d.kundennummer)") }
++        if !d.anschrift.isEmpty { zeilen.append("Anschrift: \(d.anschrift)") }
++        if !d.telefon.isEmpty { zeilen.append("Telefon: \(d.telefon)") }
++        zeilen.append("")
++        zeilen.append("Mit freundlichen Grüßen")
++        zeilen.append(d.name.isEmpty ? "" : d.name)
++        return zeilen.joined(separator: "\n")
++    }
++
++    var body: some View {
++        VStack(spacing: 0) {
++            ZSBlattKopf(titel: "Pod reklamieren", abbrechen: schliessen)
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space6) {
++                    Text("Wähle, was passiert ist, und fotografiere das Etikett der Pod-Verpackung. Danach öffnet sich die Mail-App fertig ausgefüllt. Senden tust du selbst.")
++                        .font(ZSSchrift.subhead)
++                        .foregroundStyle(ZSFarbe.text2)
++                        .fixedSize(horizontal: false, vertical: true)
++
++                    VStack(alignment: .leading, spacing: ZSMass.space3) {
++                        ZSAbschnittTitel(text: "Was ist passiert?")
++                        ZSEingabeFeld(titel: "Fehler") {
++                            Picker("Fehler", selection: $fehler) {
++                                ForEach(ZSPodFehler.allCases) { Text($0.rawValue).tag($0) }
++                            }
++                            .pickerStyle(.menu)
++                            .tint(ZSFarbe.text)
++                            .frame(maxWidth: .infinity, alignment: .leading)
++                        }
++                        ZSEingabeFeld(titel: "Wann") {
++                            DatePicker("Wann", selection: $zeitpunkt, in: ...Date())
++                                .labelsHidden()
++                                .frame(maxWidth: .infinity, alignment: .leading)
++                        }
++                        ZSEingabeFeld(titel: "Bemerkung (optional)") {
++                            TextField("z. B. Alarm 2 Std. nach dem Setzen", text: $bemerkung, axis: .vertical)
++                                .lineLimit(1...4)
++                        }
++                    }
++
++                    VStack(alignment: .leading, spacing: ZSMass.space3) {
++                        ZSAbschnittTitel(text: "Pod")
++                        Button {
++                            kameraOffen = true
++                        } label: {
++                            Label(liest ? "Etikett wird gelesen …" : "Etikett fotografieren", systemImage: "camera.viewfinder")
++                                .font(ZSSchrift.headline)
++                        }
++                        .buttonStyle(ZSDruckStil(art: .sekundaer))
++                        .disabled(liest)
++                        if let etikettHinweis {
++                            Text(etikettHinweis)
++                                .font(ZSSchrift.footnote)
++                                .foregroundStyle(ZSFarbe.text2)
++                        }
++                        ZSEingabeFeld(titel: "LOT") {
++                            TextField("steht auf der Verpackung", text: $lot)
++                                .textInputAutocapitalization(.characters)
++                                .autocorrectionDisabled()
++                        }
++                        ZSEingabeFeld(titel: "SN (Seriennummer)") {
++                            TextField("steht auf der Verpackung", text: $sn)
++                                .textInputAutocapitalization(.characters)
++                                .autocorrectionDisabled()
++                        }
++                        if let podAktiviert {
++                            Text("Aktiviert am \(Self.datum(podAktiviert)) Uhr (letzter erkannter Pod-Wechsel).")
++                                .font(ZSSchrift.footnote)
++                                .foregroundStyle(ZSFarbe.text3)
++                        }
++                    }
++
++                    VStack(alignment: .leading, spacing: ZSMass.space3) {
++                        ZSAbschnittTitel(text: "Deine Angaben")
++                        Text("Einmal eintragen, die App merkt sie sich. Sie bleiben auf dem iPhone.")
++                            .font(ZSSchrift.footnote)
++                            .foregroundStyle(ZSFarbe.text3)
++                        ZSEingabeFeld(titel: "Name") {
++                            TextField("Vor- und Nachname", text: $speicher.daten.name)
++                                .textContentType(.name)
++                        }
++                        ZSEingabeFeld(titel: "Kundennummer bei Insulet") {
++                            TextField("z. B. von der Lieferung", text: $speicher.daten.kundennummer)
++                                .autocorrectionDisabled()
++                        }
++                        ZSEingabeFeld(titel: "Anschrift für den Ersatz") {
++                            TextField("Straße, PLZ, Ort", text: $speicher.daten.anschrift, axis: .vertical)
++                                .textContentType(.fullStreetAddress)
++                                .lineLimit(1...3)
++                        }
++                        ZSEingabeFeld(titel: "Telefon (optional)") {
++                            TextField("für Rückfragen", text: $speicher.daten.telefon)
++                                .keyboardType(.phonePad)
++                                .textContentType(.telephoneNumber)
++                        }
++                        ZSEingabeFeld(titel: "Empfänger") {
++                            TextField("E-Mail des Kundenservice", text: $speicher.daten.empfaenger)
++                                .keyboardType(.emailAddress)
++                                .textInputAutocapitalization(.never)
++                                .autocorrectionDisabled()
++                        }
++                    }
++
++                    Button(action: mailVorbereiten) {
++                        Text("Mail vorbereiten").font(ZSSchrift.headline)
++                    }
++                    .buttonStyle(ZSDruckStil(art: .primaer))
++
++                    Text("Die App sendet nichts selbst. In der Mail-App kannst du den Text noch ändern, senden oder als Entwurf sichern.")
++                        .font(ZSSchrift.footnote)
++                        .foregroundStyle(ZSFarbe.text3)
++                        .fixedSize(horizontal: false, vertical: true)
++                }
++                .padding(ZSMass.space5)
++            }
++        }
++        .background(ZSFarbe.grund.ignoresSafeArea())
++        .sheet(isPresented: $kameraOffen) {
++            ZSKameraBlatt { bild in
++                kameraOffen = false
++                guard let bild else { return }
++                liest = true
++                etikettHinweis = nil
++                ZSEtikett.lesen(bild) { gefundenLot, gefundenSn in
++                    liest = false
++                    if let gefundenLot { lot = gefundenLot }
++                    if let gefundenSn { sn = gefundenSn }
++                    switch (gefundenLot, gefundenSn) {
++                    case (.some, .some): etikettHinweis = "LOT und SN erkannt. Bitte kurz mit der Verpackung vergleichen."
++                    case (nil, nil): etikettHinweis = "Nichts erkannt. Etikett näher und gerade fotografieren oder abtippen."
++                    default: etikettHinweis = "Nur teilweise erkannt. Bitte den Rest abtippen."
++                    }
++                }
++            }
++            .ignoresSafeArea()
++        }
++        .sheet(isPresented: $mailOffen) {
++            ZSMailBlatt(empfaenger: speicher.daten.empfaenger, betreff: betreff, text: mailText) { mailOffen = false }
++                .ignoresSafeArea()
++        }
++    }
++
++    private func mailVorbereiten() {
++        if MFMailComposeViewController.canSendMail() {
++            mailOffen = true
++            return
++        }
++        // Ohne eingerichtete Mail-App: Standard-Mail-Programm über mailto öffnen.
++        var teile = URLComponents()
++        teile.scheme = "mailto"
++        teile.path = speicher.daten.empfaenger
++        teile.queryItems = [URLQueryItem(name: "subject", value: betreff), URLQueryItem(name: "body", value: mailText)]
++        if let url = teile.url { UIApplication.shared.open(url) }
++    }
++}
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
-index 8f6183e..ae6a1d6 100644
+index 8f6183e..a5764ab 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
-@@ -683,7 +683,13 @@ final class ZuckerschockTabController: UIViewController {
+@@ -231,6 +231,8 @@ private struct ZSTherapieView: View {
+                         Divider().overlay(ZSFarbe.haarlinie).padding(.leading, 57)
+                         ZSListenZeile(titel: "Vorrat", untertitel: "Pods, Sensoren, Insulin, Rezept", symbol: "shippingbox", aktion: aktionen.vorrat)
+                         Divider().overlay(ZSFarbe.haarlinie).padding(.leading, 57)
++                        ZSListenZeile(titel: "Pod reklamieren", untertitel: "Fehlerhaften Pod melden, Ersatz anfordern", symbol: "exclamationmark.bubble", aktion: aktionen.reklamation)
++                        Divider().overlay(ZSFarbe.haarlinie).padding(.leading, 57)
+                         ZSListenZeile(titel: "Therapieplan", untertitel: "Unterzucker-Plan, FPE, Spritz-Ess-Abstand", symbol: "list.clipboard", aktion: aktionen.therapieplan)
+                         Divider().overlay(ZSFarbe.haarlinie).padding(.leading, 57)
+                         ZSListenZeile(titel: "Unterzucker-Begleiter", untertitel: "Läuft von selbst, Rückblick", symbol: "heart.text.square", aktion: aktionen.hypo)
+@@ -519,6 +521,10 @@ final class ZuckerschockTabController: UIViewController {
+                 return AnyView(ZSZielzeitView(einheit: self.heuteModell.stand?.einheit ?? .milligramsPerDeciliter,
+                                               laden: { [weak self] fertig in self?.zielzeitLaden(fertig) },
+                                               schliessen: schliessen))
++            } },
++            reklamation: { [weak self] in self?.blattZeigen { schliessen in
++                guard let self else { return AnyView(EmptyView()) }
++                return AnyView(ZSReklamationView(speicher: .shared, podAktiviert: self.vorrat.stand.letzterPodWechsel, schliessen: schliessen))
+             } })
+ 
+         kinder[.heute] = gastgeber(ZSHeuteView(modell: heuteModell, vorrat: vorrat, keton: keton, hinweise: hinweise, aktionen: aktionen))
+@@ -683,7 +689,16 @@ final class ZuckerschockTabController: UIViewController {
              letzteMahlzeit: letzte.map { "\($0.name) · \(ZSFormat.zahl($0.kh, stellen: 0)) g" },
              vorratText: "\(vorrat.stand.pods) Pods · bis \(format.string(from: podsBis))",
              loopAktiv: heute?.loop == .aktiv,
@@ -159,12 +601,24 @@ index 8f6183e..ae6a1d6 100644
 +            podEnde: vorratQuelle.podRest.map { jetzt.addingTimeInterval($0) }.map {
 +                // Auf 5 Minuten runden, damit der Stand nicht bei jedem Aufruf neu geschrieben wird.
 +                Date(timeIntervalSinceReferenceDate: ($0.timeIntervalSinceReferenceDate / 300).rounded() * 300)
++            },
++            sensorEnde: vorratQuelle.sensorRest.map { jetzt.addingTimeInterval($0) }.map {
++                Date(timeIntervalSinceReferenceDate: ($0.timeIntervalSinceReferenceDate / 300).rounded() * 300)
 +            })
          guard stand != ZSWidgetStand.lesen().map({ alt in var a = alt; a.erstellt = jetzt; return a }) else { return }
          stand.schreiben()
          WidgetCenter.shared.reloadTimelines(ofKind: ZSWidgetStand.kindSperr)
+@@ -845,6 +860,8 @@ extension ZuckerschockTabController {
+             blattZeigen { schliessen in AnyView(ZSAngehoerigeView(modell: self.heuteModell, begleiter: self.hypoBegleiter, schliessen: schliessen)) }
+         case "stellen":
+             blattZeigen { schliessen in AnyView(ZSStellenView(stellen: self.stellen, nachEintrag: {}, schliessen: schliessen)) }
++        case "reklamation":
++            blattZeigen { schliessen in AnyView(ZSReklamationView(speicher: ZSReklamationsSpeicher(ordner: FileManager.default.temporaryDirectory.appendingPathComponent("ZSVorschau-\(UUID().uuidString)")), podAktiviert: Date().addingTimeInterval(-30 * 3600), schliessen: schliessen)) }
+         case "zielzeit-tag":
+             let daten = ZSZielzeitDaten.vorschau()
+             let gestern = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift b/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
-index c26130f..df4ed44 100644
+index c26130f..1c9635e 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
 @@ -197,6 +197,11 @@ final class ZSVorratWaechter {
@@ -194,7 +648,15 @@ index c26130f..df4ed44 100644
          hinweisFallsNoetig(jetzt: jetzt)
      }
  
-@@ -267,7 +280,7 @@ struct ZSVorratView: View {
+@@ -240,6 +253,7 @@ struct ZSVorratView: View {
+     var schliessen: () -> Void
+ 
+     @State private var tagesmenge: Double?
++    @State private var reklamationOffen = false
+ 
+     private static let datum: DateFormatter = {
+         let f = DateFormatter()
+@@ -267,7 +281,7 @@ struct ZSVorratView: View {
                          Text("\(vorrat.stand.pods) auf Lager\(quelle.podRest.map { " + aktueller Pod (noch \(Int(($0 / 3600).rounded())) Std.)" } ?? "") · etwa \(max(0, Int(podTage.rounded()))) Tage")
                              .font(ZSSchrift.subhead)
                              .foregroundStyle(ZSFarbe.text2)
@@ -203,11 +665,36 @@ index c26130f..df4ed44 100644
                              .font(ZSSchrift.footnote)
                              .foregroundStyle(ZSFarbe.text2)
                      }
+@@ -300,6 +314,14 @@ struct ZSVorratView: View {
+                     }
+                     .font(ZSSchrift.subhead.weight(.semibold))
+ 
++                    Button {
++                        reklamationOffen = true
++                    } label: {
++                        Label("Pod fehlerhaft? Reklamieren", systemImage: "exclamationmark.bubble")
++                            .font(ZSSchrift.headline)
++                    }
++                    .buttonStyle(ZSDruckStil(art: .sekundaer))
++
+                     VStack(alignment: .leading, spacing: ZSMass.space3) {
+                         ZSAbschnittTitel(text: "Rezept und Lieferung")
+                         datumZeile("Folgerezept angefragt", wert: $vorrat.stand.rezeptAngefragtAm)
+@@ -321,6 +343,9 @@ struct ZSVorratView: View {
+         }
+         .background(ZSFarbe.grund.ignoresSafeArea())
+         .onAppear { quelle.tagesmenge { tagesmenge = $0 } }
++        .sheet(isPresented: $reklamationOffen) {
++            ZSReklamationView(speicher: .shared, podAktiviert: vorrat.stand.letzterPodWechsel) { reklamationOffen = false }
++        }
+     }
+ 
+     private var trenner: some View {
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockWidgetGemeinsam.swift b/Loop/Loop/Zuckerschock/ZuckerschockWidgetGemeinsam.swift
-index b69d648..2bf8d0c 100644
+index b69d648..5d07339 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockWidgetGemeinsam.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockWidgetGemeinsam.swift
-@@ -30,6 +30,10 @@ struct ZSWidgetStand: Codable, Equatable {
+@@ -30,6 +30,12 @@ struct ZSWidgetStand: Codable, Equatable {
      var loopAktiv: Bool
      /// Wert im gesperrten Zustand ausblenden (Einstellung in der App).
      var wertVerbergen: Bool
@@ -215,6 +702,8 @@ index b69d648..2bf8d0c 100644
 +    var podRestIE: Double? = nil
 +    /// Ende der Pod-Laufzeit laut Pod-Fortschritt.
 +    var podEnde: Date? = nil
++    /// Ende der Sensor-Laufzeit laut Sensor-Fortschritt.
++    var sensorEnde: Date? = nil
  
      static let schluessel = "Zuckerschock.WidgetStand"
      static let kindSperr = "ZuckerschockSperrbildschirm"

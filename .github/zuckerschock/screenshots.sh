@@ -96,6 +96,7 @@ for eintrag in "${GERAETE[@]}"; do
     aufnehmen "$udid" "$name-dark-large-heute-24std" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_KURVE=24
     aufnehmen "$udid" "$name-dark-large-zielzeit" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_BLATT=zielzeit
     aufnehmen "$udid" "$name-dark-large-zielzeit-tag" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_BLATT=zielzeit-tag
+    aufnehmen "$udid" "$name-dark-large-reklamation" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_BLATT=reklamation
     xcrun simctl ui "$udid" appearance light
     aufnehmen "$udid" "$name-light-large-essen" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_TAB=essen
     aufnehmen "$udid" "$name-light-large-vorrat" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_BLATT=vorrat
