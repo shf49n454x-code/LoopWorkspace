@@ -505,10 +505,10 @@ index 5829323..2deacc5 100644
  /// Insulin-Abgabe nie per Antippen: Der Knopf muss ganz nach rechts geschoben werden.
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockZielzeit.swift b/Loop/Loop/Zuckerschock/ZuckerschockZielzeit.swift
 new file mode 100644
-index 0000000..ad813e4
+index 0000000..1e48b65
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockZielzeit.swift
-@@ -0,0 +1,882 @@
+@@ -0,0 +1,889 @@
 +//
 +//  ZuckerschockZielzeit.swift
 +//  Loop
@@ -1065,6 +1065,11 @@ index 0000000..ad813e4
 +        datum.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "de_DE")))
 +    }
 +
++    /// Kurz für den Blattkopf: „Do., 29. Okt.“
++    static func kurztitel(_ datum: Date) -> String {
++        datum.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).locale(Locale(identifier: "de_DE")))
++    }
++
 +    /// Anteile unter 70, im Ziel, über 180.
 +    var anteile: (tief: Double, ziel: Double, hoch: Double) {
 +        guard !werte.isEmpty else { return (0, 0, 0) }
@@ -1133,7 +1138,7 @@ index 0000000..ad813e4
 +
 +    var body: some View {
 +        VStack(spacing: 0) {
-+            ZSBlattKopf(titel: ZSTagesAuswertung.titel(auswertung.tag), art: .fertig, abbrechen: { dismiss() })
++            ZSBlattKopf(titel: ZSTagesAuswertung.kurztitel(auswertung.tag), art: .fertig, abbrechen: { dismiss() })
 +            ScrollView {
 +                VStack(alignment: .leading, spacing: ZSMass.space4) {
 +                    verteilung.zsKarte()
@@ -1362,11 +1367,13 @@ index 0000000..ad813e4
 +            return Double(zufall >> 33) / Double(1 << 31)
 +        }
 +        var tagesVersatz = 0.0
++        var letzterTag = -1
 +        let anzahl = 92 * 288
 +        for i in 0..<anzahl {
 +            let datum = bis.addingTimeInterval(-Double(anzahl - 1 - i) * 300)
 +            let stunde = Double(Calendar.current.component(.hour, from: datum)) + Double(Calendar.current.component(.minute, from: datum)) / 60
-+            if i % 288 == 0 { tagesVersatz = (naechste() - 0.35) * 90 }
++            let tagNr = Calendar.current.ordinality(of: .day, in: .era, for: datum) ?? 0
++            if tagNr != letzterTag { letzterTag = tagNr; tagesVersatz = (naechste() - 0.35) * 90 }
 +            var mgdl = 125 + tagesVersatz
 +            mgdl += 55 * exp(-pow((stunde - 8.5) / 1.1, 2))
 +            mgdl += 45 * exp(-pow((stunde - 13.5) / 1.3, 2))
