@@ -1,3 +1,20 @@
+diff --git a/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift b/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift
+index 3dd4ce6..a99b8b8 100644
+--- a/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift	
++++ b/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift	
+@@ -130,8 +130,10 @@ struct GlucoseLiveActivityConfiguration: Widget {
+                     .padding(.leading, 4)
+             }
+             DynamicIslandExpandedRegion(.trailing) {
+-                ZSLoopPunkt(d: d)
+-                    .padding(.trailing, 4)
++                if !d.loopFrisch {
++                    ZSLoopPunkt(d: d)
++                        .padding(.trailing, 4)
++                }
+             }
+             DynamicIslandExpandedRegion(.bottom) {
+                 if d.mitKurve {
 diff --git a/Loop/Loop.xcodeproj/project.pbxproj b/Loop/Loop.xcodeproj/project.pbxproj
 index 7a37333..84ea304 100644
 --- a/Loop/Loop.xcodeproj/project.pbxproj
@@ -34,6 +51,121 @@ index 7a37333..84ea304 100644
  				5A5DDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift in Sources */,
  				5A5DCEE2DDE1AF0F65F574D9 /* ZuckerschockBericht.swift in Sources */,
  				5A5DE734B88CFFE8B0E834CC /* ZuckerschockStellen.swift in Sources */,
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
+index 471471c..ed97cfb 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
+@@ -100,6 +100,13 @@ struct ZSGlukoseDarstellung {
+         (istTief || alt) ? ZSFarbe.text2 : ZSFarbe.orangeLinie
+     }
+ 
++    /// Loop lief in den letzten 6 Minuten: dann bleibt der Ring weg (ruhiger).
++    var loopFrisch: Bool {
++        guard stand.isCloseLoop, let zuletzt = stand.lastCompleted else { return false }
++        if case .fresh = LoopCompletionFreshness(age: abs(min(0, zuletzt.timeIntervalSinceNow))) { return true }
++        return false
++    }
++
+     var loopFarbe: Color {
+         var frische: LoopCompletionFreshness = .stale
+         if let zuletzt = stand.lastCompleted {
+@@ -134,8 +141,8 @@ struct ZSGlukoseDarstellung {
+                 }
+                 switch eintrag.label {
+                 case BottomRowConfiguration.eventualBg.name(): return Kennzahl(wert: eintrag.value, label: "Prognose")
+-                case BottomRowConfiguration.deltaBg.name(): return Kennzahl(wert: eintrag.value, label: "Änderung")
+-                case BottomRowConfiguration.updatedAt.name(): return Kennzahl(wert: eintrag.value, label: "Stand")
++                // Änderung steht schon neben dem Wert, die Uhrzeit braucht es auf dem Sperrbildschirm nicht.
++                case BottomRowConfiguration.deltaBg.name(), BottomRowConfiguration.updatedAt.name(): return nil
+                 default: return Kennzahl(wert: eintrag.value + eintrag.unit, label: eintrag.label)
+                 }
+             }
+@@ -160,10 +167,10 @@ struct ZSGlukoseSperrAnsicht: View {
+                     HStack(alignment: .top, spacing: 12) {
+                         ZSGlukoseWertBlock(d: d, gross: true)
+                             .frame(width: 112, alignment: .leading)
+-                        ZSGlukoseKurve(d: d, achsen: true)
+-                            .frame(height: 86)
++                        ZSGlukoseKurve(d: d, achsen: false)
++                            .frame(height: 78)
+                     }
+-                    if !d.kennzahlen.isEmpty {
++                    if !d.kennzahlen.isEmpty || !d.loopFrisch {
+                         Rectangle().fill(ZSFarbe.haarlinie).frame(height: 1)
+                         kennzahlZeile
+                     }
+@@ -207,7 +214,9 @@ struct ZSGlukoseSperrAnsicht: View {
+                 .accessibilityElement(children: .combine)
+             }
+             Spacer(minLength: 8)
+-            ZSLoopPunkt(d: d)
++            if !d.loopFrisch {
++                ZSLoopPunkt(d: d)
++            }
+         }
+     }
+ }
+@@ -220,17 +229,6 @@ struct ZSGlukoseWertBlock: View {
+ 
+     var body: some View {
+         VStack(alignment: .leading, spacing: 1) {
+-            HStack(spacing: 4) {
+-                if !d.istTief {
+-                    Circle()
+-                        .fill(ZSFarbe.orange)
+-                        .frame(width: 6, height: 6)
+-                        .accessibilityHidden(true)
+-                }
+-                Text("Zucker")
+-                    .font(.caption2.weight(.medium))
+-                    .foregroundStyle(ZSFarbe.text2)
+-            }
+             HStack(alignment: .firstTextBaseline, spacing: 3) {
+                 Text(d.wertText)
+                     .font(.system(size: gross ? 40 : 30, weight: .semibold, design: .rounded))
+@@ -252,7 +250,7 @@ struct ZSGlukoseWertBlock: View {
+     }
+ }
+ 
+-/// „Im Ziel · 07:41“ oder, ab 10 Minuten, „vor 12 Min.“ (läuft von selbst weiter).
++/// „Im Ziel“ oder, ab 10 Minuten, „vor 12 Min.“ (läuft von selbst weiter).
+ @available(iOS 16.2, *)
+ struct ZSGlukoseZustandZeile: View {
+     var d: ZSGlukoseDarstellung
+@@ -271,20 +269,10 @@ struct ZSGlukoseZustandZeile: View {
+                     .fill(d.zustandFarbe)
+                     .frame(width: 7, height: 7)
+                     .accessibilityHidden(true)
+-                // Der Zustand geht vor; die Uhrzeit nur, wenn Platz ist.
+-                ViewThatFits(in: .horizontal) {
+-                    HStack(spacing: 4) {
+-                        Text(d.zustandWort)
+-                            .font(.caption.weight(.semibold))
+-                        Text("· \(ZSGlukoseDarstellung.uhrzeit(d.stand.date))")
+-                            .font(.caption)
+-                            .foregroundStyle(ZSFarbe.text3)
+-                    }
+-                    .fixedSize()
+-                    Text(d.zustandWort)
+-                        .font(.caption.weight(.semibold))
+-                        .lineLimit(1)
+-                }
++                // Ruhig: nur der Zustand. Die Uhrzeit erscheint erst, wenn der Wert alt ist (siehe oben).
++                Text(d.zustandWort)
++                    .font(.caption.weight(.semibold))
++                    .lineLimit(1)
+             }
+         }
+         .foregroundStyle(d.alt ? ZSFarbe.text2 : d.zustandFarbe)
+@@ -332,7 +320,7 @@ struct ZSGlukoseKurve: View {
+     private var prognose: [Punkt] {
+         guard d.mitPrognose, let start = d.stand.predicatedStartDate else { return [] }
+         let schritt = d.stand.predicatedInterval ?? 5 * 60
+-        let ende = start.addingTimeInterval(3 * 60 * 60)
++        let ende = start.addingTimeInterval(60 * 60)
+         return d.stand.predicatedGlucose.enumerated().compactMap { i, y in
+             let x = start.addingTimeInterval(schritt * Double(i))
+             return x <= ende ? Punkt(x: x, y: y) : nil
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteDaten.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteDaten.swift
 index db86ace..518c082 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteDaten.swift
