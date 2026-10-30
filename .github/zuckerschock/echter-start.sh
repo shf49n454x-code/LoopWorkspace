@@ -38,7 +38,10 @@ xcrun simctl install "$udid" "$APP"
 xcrun simctl launch "$udid" "$BUNDLE" -AppleLanguages "(de)" -AppleLocale de_DE > /dev/null || echo "Start meldete einen Fehler"
 sleep 12
 xcrun simctl io "$udid" screenshot --type=png "$ZIEL/iPhone-16-dark-echter-start.png" > /dev/null
-if xcrun simctl spawn "$udid" launchctl list | grep -q "$BUNDLE"; then
+# Erst in eine Datei schreiben: „| grep -q“ beendet die Pipe früh, und mit pipefail
+# meldete der Abbruch (SIGPIPE) fälschlich „läuft nicht mehr“.
+xcrun simctl spawn "$udid" launchctl list > "$ZIEL/.launchctl.txt" 2>/dev/null || true
+if grep -q "$BUNDLE" "$ZIEL/.launchctl.txt"; then
   echo "Echter Start: App läuft"
 else
   echo "Echter Start: App läuft nicht mehr"
@@ -52,4 +55,5 @@ else
     [ -e "$bericht" ] && cp "$bericht" "$ZIEL/" || true
   done
 fi
+rm -f "$ZIEL/.launchctl.txt"
 xcrun simctl shutdown "$udid" || true
