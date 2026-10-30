@@ -351,6 +351,27 @@ index 5d9122c..772a23f 100644
              ))
          }
      }
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift b/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift
+index afa9cb3..47a2330 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift
+@@ -432,6 +432,7 @@ struct ZSAufhellStil: ButtonStyle {
+ /// Kopfzeile eines Blatts: „Abbrechen“ schließt sofort, auch während einer Analyse.
+ struct ZSBlattKopf: View {
+     var titel: String
++    var knopf: String = "Abbrechen"
+     var abbrechen: () -> Void
+ 
+     var body: some View {
+@@ -441,7 +442,7 @@ struct ZSBlattKopf: View {
+                 .foregroundStyle(ZSFarbe.text)
+                 .accessibilityAddTraits(.isHeader)
+             HStack {
+-                Button("Abbrechen", action: abbrechen)
++                Button(knopf, action: abbrechen)
+                     .font(ZSSchrift.body)
+                     .foregroundStyle(ZSFarbe.orangeText)
+                     .frame(minHeight: ZSMass.tap)
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
 new file mode 100644
 index 0000000..b280ec9
@@ -936,6 +957,149 @@ index 0000000..b280ec9
 +        .lineLimit(1)
 +    }
 +}
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockStellen.swift b/Loop/Loop/Zuckerschock/ZuckerschockStellen.swift
+index 5116c61..06f7686 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockStellen.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockStellen.swift
+@@ -63,8 +63,18 @@ final class ZSStellen: ObservableObject {
+         eintraege = (try? Data(contentsOf: datei)).flatMap { try? decoder.decode([ZSStellenEintrag].self, from: $0) } ?? []
+     }
+ 
++    /// Wie lange ein Eintrag noch durch Antippen einer anderen Stelle korrigiert wird (Vertipper).
++    static let korrekturFenster: TimeInterval = 60 * 60
++
++    /// Trägt die Stelle des neuen Pods ein. Innerhalb einer Stunde nach dem letzten Eintrag
++    /// ersetzt ein erneutes Antippen diesen Eintrag, statt einen zweiten Pod einzutragen.
+     func eintragen(_ stelle: ZSStelle, am datum: Date = Date()) {
+-        eintraege.insert(ZSStellenEintrag(stelle: stelle, datum: datum), at: 0)
++        if let letzter = eintraege.first, datum.timeIntervalSince(letzter.datum) < Self.korrekturFenster {
++            guard letzter.stelle != stelle else { return }
++            eintraege[0] = ZSStellenEintrag(stelle: stelle, datum: letzter.datum)
++        } else {
++            eintraege.insert(ZSStellenEintrag(stelle: stelle, datum: datum), at: 0)
++        }
+         let encoder = JSONEncoder()
+         encoder.dateEncodingStrategy = .iso8601
+         try? encoder.encode(eintraege).write(to: datei, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+@@ -80,6 +90,12 @@ final class ZSStellen: ObservableObject {
+     }
+ 
+     var aktuell: ZSStellenEintrag? { eintraege.first }
++
++    /// Noch korrigierbar (letzter Eintrag jünger als eine Stunde)?
++    var korrigierbar: Bool {
++        guard let aktuell else { return false }
++        return Date().timeIntervalSince(aktuell.datum) < Self.korrekturFenster
++    }
+ }
+ 
+ #if targetEnvironment(simulator)
+@@ -105,7 +121,7 @@ struct ZSStellenView: View {
+ 
+     var body: some View {
+         VStack(spacing: 0) {
+-            ZSBlattKopf(titel: "Stellen-Karte", abbrechen: schliessen)
++            ZSBlattKopf(titel: "Stellen-Karte", knopf: "Fertig", abbrechen: schliessen)
+             ScrollView {
+                 VStack(alignment: .leading, spacing: ZSMass.space6) {
+                     VStack(alignment: .leading, spacing: ZSMass.space1) {
+@@ -127,6 +143,8 @@ struct ZSStellenView: View {
+                     }
+                     .frame(height: 300)
+ 
++                    legende
++
+                     VStack(alignment: .leading, spacing: 0) {
+                         ZSAbschnittTitel(text: "Wo sitzt der neue Pod?")
+                             .padding(.bottom, ZSMass.space2)
+@@ -154,6 +172,13 @@ struct ZSStellenView: View {
+                             .buttonStyle(ZSAufhellStil())
+                             Divider().overlay(ZSFarbe.haarlinie)
+                         }
++                        Text(stellen.korrigierbar
++                             ? "Vertippt? Tippe einfach die richtige Stelle an. Das geht bis eine Stunde nach dem Eintrag."
++                             : "Antippen trägt die Stelle des neuen Pods ein.")
++                            .font(ZSSchrift.footnote)
++                            .foregroundStyle(ZSFarbe.text2)
++                            .fixedSize(horizontal: false, vertical: true)
++                            .padding(.top, ZSMass.space3)
+                     }
+                 }
+                 .padding(ZSMass.space5)
+@@ -180,9 +205,17 @@ struct ZSStellenView: View {
+                     }
+                 }
+             }
+-            Text(titel)
+-                .font(ZSSchrift.caption)
+-                .foregroundStyle(ZSFarbe.text3)
++            // Vorn ist die linke Körperseite rechts im Bild, hinten links.
++            HStack {
++                Text(seite == 0 ? "R" : "L")
++                Spacer()
++                Text(titel)
++                Spacer()
++                Text(seite == 0 ? "L" : "R")
++            }
++            .font(ZSSchrift.caption)
++            .foregroundStyle(ZSFarbe.text3)
++            .padding(.horizontal, ZSMass.space2)
+         }
+         .accessibilityElement(children: .ignore)
+         .accessibilityLabel("Körperskizze \(titel)")
+@@ -195,11 +228,50 @@ struct ZSStellenView: View {
+             Circle()
+                 .fill(frisch ? ZSFarbe.text3 : ZSFarbe.text)
+                 .frame(width: 14, height: 14)
+-            if stelle == stellen.vorschlag {
++            if stelle == stellen.aktuell?.stelle {
++                Circle()
++                    .strokeBorder(ZSFarbe.text, lineWidth: 2.5)
++                    .frame(width: 26, height: 26)
++            } else if stelle == stellen.vorschlag {
+                 Circle()
+-                    .strokeBorder(ZSFarbe.orange, lineWidth: 2.5)
++                    .strokeBorder(ZSFarbe.orange, style: StrokeStyle(lineWidth: 2.5, dash: [4, 3]))
+                     .frame(width: 26, height: 26)
+             }
+         }
+     }
++
++    /// Erklärt die Punkte: Pod jetzt, Vorschlag, frei, kürzlich benutzt.
++    private var legende: some View {
++        let eintraege: [(String, AnyView)] = [
++            ("Pod jetzt", AnyView(ZStack {
++                Circle().fill(ZSFarbe.text3).frame(width: 8, height: 8)
++                Circle().strokeBorder(ZSFarbe.text, lineWidth: 2).frame(width: 16, height: 16)
++            })),
++            ("Vorschlag", AnyView(ZStack {
++                Circle().fill(ZSFarbe.text).frame(width: 8, height: 8)
++                Circle().strokeBorder(ZSFarbe.orange, style: StrokeStyle(lineWidth: 2, dash: [3, 2])).frame(width: 16, height: 16)
++            })),
++            ("frei", AnyView(Circle().fill(ZSFarbe.text).frame(width: 10, height: 10))),
++            ("kürzlich", AnyView(Circle().fill(ZSFarbe.text3).frame(width: 10, height: 10))),
++        ]
++        return ViewThatFits(in: .horizontal) {
++            HStack(spacing: ZSMass.space4) {
++                ForEach(eintraege, id: \.0) { text, symbol in legendenPunkt(text, symbol) }
++            }
++            VStack(alignment: .leading, spacing: ZSMass.space2) {
++                ForEach(eintraege, id: \.0) { text, symbol in legendenPunkt(text, symbol) }
++            }
++        }
++        .frame(maxWidth: .infinity)
++        .accessibilityElement(children: .combine)
++    }
++
++    private func legendenPunkt(_ text: String, _ symbol: AnyView) -> some View {
++        HStack(spacing: ZSMass.space1) {
++            symbol.frame(width: 16, height: 16)
++            Text(text)
++                .font(ZSSchrift.caption)
++                .foregroundStyle(ZSFarbe.text2)
++        }
++    }
+ }
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
 index 4d5d9c8..5fc35a6 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
