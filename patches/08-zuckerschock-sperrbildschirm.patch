@@ -513,10 +513,10 @@ index afa9cb3..430529d 100644
                          .font(ZSSchrift.headline)
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
 new file mode 100644
-index 0000000..b280ec9
+index 0000000..471471c
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
-@@ -0,0 +1,579 @@
+@@ -0,0 +1,586 @@
 +//
 +//  ZuckerschockGlukoseAktivitaet.swift
 +//  Loop + Loop Widget Extension
@@ -790,13 +790,20 @@ index 0000000..b280ec9
 +                    .fill(d.zustandFarbe)
 +                    .frame(width: 7, height: 7)
 +                    .accessibilityHidden(true)
-+                Text(d.zustandWort)
-+                    .font(.caption.weight(.semibold))
-+                    .lineLimit(1)
-+                Text("· \(ZSGlukoseDarstellung.uhrzeit(d.stand.date))")
-+                    .font(.caption)
-+                    .foregroundStyle(ZSFarbe.text3)
-+                    .lineLimit(1)
++                // Der Zustand geht vor; die Uhrzeit nur, wenn Platz ist.
++                ViewThatFits(in: .horizontal) {
++                    HStack(spacing: 4) {
++                        Text(d.zustandWort)
++                            .font(.caption.weight(.semibold))
++                        Text("· \(ZSGlukoseDarstellung.uhrzeit(d.stand.date))")
++                            .font(.caption)
++                            .foregroundStyle(ZSFarbe.text3)
++                    }
++                    .fixedSize()
++                    Text(d.zustandWort)
++                        .font(.caption.weight(.semibold))
++                        .lineLimit(1)
++                }
 +            }
 +        }
 +        .foregroundStyle(d.alt ? ZSFarbe.text2 : d.zustandFarbe)
