@@ -62,7 +62,7 @@ index 7a37333..84ea304 100644
  				5A5DCEE2DDE1AF0F65F574D9 /* ZuckerschockBericht.swift in Sources */,
  				5A5DE734B88CFFE8B0E834CC /* ZuckerschockStellen.swift in Sources */,
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
-index 471471c..20d4a3a 100644
+index 471471c..edb8498 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
 @@ -100,6 +100,13 @@ struct ZSGlukoseDarstellung {
@@ -79,6 +79,17 @@ index 471471c..20d4a3a 100644
      var loopFarbe: Color {
          var frische: LoopCompletionFreshness = .stale
          if let zuletzt = stand.lastCompleted {
+@@ -124,8 +131,8 @@ struct ZSGlukoseDarstellung {
+             case .currentBg:
+                 return nil
+             case .basal:
+-                let rate = eintrag.rate.formatted(.number.precision(.fractionLength(0...2)).locale(Locale(identifier: "de_DE")))
+-                return Kennzahl(wert: "\(rate) IE/h", label: "Basal")
++                // Ruhiger Sperrbildschirm: Basal steht in der App, nicht hier.
++                return nil
+             case .generic:
+                 switch eintrag.unit {
+                 case "U": return Kennzahl(wert: eintrag.value, label: "IE aktiv")
 @@ -134,8 +141,8 @@ struct ZSGlukoseDarstellung {
                  }
                  switch eintrag.label {
@@ -142,7 +153,16 @@ index 471471c..20d4a3a 100644
  @available(iOS 16.2, *)
  struct ZSGlukoseZustandZeile: View {
      var d: ZSGlukoseDarstellung
-@@ -271,20 +269,10 @@ struct ZSGlukoseZustandZeile: View {
+@@ -262,7 +260,7 @@ struct ZSGlukoseZustandZeile: View {
+             if d.alt {
+                 Image(systemName: "clock")
+                     .font(.caption2.weight(.semibold))
+-                (Text("vor ") + Text(d.stand.date, style: .relative))
++                ZSAlterText(datum: d.stand.date)
+                     .font(.caption.weight(.semibold))
+                     .lineLimit(1)
+                     .minimumScaleFactor(0.7)
+@@ -271,26 +269,29 @@ struct ZSGlukoseZustandZeile: View {
                      .fill(d.zustandFarbe)
                      .frame(width: 7, height: 7)
                      .accessibilityHidden(true)
@@ -167,7 +187,34 @@ index 471471c..20d4a3a 100644
              }
          }
          .foregroundStyle(d.alt ? ZSFarbe.text2 : d.zustandFarbe)
-@@ -332,7 +320,7 @@ struct ZSGlukoseKurve: View {
+     }
+ }
+ 
++/// „vor 23 Min.“, läuft von selbst weiter. Ab iOS 18 ohne Sekunden.
++struct ZSAlterText: View {
++    var datum: Date
++
++    var body: some View {
++        if #available(iOS 18.0, *) {
++            Text(.currentDate, format: .reference(to: datum, allowedFields: [.hour, .minute]))
++        } else {
++            Text("vor ") + Text(datum, style: .relative)
++        }
++    }
++}
++
+ /// Kleiner Ring: Loop geschlossen (voll) oder offen (Lücke), Farbe nach letzter Ausführung.
+ @available(iOS 16.2, *)
+ struct ZSLoopPunkt: View {
+@@ -306,6 +307,7 @@ struct ZSLoopPunkt: View {
+             Text("Loop")
+                 .font(.caption2.weight(.medium))
+                 .foregroundStyle(ZSFarbe.text2)
++                .fixedSize()
+         }
+         .accessibilityElement(children: .ignore)
+         .accessibilityLabel(d.stand.isCloseLoop ? "Loop geschlossen" : "Loop offen")
+@@ -332,7 +334,7 @@ struct ZSGlukoseKurve: View {
      private var prognose: [Punkt] {
          guard d.mitPrognose, let start = d.stand.predicatedStartDate else { return [] }
          let schritt = d.stand.predicatedInterval ?? 5 * 60
@@ -176,7 +223,7 @@ index 471471c..20d4a3a 100644
          return d.stand.predicatedGlucose.enumerated().compactMap { i, y in
              let x = start.addingTimeInterval(schritt * Double(i))
              return x <= ende ? Punkt(x: x, y: y) : nil
-@@ -502,7 +490,7 @@ enum ZSGlukoseBeispiel {
+@@ -502,7 +504,7 @@ enum ZSGlukoseBeispiel {
              isCloseLoop: true, lastCompleted: alt ? jetzt.addingTimeInterval(-21 * 60) : jetzt.addingTimeInterval(-60),
              bottomRow: zeile, glucoseSamples: proben, predicatedGlucose: prognose,
              predicatedStartDate: messzeit, predicatedInterval: 300, yAxisMarks: [40, 100, 160, 220])
@@ -185,7 +232,7 @@ index 471471c..20d4a3a 100644
      }
  }
  
-@@ -518,7 +506,7 @@ struct ZSGlukoseAktivitaetVorschau: View {
+@@ -518,7 +520,7 @@ struct ZSGlukoseAktivitaetVorschau: View {
                      .font(.system(size: 72, weight: .semibold, design: .rounded))
                      .foregroundStyle(ZSFarbe.text)
                      .padding(.top, 8)
@@ -235,7 +282,7 @@ index db86ace..518c082 100644
          let richtung: Double = szenario == .hoch ? 2.5 : (szenario == .tief ? -1.4 : -0.7)
          let vorhersage = (0...6).map { schritt in
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
-index dc2ee80..7b0f24b 100644
+index dc2ee80..96094a0 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 @@ -33,6 +33,8 @@ struct ZSAktionen {
@@ -270,7 +317,7 @@ index dc2ee80..7b0f24b 100644
          }
          .padding(.horizontal, ZSMass.space5)
          .padding(.top, ZSMass.space2)
-@@ -468,39 +474,111 @@ struct ZSWertring: View {
+@@ -468,39 +474,114 @@ struct ZSWertring: View {
  private struct ZSKurvenKarte: View {
      var stand: ZSHeuteStand?
      var jetzt: Date
@@ -299,16 +346,19 @@ index dc2ee80..7b0f24b 100644
 -                    .font(ZSSchrift.caption)
 -                    .foregroundStyle(ZSFarbe.text3)
 -                    .accessibilityHidden(true)
++            // Immer eine Zeile, damit die Kurve auch auf dem SE genug Höhe hat.
 +            ViewThatFits(in: .horizontal) {
 +                HStack(spacing: ZSMass.space2) {
 +                    ZSZeitraumRegler(stunden: $stunden)
 +                    Spacer(minLength: ZSMass.space2)
-+                    chip
++                    chip(kompakt: false)
 +                }
-+                VStack(alignment: .leading, spacing: ZSMass.space2) {
++                HStack(spacing: ZSMass.space2) {
 +                    ZSZeitraumRegler(stunden: $stunden)
-+                    chip
++                    Spacer(minLength: ZSMass.space1)
++                    chip(kompakt: true)
 +                }
++                ZSZeitraumRegler(stunden: $stunden)
              }
 -            ZSKurve(stand: stand, jetzt: jetzt)
 +            ZSKurve(stand: stand, jetzt: jetzt, stunden: Double([3, 6, 12, 24].contains(stunden) ? stunden : 3))
@@ -316,9 +366,9 @@ index dc2ee80..7b0f24b 100644
          .zsKarte()
      }
 +
-+    private var chip: some View {
++    private func chip(kompakt: Bool) -> some View {
 +        Button(action: zielzeit) {
-+            ZSZielChip(anteil: heuteImZiel)
++            ZSZielChip(anteil: heuteImZiel, kompakt: kompakt)
 +        }
 +        .buttonStyle(.plain)
 +    }
@@ -395,7 +445,7 @@ index dc2ee80..7b0f24b 100644
      }
  
      private var wertebereich: ClosedRange<Double> {
-@@ -518,6 +596,7 @@ struct ZSKurve: View {
+@@ -518,6 +599,7 @@ struct ZSKurve: View {
                      zielband(in: flaeche)
                      if !punkte.isEmpty {
                          fuellung(in: flaeche)
@@ -403,7 +453,7 @@ index dc2ee80..7b0f24b 100644
                          linie(punkte, in: flaeche)
                              .stroke(ZSFarbe.orangeLinie, style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
                          if let letzter = punkte.last, !zukunft.isEmpty {
-@@ -552,7 +631,7 @@ struct ZSKurve: View {
+@@ -552,7 +634,7 @@ struct ZSKurve: View {
              achse
          }
          .accessibilityElement(children: .ignore)
@@ -412,7 +462,7 @@ index dc2ee80..7b0f24b 100644
          .accessibilityValue(barrierefreiWert)
      }
  
-@@ -566,11 +645,11 @@ struct ZSKurve: View {
+@@ -566,11 +648,11 @@ struct ZSKurve: View {
  
      private var achse: some View {
          let start = zeitraum.lowerBound
@@ -426,7 +476,7 @@ index dc2ee80..7b0f24b 100644
                  Text(ZSFormat.uhrzeit(datum))
                  Spacer()
              }
-@@ -620,14 +699,28 @@ struct ZSKurve: View {
+@@ -620,14 +702,28 @@ struct ZSKurve: View {
          .fill(LinearGradient(colors: [ZSFarbe.orange.opacity(0.3), ZSFarbe.orange.opacity(0)], startPoint: .top, endPoint: .bottom))
      }
  
@@ -665,10 +715,10 @@ index 5829323..2deacc5 100644
  /// Insulin-Abgabe nie per Antippen: Der Knopf muss ganz nach rechts geschoben werden.
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockZielzeit.swift b/Loop/Loop/Zuckerschock/ZuckerschockZielzeit.swift
 new file mode 100644
-index 0000000..1e48b65
+index 0000000..5080e0f
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockZielzeit.swift
-@@ -0,0 +1,889 @@
+@@ -0,0 +1,891 @@
 +//
 +//  ZuckerschockZielzeit.swift
 +//  Loop
@@ -1160,6 +1210,8 @@ index 0000000..1e48b65
 +/// „◔ 74 % heute im Ziel ›“: öffnet das Blatt Zeit im Ziel.
 +struct ZSZielChip: View {
 +    var anteil: Double?
++    /// Schmal (SE): nur Ring und Prozent.
++    var kompakt = false
 +
 +    var body: some View {
 +        HStack(spacing: 6) {
@@ -1171,7 +1223,7 @@ index 0000000..1e48b65
 +                    .rotationEffect(.degrees(-90))
 +            }
 +            .frame(width: 16, height: 16)
-+            Text(anteil.map { "\(Int(($0 * 100).rounded())) % im Ziel" } ?? "Zeit im Ziel")
++            Text(anteil.map { "\(Int(($0 * 100).rounded())) %" + (kompakt ? "" : " im Ziel") } ?? (kompakt ? "Ziel" : "Zeit im Ziel"))
 +                .font(ZSSchrift.caption.weight(.semibold))
 +                .monospacedDigit()
 +                .foregroundStyle(ZSFarbe.text)
