@@ -1,8 +1,18 @@
 diff --git a/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift b/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift
-index 3dd4ce6..a99b8b8 100644
+index 3dd4ce6..2dfaceb 100644
 --- a/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift	
 +++ b/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift	
-@@ -130,8 +130,10 @@ struct GlucoseLiveActivityConfiguration: Widget {
+@@ -97,7 +97,8 @@ struct GlucoseLiveActivityConfiguration: Widget {
+     private func zsDarstellung(_ context: ActivityViewContext<GlucoseActivityAttributes>) -> ZSGlukoseDarstellung {
+         ZSGlukoseDarstellung(
+             stand: context.state,
+-            mitKurve: context.attributes.mode == .large,
++            // Ohne Achsen hat die Kurve keinen Bezug: Sperrbildschirm und Insel zeigen nur die Zeile.
++            mitKurve: false,
+             mitPrognose: context.attributes.addPredictiveLine,
+             veraltet: context.isStale
+         )
+@@ -130,8 +131,10 @@ struct GlucoseLiveActivityConfiguration: Widget {
                      .padding(.leading, 4)
              }
              DynamicIslandExpandedRegion(.trailing) {
@@ -52,7 +62,7 @@ index 7a37333..84ea304 100644
  				5A5DCEE2DDE1AF0F65F574D9 /* ZuckerschockBericht.swift in Sources */,
  				5A5DE734B88CFFE8B0E834CC /* ZuckerschockStellen.swift in Sources */,
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
-index 471471c..ed97cfb 100644
+index 471471c..20d4a3a 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
 @@ -100,6 +100,13 @@ struct ZSGlukoseDarstellung {
@@ -166,6 +176,24 @@ index 471471c..ed97cfb 100644
          return d.stand.predicatedGlucose.enumerated().compactMap { i, y in
              let x = start.addingTimeInterval(schritt * Double(i))
              return x <= ende ? Punkt(x: x, y: y) : nil
+@@ -502,7 +490,7 @@ enum ZSGlukoseBeispiel {
+             isCloseLoop: true, lastCompleted: alt ? jetzt.addingTimeInterval(-21 * 60) : jetzt.addingTimeInterval(-60),
+             bottomRow: zeile, glucoseSamples: proben, predicatedGlucose: prognose,
+             predicatedStartDate: messzeit, predicatedInterval: 300, yAxisMarks: [40, 100, 160, 220])
+-        return ZSGlukoseDarstellung(stand: stand, mitKurve: art != "zeile", mitPrognose: true, veraltet: alt, jetzt: jetzt)
++        return ZSGlukoseDarstellung(stand: stand, mitKurve: false, mitPrognose: true, veraltet: alt, jetzt: jetzt)
+     }
+ }
+ 
+@@ -518,7 +506,7 @@ struct ZSGlukoseAktivitaetVorschau: View {
+                     .font(.system(size: 72, weight: .semibold, design: .rounded))
+                     .foregroundStyle(ZSFarbe.text)
+                     .padding(.top, 8)
+-                ForEach(["normal", "alt", "tief", "zeile"], id: \.self) { art in
++                ForEach(["normal", "hoch", "alt", "tief"], id: \.self) { art in
+                     ZSGlukoseSperrAnsicht(d: ZSGlukoseBeispiel.darstellung(art))
+                         .background(ZSFarbe.flaeche1, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                 }
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteDaten.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteDaten.swift
 index db86ace..518c082 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteDaten.swift
