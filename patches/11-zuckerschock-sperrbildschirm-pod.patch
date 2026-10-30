@@ -1,0 +1,220 @@
+diff --git a/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift b/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift
+index 2dfaceb..9641d9a 100644
+--- a/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift	
++++ b/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift	
+@@ -97,10 +97,12 @@ struct GlucoseLiveActivityConfiguration: Widget {
+     private func zsDarstellung(_ context: ActivityViewContext<GlucoseActivityAttributes>) -> ZSGlukoseDarstellung {
+         ZSGlukoseDarstellung(
+             stand: context.state,
+-            // Ohne Achsen hat die Kurve keinen Bezug: Sperrbildschirm und Insel zeigen nur die Zeile.
+-            mitKurve: false,
++            // Dünne Kurve mit Zielzone als Bezug; Pod-Angaben aus dem Stand, den die App für Widgets schreibt.
++            mitKurve: true,
+             mitPrognose: context.attributes.addPredictiveLine,
+-            veraltet: context.isStale
++            veraltet: context.isStale,
++            podIE: ZSWidgetStand.lesen()?.podRestIE,
++            podEnde: ZSWidgetStand.lesen()?.podEnde
+         )
+     }
+ 
+@@ -137,10 +139,8 @@ struct GlucoseLiveActivityConfiguration: Widget {
+                 }
+             }
+             DynamicIslandExpandedRegion(.bottom) {
+-                if d.mitKurve {
+-                    ZSGlukoseKurve(d: d, achsen: true)
+-                        .frame(height: 72)
+-                }
++                ZSGlukoseKurve(d: d, achsen: false)
++                    .frame(height: 36)
+             }
+         } compactLeading: {
+             ZSGlukoseInselWert(d: d)
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
+index edb8498..0a6991e 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
+@@ -24,11 +24,37 @@ struct ZSGlukoseDarstellung {
+ 
+     enum Zustand { case tief, ziel, hoch }
+ 
+-    init(stand: GlucoseActivityAttributes.ContentState, mitKurve: Bool, mitPrognose: Bool, veraltet: Bool, jetzt: Date = Date()) {
++    /// Pod: Rest-Insulin (falls gemeldet) und Ende der Laufzeit, aus dem Stand, den die App für Widgets schreibt.
++    var podIE: Double?
++    var podEnde: Date?
++    var jetzt: Date
++
++    init(stand: GlucoseActivityAttributes.ContentState, mitKurve: Bool, mitPrognose: Bool, veraltet: Bool, jetzt: Date = Date(),
++         podIE: Double? = nil, podEnde: Date? = nil) {
+         self.stand = stand
+         self.mitKurve = mitKurve
+         self.mitPrognose = mitPrognose
+         self.alt = veraltet || jetzt.timeIntervalSince(stand.date) > 10 * 60
++        self.jetzt = jetzt
++        self.podIE = podIE
++        self.podEnde = podEnde
++    }
++
++    /// „38 IE“ (nur wenn der Pod den Rest meldet).
++    var podIEText: String? {
++        podIE.map { "\($0.formatted(.number.precision(.fractionLength(0)).locale(Locale(identifier: "de_DE")))) IE" }
++    }
++
++    /// „bis heute 18:30“, „bis morgen 16:00“, „bis Sa. 16:00“.
++    var podEndeText: String? {
++        guard let podEnde else { return nil }
++        let k = Calendar.current
++        let uhr = Self.uhrzeit(podEnde)
++        if podEnde <= jetzt { return "abgelaufen" }
++        if k.isDateInToday(podEnde) { return "bis heute \(uhr)" }
++        if k.isDateInTomorrow(podEnde) { return "bis morgen \(uhr)" }
++        let tag = podEnde.formatted(.dateTime.weekday(.abbreviated).locale(Locale(identifier: "de_DE")))
++        return "bis \(tag) \(uhr)"
+     }
+ 
+     var unteresZiel: Double { stand.isMmol ? 3.9 : 70 }
+@@ -164,16 +190,15 @@ struct ZSGlukoseSperrAnsicht: View {
+         ZStack {
+             VStack(alignment: .leading, spacing: 10) {
+                 if d.mitKurve {
+-                    HStack(alignment: .top, spacing: 12) {
++                    HStack(alignment: .center, spacing: 14) {
+                         ZSGlukoseWertBlock(d: d, gross: true)
+-                            .frame(width: 112, alignment: .leading)
++                            .fixedSize()
++                        // Halb so hoch wie früher; die Zielzone gibt den Bezug.
+                         ZSGlukoseKurve(d: d, achsen: false)
+-                            .frame(height: 78)
+-                    }
+-                    if !d.kennzahlen.isEmpty || !d.loopFrisch {
+-                        Rectangle().fill(ZSFarbe.haarlinie).frame(height: 1)
+-                        kennzahlZeile
++                            .frame(height: 40)
+                     }
++                    Rectangle().fill(ZSFarbe.haarlinie).frame(height: 1)
++                    kennzahlZeile
+                 } else {
+                     HStack(alignment: .center, spacing: 12) {
+                         ZSGlukoseWertBlock(d: d, gross: true)
+@@ -216,6 +241,21 @@ struct ZSGlukoseSperrAnsicht: View {
+             Spacer(minLength: 8)
+             if !d.loopFrisch {
+                 ZSLoopPunkt(d: d)
++                    .padding(.trailing, 8)
++            }
++            if d.podIEText != nil || d.podEndeText != nil {
++                VStack(alignment: .trailing, spacing: 0) {
++                    Text(d.podIEText ?? "Pod")
++                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
++                        .monospacedDigit()
++                        .foregroundStyle(ZSFarbe.text)
++                    Text(d.podIEText == nil ? (d.podEndeText ?? "") : "Pod \(d.podEndeText ?? "")")
++                        .font(.caption2)
++                        .foregroundStyle(ZSFarbe.text2)
++                }
++                .lineLimit(1)
++                .minimumScaleFactor(0.8)
++                .accessibilityElement(children: .combine)
+             }
+         }
+     }
+@@ -360,7 +400,13 @@ struct ZSGlukoseKurve: View {
+                     yStart: .value("Ziel unten", d.unteresZiel),
+                     yEnd: .value("Ziel oben", d.oberesZiel)
+                 )
+-                .foregroundStyle(ZSFarbe.text.opacity(0.07))
++                .foregroundStyle(ZSFarbe.ziel.opacity(0.12))
++                RuleMark(y: .value("Ziel unten", d.unteresZiel))
++                    .foregroundStyle(ZSFarbe.ziel.opacity(0.45))
++                    .lineStyle(StrokeStyle(lineWidth: 0.8, dash: [3, 3]))
++                RuleMark(y: .value("Ziel oben", d.oberesZiel))
++                    .foregroundStyle(ZSFarbe.ziel.opacity(0.45))
++                    .lineStyle(StrokeStyle(lineWidth: 0.8, dash: [3, 3]))
+ 
+                 ForEach(messwerte) { p in
+                     AreaMark(x: .value("Zeit", p.x), yStart: .value("Boden", bereich.lowerBound), yEnd: .value("Zucker", p.y))
+@@ -504,7 +550,8 @@ enum ZSGlukoseBeispiel {
+             isCloseLoop: true, lastCompleted: alt ? jetzt.addingTimeInterval(-21 * 60) : jetzt.addingTimeInterval(-60),
+             bottomRow: zeile, glucoseSamples: proben, predicatedGlucose: prognose,
+             predicatedStartDate: messzeit, predicatedInterval: 300, yAxisMarks: [40, 100, 160, 220])
+-        return ZSGlukoseDarstellung(stand: stand, mitKurve: false, mitPrognose: true, veraltet: alt, jetzt: jetzt)
++        return ZSGlukoseDarstellung(stand: stand, mitKurve: true, mitPrognose: true, veraltet: alt, jetzt: jetzt,
++                                    podIE: art == "hoch" ? nil : 38, podEnde: jetzt.addingTimeInterval(28.5 * 3600))
+     }
+ }
+ 
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+index 8f6183e..ae6a1d6 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+@@ -683,7 +683,13 @@ final class ZuckerschockTabController: UIViewController {
+             letzteMahlzeit: letzte.map { "\($0.name) · \(ZSFormat.zahl($0.kh, stellen: 0)) g" },
+             vorratText: "\(vorrat.stand.pods) Pods · bis \(format.string(from: podsBis))",
+             loopAktiv: heute?.loop == .aktiv,
+-            wertVerbergen: UserDefaults.standard.bool(forKey: "Zuckerschock.wertVerbergen"))
++            wertVerbergen: UserDefaults.standard.bool(forKey: "Zuckerschock.wertVerbergen"),
++            podRestIE: statusTableViewController?.deviceManager.doseStore.lastReservoirValue
++                .flatMap { jetzt.timeIntervalSince($0.startDate) <= .hours(1) ? $0.unitVolume : nil },
++            podEnde: vorratQuelle.podRest.map { jetzt.addingTimeInterval($0) }.map {
++                // Auf 5 Minuten runden, damit der Stand nicht bei jedem Aufruf neu geschrieben wird.
++                Date(timeIntervalSinceReferenceDate: ($0.timeIntervalSinceReferenceDate / 300).rounded() * 300)
++            })
+         guard stand != ZSWidgetStand.lesen().map({ alt in var a = alt; a.erstellt = jetzt; return a }) else { return }
+         stand.schreiben()
+         WidgetCenter.shared.reloadTimelines(ofKind: ZSWidgetStand.kindSperr)
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift b/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
+index c26130f..df4ed44 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
+@@ -197,6 +197,11 @@ final class ZSVorratWaechter {
+         set { UserDefaults.standard.set(newValue, forKey: speicherSchluessel) }
+     }
+ 
++    private var letzterSensorAnteil: Double? {
++        get { UserDefaults.standard.object(forKey: "Zuckerschock.letzterSensorAnteil") as? Double }
++        set { UserDefaults.standard.set(newValue, forKey: "Zuckerschock.letzterSensorAnteil") }
++    }
++
+     func pruefen(jetzt: Date = Date()) {
+         if let anteil = deviceManager.pumpManager?.pumpLifecycleProgress?.percentComplete {
+             if let vorher = letzterAnteil, ZSVorratWaechter.istWechsel(vorher: vorher, jetzt: anteil),
+@@ -206,6 +211,14 @@ final class ZSVorratWaechter {
+             }
+             letzterAnteil = anteil
+         }
++        // Sensoren genauso: springt die Laufzeit des Sensors von „verbraucht“ auf „neu“, zählt das Lager herunter.
++        if let anteil = (deviceManager.cgmManager as? CGMManagerUI)?.cgmLifecycleProgress?.percentComplete {
++            if let vorher = letzterSensorAnteil, ZSVorratWaechter.istWechsel(vorher: vorher, jetzt: anteil),
++               jetzt.timeIntervalSince(vorrat.stand.letzterSensorWechsel ?? .distantPast) > .days(3) {
++                vorrat.sensorGewechselt(am: jetzt)
++            }
++            letzterSensorAnteil = anteil
++        }
+         hinweisFallsNoetig(jetzt: jetzt)
+     }
+ 
+@@ -267,7 +280,7 @@ struct ZSVorratView: View {
+                         Text("\(vorrat.stand.pods) auf Lager\(quelle.podRest.map { " + aktueller Pod (noch \(Int(($0 / 3600).rounded())) Std.)" } ?? "") · etwa \(max(0, Int(podTage.rounded()))) Tage")
+                             .font(ZSSchrift.subhead)
+                             .foregroundStyle(ZSFarbe.text2)
+-                        Text("Zählt bei jedem Pod-Wechsel automatisch mit.")
++                        Text("Zählt bei jedem Pod- und Sensorwechsel automatisch mit.")
+                             .font(ZSSchrift.footnote)
+                             .foregroundStyle(ZSFarbe.text2)
+                     }
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockWidgetGemeinsam.swift b/Loop/Loop/Zuckerschock/ZuckerschockWidgetGemeinsam.swift
+index b69d648..2bf8d0c 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockWidgetGemeinsam.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockWidgetGemeinsam.swift
+@@ -30,6 +30,10 @@ struct ZSWidgetStand: Codable, Equatable {
+     var loopAktiv: Bool
+     /// Wert im gesperrten Zustand ausblenden (Einstellung in der App).
+     var wertVerbergen: Bool
++    /// Rest-Insulin im Pod (nur wenn der Pod ihn meldet; Omnipod erst unter 50 IE).
++    var podRestIE: Double? = nil
++    /// Ende der Pod-Laufzeit laut Pod-Fortschritt.
++    var podEnde: Date? = nil
+ 
+     static let schluessel = "Zuckerschock.WidgetStand"
+     static let kindSperr = "ZuckerschockSperrbildschirm"
