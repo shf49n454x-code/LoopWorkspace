@@ -298,7 +298,7 @@ index dc2ee80..7b0f24b 100644
  
      /// Die zwei Grenzen rechts, caption in text-3. Ist das Band zu schmal (kleines iPhone), steht nur 180 über dem Band.
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
-index 7b63145..b51e0fa 100644
+index 7b63145..8f6183e 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
 @@ -8,6 +8,8 @@
@@ -399,14 +399,36 @@ index 7b63145..b51e0fa 100644
  
          kinder[.heute] = gastgeber(ZSHeuteView(modell: heuteModell, vorrat: vorrat, keton: keton, hinweise: hinweise, aktionen: aktionen))
          kinder[.essen] = gastgeber(ZSEssenView(speicher: speicher, steuerung: essenSteuerung, quelle: essenQuelle, aktionen: aktionen))
-@@ -517,6 +575,19 @@ final class ZuckerschockTabController: UIViewController {
+@@ -517,6 +575,41 @@ final class ZuckerschockTabController: UIViewController {
  
      private var abos = Set<AnyCancellable>()
  
++    /// Ereignisse für die Tagesansicht: KH aus Apple Health (mit Namen aus Zuckerschock, wenn passend),
++    /// dazu Pod-Wechsel, Keton-Messungen und Starts des Unterzucker-Begleiters.
++    private func tagesEreignisse(kh: [ZSTagesEreignis]) -> [ZSTagesEreignis] {
++        var liste = kh
++        for mahlzeit in speicher.mahlzeiten {
++            let text = "\(mahlzeit.name) · \(ZSFormat.zahl(mahlzeit.kh, stellen: 0)) g KH"
++            if let i = liste.firstIndex(where: { $0.istEssen && abs($0.datum.timeIntervalSince(mahlzeit.datum)) < 5 * 60 }) {
++                liste[i].text = text
++            } else {
++                liste.append(ZSTagesEreignis(datum: mahlzeit.datum, symbol: "fork.knife", text: text, istEssen: true))
++            }
++        }
++        liste += stellen.eintraege.map { ZSTagesEreignis(datum: $0.datum, symbol: "circle.dotted", text: "Pod-Wechsel · \($0.stelle.name)") }
++        liste += keton.werte.map { ZSTagesEreignis(datum: $0.datum, symbol: "drop", text: "Keton \(ZSFormat.zahl($0.mmol, stellen: 1)) mmol/l") }
++        liste += hypoBegleiter.verlauf.map { ZSTagesEreignis(datum: $0.start, symbol: "heart.text.square", text: "Unterzucker-Begleiter gestartet") }
++        return liste
++    }
++
 +    /// Zeit im Ziel: Glukose aus Apple Health (92 Tage); in der Vorschau Beispielwerte.
 +    private func zielzeitLaden(_ fertig: @escaping (ZSZielzeitDaten?) -> Void) {
 +        if let deviceManager = statusTableViewController?.deviceManager {
-+            ZSZielzeitDaten.laden(healthStore: deviceManager.healthStore, fertig: fertig)
++            ZSZielzeitDaten.laden(healthStore: deviceManager.healthStore) { [weak self] daten in
++                guard let self, var daten else { fertig(daten); return }
++                daten.ereignisse = self.tagesEreignisse(kh: daten.ereignisse)
++                fertig(daten)
++            }
 +        } else {
 +            #if targetEnvironment(simulator)
 +            fertig(ZSZielzeitDaten.vorschau())
@@ -419,7 +441,7 @@ index 7b63145..b51e0fa 100644
      private func berichtLaden(tage: Int, fertig: @escaping (ZSBerichtDaten) -> Void) {
          if let deviceManager = statusTableViewController?.deviceManager {
              ZSBericht.laden(tage: tage, deviceManager: deviceManager, begleiter: hypoBegleiter, keton: keton, speicher: speicher, fertig: fertig)
-@@ -720,6 +791,8 @@ enum ZSVorschau {
+@@ -720,6 +813,8 @@ enum ZSVorschau {
              tabs.loadViewIfNeeded()
              tabs.vorschauTab(tab)
          }
@@ -428,10 +450,14 @@ index 7b63145..b51e0fa 100644
          if let blatt = umgebung["ZS_BLATT"] {
              DispatchQueue.main.asyncAfter(deadline: .now() + 1) { tabs.vorschauBlatt(blatt) }
          }
-@@ -750,6 +823,8 @@ extension ZuckerschockTabController {
+@@ -750,6 +845,12 @@ extension ZuckerschockTabController {
              blattZeigen { schliessen in AnyView(ZSAngehoerigeView(modell: self.heuteModell, begleiter: self.hypoBegleiter, schliessen: schliessen)) }
          case "stellen":
              blattZeigen { schliessen in AnyView(ZSStellenView(stellen: self.stellen, nachEintrag: {}, schliessen: schliessen)) }
++        case "zielzeit-tag":
++            let daten = ZSZielzeitDaten.vorschau()
++            let gestern = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
++            blattZeigen { _ in AnyView(ZSTagView(auswertung: ZSTagesAuswertung(daten: daten, tag: gestern), einheit: .milligramsPerDeciliter)) }
 +        case "zielzeit":
 +            blattZeigen { schliessen in AnyView(ZSZielzeitView(einheit: .milligramsPerDeciliter, laden: { $0(ZSZielzeitDaten.vorschau()) }, schliessen: schliessen)) }
          case "sperrbildschirm":
@@ -479,10 +505,10 @@ index 5829323..2deacc5 100644
  /// Insulin-Abgabe nie per Antippen: Der Knopf muss ganz nach rechts geschoben werden.
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockZielzeit.swift b/Loop/Loop/Zuckerschock/ZuckerschockZielzeit.swift
 new file mode 100644
-index 0000000..d4a350a
+index 0000000..ad813e4
 --- /dev/null
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockZielzeit.swift
-@@ -0,0 +1,493 @@
+@@ -0,0 +1,882 @@
 +//
 +//  ZuckerschockZielzeit.swift
 +//  Loop
@@ -499,10 +525,21 @@ index 0000000..d4a350a
 +
 +// MARK: - Auswertung
 +
++/// Etwas, das an einem Tag passiert ist (Essen, Pod-Wechsel, Keton, Unterzucker-Begleiter).
++struct ZSTagesEreignis: Identifiable {
++    var id = UUID()
++    var datum: Date
++    var symbol: String
++    var text: String
++    var istEssen = false
++}
++
 +struct ZSZielzeitDaten {
 +    /// Aufsteigend nach Datum, mg/dl.
 +    var werte: [ZSMesspunkt]
 +    var bis: Date
++    /// KH-Einträge aus Apple Health und Ereignisse aus der App, für die Tagesansicht.
++    var ereignisse: [ZSTagesEreignis] = []
 +
 +    static let ziel: ClosedRange<Double> = 70...180
 +    static let tief: Double = 70
@@ -575,17 +612,39 @@ index 0000000..d4a350a
 +    static func laden(healthStore: HKHealthStore, fertig: @escaping (ZSZielzeitDaten?) -> Void) {
 +        let bis = Date()
 +        let von = bis.addingTimeInterval(-92 * 86_400)
-+        let abfrage = HKSampleQuery(
++        let gruppe = DispatchGroup()
++        var werte: [ZSMesspunkt] = []
++        var khEintraege: [ZSTagesEreignis] = []
++
++        gruppe.enter()
++        healthStore.execute(HKSampleQuery(
 +            sampleType: HKQuantityType(.bloodGlucose),
 +            predicate: HKQuery.predicateForSamples(withStart: von, end: bis),
 +            limit: HKObjectQueryNoLimit,
 +            sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)]) { _, proben, _ in
-+            let werte = (proben as? [HKQuantitySample] ?? []).map {
++            werte = (proben as? [HKQuantitySample] ?? []).map {
 +                ZSMesspunkt(datum: $0.startDate, mgdl: $0.quantity.doubleValue(for: .milligramsPerDeciliter))
 +            }
-+            DispatchQueue.main.async { fertig(ZSZielzeitDaten(werte: werte, bis: bis)) }
++            gruppe.leave()
++        })
++
++        // KH, die Loop nach Apple Health schreibt; ohne Leserecht bleibt die Liste leer.
++        gruppe.enter()
++        healthStore.execute(HKSampleQuery(
++            sampleType: HKQuantityType(.dietaryCarbohydrates),
++            predicate: HKQuery.predicateForSamples(withStart: von, end: bis),
++            limit: HKObjectQueryNoLimit,
++            sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)]) { _, proben, _ in
++            khEintraege = (proben as? [HKQuantitySample] ?? []).map {
++                let gramm = $0.quantity.doubleValue(for: .gram())
++                return ZSTagesEreignis(datum: $0.startDate, symbol: "fork.knife", text: "\(ZSFormat.zahl(gramm, stellen: 0)) g KH", istEssen: true)
++            }
++            gruppe.leave()
++        })
++
++        gruppe.notify(queue: .main) {
++            fertig(ZSZielzeitDaten(werte: werte, bis: bis, ereignisse: khEintraege))
 +        }
-+        healthStore.execute(abfrage)
 +    }
 +}
 +
@@ -598,6 +657,7 @@ index 0000000..d4a350a
 +
 +    @State private var daten: ZSZielzeitDaten?
 +    @State private var laedt = true
++    @State private var tag: ZSTagAuswahl?
 +
 +    var body: some View {
 +        VStack(spacing: 0) {
@@ -608,7 +668,7 @@ index 0000000..d4a350a
 +                        ZSZielRinge(heute: daten.heute, tage7: daten.tage7, tage14: daten.tage14)
 +                            .zsKarte()
 +                            .zsAuftritt(0)
-+                        ZSZielKalender(wochen: daten.wochen)
++                        ZSZielKalender(wochen: daten.wochen) { tag = ZSTagAuswahl(datum: $0) }
 +                            .zsKarte()
 +                            .zsAuftritt(1)
 +                        ZSTiefMuster(raster: daten.muster, grenze: ZSFormat.glukose(ZSZielzeitDaten.tief, einheit) + " " + ZSFormat.einheit(einheit))
@@ -634,6 +694,12 @@ index 0000000..d4a350a
 +            }
 +        }
 +        .background(ZSFarbe.grund.ignoresSafeArea())
++        .sheet(item: $tag) { auswahl in
++            if let daten {
++                ZSTagView(auswertung: ZSTagesAuswertung(daten: daten, tag: auswahl.datum), einheit: einheit)
++                    .presentationDragIndicator(.visible)
++            }
++        }
 +        .onAppear {
 +            laden { neu in
 +                daten = (neu?.werte.isEmpty ?? true) ? nil : neu
@@ -711,6 +777,7 @@ index 0000000..d4a350a
 +/// Ein Kästchen je Tag, Wochen als Spalten, Montag oben. Je grüner, desto mehr Zeit im Ziel.
 +struct ZSZielKalender: View {
 +    var wochen: [[ZSZielzeitDaten.Tag]]
++    var gewaehlt: (Date) -> Void = { _ in }
 +
 +    private static let stufen: [Double] = [0.16, 0.32, 0.52, 0.76, 1.0]
 +
@@ -751,6 +818,7 @@ index 0000000..d4a350a
 +                                .font(.system(size: 9, weight: .medium))
 +                                .foregroundStyle(ZSFarbe.text3)
 +                                .frame(width: 19, height: kante, alignment: .leading)
++                                .accessibilityHidden(true)
 +                        }
 +                    }
 +                    ForEach(Array(wochen.enumerated()), id: \.offset) { index, woche in
@@ -759,6 +827,7 @@ index 0000000..d4a350a
 +                                .font(.system(size: 9, weight: .medium))
 +                                .foregroundStyle(ZSFarbe.text3)
 +                                .fixedSize()
++                                .accessibilityHidden(true)
 +                                .frame(width: kante, height: 14, alignment: .leading)
 +                            ForEach(woche) { tag in
 +                                kaestchen(tag, kante: kante)
@@ -768,7 +837,6 @@ index 0000000..d4a350a
 +                }
 +            }
 +            .frame(height: 14 + 7 * 22 + 6 * 3)
-+            .accessibilityHidden(true)
 +
 +            VStack(alignment: .leading, spacing: ZSMass.space2) {
 +                HStack(spacing: 4) {
@@ -782,6 +850,7 @@ index 0000000..d4a350a
 +                }
 +                Text("\(tageMitWert.filter { ($0.anteil ?? 0) >= 0.7 }.count) von \(tageMitWert.count) Tagen mit mindestens 70 % im Ziel")
 +                    .monospacedDigit()
++                Text("Tippe auf einen Tag, um zu sehen, was an dem Tag los war.")
 +            }
 +            .font(ZSSchrift.caption)
 +            .foregroundStyle(ZSFarbe.text3)
@@ -790,7 +859,22 @@ index 0000000..d4a350a
 +        }
 +    }
 +
++    @ViewBuilder
 +    private func kaestchen(_ tag: ZSZielzeitDaten.Tag, kante: CGFloat) -> some View {
++        if let anteil = tag.anteil {
++            Button { gewaehlt(tag.datum) } label: {
++                flaeche(tag, kante: kante)
++            }
++            .buttonStyle(ZSDruckFlaeche())
++            .accessibilityLabel("\(ZSTagesAuswertung.titel(tag.datum)), \(Int((anteil * 100).rounded())) Prozent im Ziel")
++            .accessibilityHint("Zeigt, was an diesem Tag auffiel")
++        } else {
++            flaeche(tag, kante: kante)
++                .accessibilityHidden(true)
++        }
++    }
++
++    private func flaeche(_ tag: ZSZielzeitDaten.Tag, kante: CGFloat) -> some View {
 +        let istHeute = Calendar.current.isDateInToday(tag.datum)
 +        return RoundedRectangle(cornerRadius: 4, style: .continuous)
 +            .fill(tag.zukunft ? Color.clear : (tag.anteil.map { ZSFarbe.ziel.opacity(Self.deckkraft($0)) } ?? ZSFarbe.flaeche2))
@@ -947,6 +1031,325 @@ index 0000000..d4a350a
 +    }
 +}
 +
++// MARK: - Tagesansicht
++
++struct ZSTagAuswahl: Identifiable {
++    var datum: Date
++    var id: Date { datum }
++}
++
++/// Drückt ein Kalenderkästchen sichtbar ein.
++struct ZSDruckFlaeche: ButtonStyle {
++    func makeBody(configuration: Configuration) -> some View {
++        configuration.label
++            .scaleEffect(configuration.isPressed ? 0.88 : 1)
++            .animation(.easeOut(duration: 0.08), value: configuration.isPressed)
++    }
++}
++
++/// Was an einem Tag auffiel: nur Beobachtungen aus Messwerten und Einträgen, nie ein „weil“, nie eine Empfehlung.
++struct ZSTagesAuswertung {
++    var tag: Date
++    var werte: [ZSMesspunkt]
++    var ereignisse: [ZSTagesEreignis]
++
++    init(daten: ZSZielzeitDaten, tag: Date) {
++        let start = Calendar.current.startOfDay(for: tag)
++        let ende = start.addingTimeInterval(86_400)
++        self.tag = start
++        werte = daten.werte.filter { $0.datum >= start && $0.datum < ende }
++        ereignisse = daten.ereignisse.filter { $0.datum >= start && $0.datum < ende }.sorted { $0.datum < $1.datum }
++    }
++
++    static func titel(_ datum: Date) -> String {
++        datum.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "de_DE")))
++    }
++
++    /// Anteile unter 70, im Ziel, über 180.
++    var anteile: (tief: Double, ziel: Double, hoch: Double) {
++        guard !werte.isEmpty else { return (0, 0, 0) }
++        let n = Double(werte.count)
++        return (Double(werte.filter { $0.mgdl < 70 }.count) / n,
++                Double(werte.filter { (70...180).contains($0.mgdl) }.count) / n,
++                Double(werte.filter { $0.mgdl > 180 }.count) / n)
++    }
++
++    struct Phase: Identifiable {
++        var start: Date
++        var ende: Date
++        var extrem: Double
++        var hoch: Bool
++        var id: Date { start }
++        var dauer: TimeInterval { ende.timeIntervalSince(start) }
++    }
++
++    /// Zusammenhängende Phasen über 180 (ab 30 Min) und unter 70 (ab 15 Min); Lücken bis 15 Min zählen mit.
++    var phasen: [Phase] {
++        func suche(hoch: Bool) -> [Phase] {
++            var ergebnis: [Phase] = []
++            var laufend: Phase?
++            for wert in werte {
++                let drin = hoch ? wert.mgdl > 180 : wert.mgdl < 70
++                if drin {
++                    if var p = laufend, wert.datum.timeIntervalSince(p.ende) <= 15 * 60 {
++                        p.ende = wert.datum
++                        p.extrem = hoch ? max(p.extrem, wert.mgdl) : min(p.extrem, wert.mgdl)
++                        laufend = p
++                    } else {
++                        if let p = laufend { ergebnis.append(p) }
++                        laufend = Phase(start: wert.datum, ende: wert.datum, extrem: wert.mgdl, hoch: hoch)
++                    }
++                } else if let p = laufend, wert.datum.timeIntervalSince(p.ende) > 15 * 60 {
++                    ergebnis.append(p)
++                    laufend = nil
++                }
++            }
++            if let p = laufend { ergebnis.append(p) }
++            return ergebnis.filter { $0.dauer >= (hoch ? 30 : 15) * 60 }
++        }
++        return (suche(hoch: true) + suche(hoch: false)).sorted { $0.start < $1.start }
++    }
++
++    /// Sensorlücken ab einer Stunde.
++    var luecken: [(von: Date, bis: Date)] {
++        zip(werte, werte.dropFirst()).compactMap { a, b in
++            b.datum.timeIntervalSince(a.datum) >= 3600 ? (von: a.datum, bis: b.datum) : nil
++        }
++    }
++
++    /// Das letzte Essen bis 3 Stunden vor (oder 15 Minuten nach) Beginn einer hohen Phase.
++    func essenVor(_ phase: Phase) -> ZSTagesEreignis? {
++        ereignisse.filter { $0.istEssen && $0.datum >= phase.start.addingTimeInterval(-3 * 3600) && $0.datum <= phase.start.addingTimeInterval(15 * 60) }.last
++    }
++}
++
++struct ZSTagView: View {
++    var auswertung: ZSTagesAuswertung
++    var einheit: HKUnit
++
++    @Environment(\.dismiss) private var dismiss
++
++    private func g(_ mgdl: Double) -> String { ZSFormat.glukose(mgdl, einheit) }
++
++    var body: some View {
++        VStack(spacing: 0) {
++            ZSBlattKopf(titel: ZSTagesAuswertung.titel(auswertung.tag), art: .fertig, abbrechen: { dismiss() })
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space4) {
++                    verteilung.zsKarte()
++                    VStack(alignment: .leading, spacing: ZSMass.space2) {
++                        Text("Der Tag")
++                            .font(ZSSchrift.subhead.weight(.semibold))
++                            .foregroundStyle(ZSFarbe.text)
++                        ZSTagesKurve(auswertung: auswertung)
++                            .frame(height: 170)
++                    }
++                    .zsKarte()
++                    auffaelligkeiten.zsKarte()
++                    if !sonstige.isEmpty {
++                        ereignisListe.zsKarte()
++                    }
++                    Text("Nur Beobachtungen aus deinen Werten und Einträgen. Was du daraus ableitest, besprichst du mit deinem Diabetes-Team.")
++                        .font(ZSSchrift.footnote)
++                        .foregroundStyle(ZSFarbe.text3)
++                        .fixedSize(horizontal: false, vertical: true)
++                }
++                .padding(ZSMass.space5)
++            }
++        }
++        .background(ZSFarbe.grund.ignoresSafeArea())
++    }
++
++    private var verteilung: some View {
++        let a = auswertung.anteile
++        return VStack(alignment: .leading, spacing: ZSMass.space3) {
++            HStack(alignment: .firstTextBaseline, spacing: ZSMass.space2) {
++                Text("\(Int((a.ziel * 100).rounded())) %")
++                    .font(.system(size: 40, weight: .semibold, design: .rounded))
++                    .monospacedDigit()
++                    .foregroundStyle(ZSFarbe.text)
++                Text("im Ziel")
++                    .font(ZSSchrift.subhead)
++                    .foregroundStyle(ZSFarbe.text2)
++            }
++            GeometryReader { geo in
++                HStack(spacing: 2) {
++                    ForEach([(a.tief, ZSFarbe.tief), (a.ziel, ZSFarbe.ziel), (a.hoch, ZSFarbe.hoch)].indices, id: \.self) { i in
++                        let teil = [(a.tief, ZSFarbe.tief), (a.ziel, ZSFarbe.ziel), (a.hoch, ZSFarbe.hoch)][i]
++                        if teil.0 > 0 {
++                            RoundedRectangle(cornerRadius: 3, style: .continuous)
++                                .fill(teil.1)
++                                .frame(width: max(4, (geo.size.width - 4) * CGFloat(teil.0)))
++                        }
++                    }
++                }
++            }
++            .frame(height: 10)
++            .accessibilityHidden(true)
++            HStack(spacing: ZSMass.space4) {
++                anteil("unter \(g(70))", a.tief, ZSFarbe.tief)
++                anteil("im Ziel", a.ziel, ZSFarbe.ziel)
++                anteil("über \(g(180))", a.hoch, ZSFarbe.hoch)
++            }
++        }
++    }
++
++    private func anteil(_ titel: String, _ wert: Double, _ farbe: Color) -> some View {
++        HStack(spacing: 5) {
++            Circle().fill(farbe).frame(width: 7, height: 7)
++            Text("\(Int((wert * 100).rounded())) %")
++                .font(ZSSchrift.caption.weight(.semibold))
++                .monospacedDigit()
++                .foregroundStyle(ZSFarbe.text)
++            Text(titel)
++                .font(ZSSchrift.caption)
++                .foregroundStyle(ZSFarbe.text3)
++        }
++        .accessibilityElement(children: .combine)
++    }
++
++    private static func uhr(_ d: Date) -> String { ZSFormat.uhrzeit(d) }
++
++    private static func dauer(_ t: TimeInterval) -> String {
++        let minuten = Int((t / 60).rounded())
++        return minuten >= 60 ? "\(minuten / 60) Std\(minuten % 60 > 0 ? " \(minuten % 60) Min" : "")" : "\(minuten) Min"
++    }
++
++    private var auffaelligkeiten: some View {
++        VStack(alignment: .leading, spacing: ZSMass.space3) {
++            Text("Was an diesem Tag auffiel")
++                .font(ZSSchrift.subhead.weight(.semibold))
++                .foregroundStyle(ZSFarbe.text)
++                .accessibilityAddTraits(.isHeader)
++            let phasen = auswertung.phasen
++            let luecken = auswertung.luecken
++            if phasen.isEmpty && luecken.isEmpty {
++                Text("Keine längeren Phasen außerhalb des Ziels.")
++                    .font(ZSSchrift.subhead)
++                    .foregroundStyle(ZSFarbe.text2)
++            }
++            ForEach(phasen) { phase in
++                zeile(symbol: phase.hoch ? "arrow.up.right" : "arrow.down.right",
++                      farbe: phase.hoch ? ZSFarbe.hoch : ZSFarbe.tief,
++                      titel: "\(Self.uhr(phase.start))–\(Self.uhr(phase.ende)) \(phase.hoch ? "über \(g(180))" : "unter \(g(70))")",
++                      text: "\(Self.dauer(phase.dauer)) · \(phase.hoch ? "höchster" : "tiefster") Wert \(g(phase.extrem))",
++                      zusatz: phase.hoch ? auswertung.essenVor(phase).map { "Davor \(Self.uhr($0.datum)): \($0.text)" } : nil)
++            }
++            ForEach(Array(luecken.enumerated()), id: \.offset) { _, luecke in
++                zeile(symbol: "antenna.radiowaves.left.and.right.slash", farbe: ZSFarbe.text3,
++                      titel: "\(Self.uhr(luecke.von))–\(Self.uhr(luecke.bis)) keine Sensorwerte",
++                      text: Self.dauer(luecke.bis.timeIntervalSince(luecke.von)), zusatz: nil)
++            }
++        }
++    }
++
++    /// Ereignisse außer Essen (Pod-Wechsel, Keton, Unterzucker-Begleiter); Essen steht in der Kurve.
++    private var sonstige: [ZSTagesEreignis] { auswertung.ereignisse.filter { !$0.istEssen } }
++
++    private var ereignisListe: some View {
++        VStack(alignment: .leading, spacing: ZSMass.space3) {
++            Text("Einträge")
++                .font(ZSSchrift.subhead.weight(.semibold))
++                .foregroundStyle(ZSFarbe.text)
++                .accessibilityAddTraits(.isHeader)
++            ForEach(sonstige) { e in
++                zeile(symbol: e.symbol, farbe: ZSFarbe.text2, titel: "\(Self.uhr(e.datum)) \(e.text)", text: nil, zusatz: nil)
++            }
++        }
++    }
++
++    private func zeile(symbol: String, farbe: Color, titel: String, text: String?, zusatz: String?) -> some View {
++        HStack(alignment: .top, spacing: ZSMass.space3) {
++            Image(systemName: symbol)
++                .font(.system(size: 14, weight: .semibold))
++                .foregroundStyle(farbe)
++                .frame(width: 22)
++            VStack(alignment: .leading, spacing: 2) {
++                Text(titel)
++                    .font(ZSSchrift.subhead.weight(.semibold))
++                    .foregroundStyle(ZSFarbe.text)
++                if let text {
++                    Text(text)
++                        .font(ZSSchrift.caption)
++                        .foregroundStyle(ZSFarbe.text2)
++                }
++                if let zusatz {
++                    Label(zusatz, systemImage: "fork.knife")
++                        .font(ZSSchrift.caption)
++                        .foregroundStyle(ZSFarbe.text2)
++                }
++            }
++            Spacer(minLength: 0)
++        }
++        .accessibilityElement(children: .combine)
++    }
++}
++
++/// Kurve von 0 bis 24 Uhr mit Zielzone; Essen als Marken oben, Werte unter 70 rot.
++struct ZSTagesKurve: View {
++    var auswertung: ZSTagesAuswertung
++
++    var body: some View {
++        VStack(spacing: 4) {
++            GeometryReader { geo in
++                let r = CGRect(origin: .zero, size: geo.size)
++                let unten = min(50, (auswertung.werte.map(\.mgdl).min() ?? 50) - 5)
++                let oben = max(250, (auswertung.werte.map(\.mgdl).max() ?? 250) + 10)
++                let x: (Date) -> CGFloat = { r.width * CGFloat($0.timeIntervalSince(auswertung.tag) / 86_400) }
++                let y: (Double) -> CGFloat = { r.height * CGFloat(1 - ($0 - unten) / (oben - unten)) }
++                ZStack(alignment: .topLeading) {
++                    Rectangle()
++                        .fill(ZSFarbe.ziel.opacity(0.10))
++                        .frame(width: r.width, height: y(70) - y(180))
++                        .offset(y: y(180))
++                    Path { p in
++                        for grenze in [70.0, 180.0] {
++                            p.move(to: CGPoint(x: 0, y: y(grenze)))
++                            p.addLine(to: CGPoint(x: r.width, y: y(grenze)))
++                        }
++                    }
++                    .stroke(ZSFarbe.ziel.opacity(0.45), style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
++                    Path { p in
++                        var vorher: ZSMesspunkt?
++                        for w in auswertung.werte {
++                            let punkt = CGPoint(x: x(w.datum), y: y(w.mgdl))
++                            if let v = vorher, w.datum.timeIntervalSince(v.datum) < 20 * 60 {
++                                p.addLine(to: punkt)
++                            } else {
++                                p.move(to: punkt)
++                            }
++                            vorher = w
++                        }
++                    }
++                    .stroke(ZSFarbe.orangeLinie, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
++                    ForEach(auswertung.werte.filter { $0.mgdl < 70 }) { w in
++                        Circle().fill(ZSFarbe.tief).frame(width: 4, height: 4).position(x: x(w.datum), y: y(w.mgdl))
++                    }
++                    ForEach(auswertung.ereignisse.filter(\.istEssen)) { e in
++                        Image(systemName: "fork.knife")
++                            .font(.system(size: 9, weight: .bold))
++                            .foregroundStyle(ZSFarbe.text2)
++                            .frame(width: 18, height: 18)
++                            .background(Circle().fill(ZSFarbe.flaeche3))
++                            .position(x: min(max(x(e.datum), 9), r.width - 9), y: 9)
++                    }
++                }
++            }
++            HStack {
++                ForEach([0, 6, 12, 18], id: \.self) { stunde in
++                    Text("\(stunde) Uhr")
++                    Spacer()
++                }
++                Text("24")
++            }
++            .font(.system(size: 10, weight: .medium))
++            .foregroundStyle(ZSFarbe.text3)
++        }
++        .accessibilityElement(children: .ignore)
++        .accessibilityLabel("Zuckerkurve des Tages")
++    }
++}
++
 +#if targetEnvironment(simulator)
 +extension ZSZielzeitDaten {
 +    /// 92 Tage Beispielwerte: Tageswelle, Mahlzeitenspitzen, gelegentlich nachts unter 70.
@@ -972,7 +1375,19 @@ index 0000000..d4a350a
 +            mgdl += (naechste() - 0.5) * 12
 +            werte.append(ZSMesspunkt(datum: datum, mgdl: max(45, mgdl)))
 +        }
-+        return ZSZielzeitDaten(werte: werte, bis: bis)
++        var ereignisse: [ZSTagesEreignis] = []
++        let k = Calendar.current
++        for tag in 0..<92 {
++            guard let start = k.date(byAdding: .day, value: -tag, to: k.startOfDay(for: bis)) else { continue }
++            for (stunde, name) in [(8.0, "Müsli · 45 g KH"), (13.0, "Pasta · 70 g KH"), (19.0, "Pizza · 85 g KH")] {
++                let datum = start.addingTimeInterval(stunde * 3600 - 30 * 60)
++                if datum < bis { ereignisse.append(ZSTagesEreignis(datum: datum, symbol: "fork.knife", text: name, istEssen: true)) }
++            }
++            if tag % 3 == 1 {
++                ereignisse.append(ZSTagesEreignis(datum: start.addingTimeInterval(18.3 * 3600), symbol: "circle.dotted", text: "Pod-Wechsel · Bauch links"))
++            }
++        }
++        return ZSZielzeitDaten(werte: werte, bis: bis, ereignisse: ereignisse)
 +    }
 +}
 +#endif
