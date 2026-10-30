@@ -351,27 +351,166 @@ index 5d9122c..772a23f 100644
              ))
          }
      }
-diff --git a/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift b/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift
-index afa9cb3..47a2330 100644
---- a/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift
-+++ b/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift
-@@ -432,6 +432,7 @@ struct ZSAufhellStil: ButtonStyle {
- /// Kopfzeile eines Blatts: „Abbrechen“ schließt sofort, auch während einer Analyse.
- struct ZSBlattKopf: View {
-     var titel: String
-+    var knopf: String = "Abbrechen"
-     var abbrechen: () -> Void
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockAngehoerige.swift b/Loop/Loop/Zuckerschock/ZuckerschockAngehoerige.swift
+index 7a6f61e..2eff560 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockAngehoerige.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockAngehoerige.swift
+@@ -209,7 +209,9 @@ struct ZSHomeAssistantView: View {
  
      var body: some View {
-@@ -441,7 +442,7 @@ struct ZSBlattKopf: View {
+         VStack(spacing: 0) {
+-            ZSBlattKopf(titel: "Home Assistant", abbrechen: schliessen)
++            ZSBlattKopf(titel: "Home Assistant", abbrechen: schliessen, speichern: {
++                if sichern() { schliessen() }
++            })
+             ScrollView {
+                 VStack(alignment: .leading, spacing: ZSMass.space4) {
+                     Text("Bei Unterzucker ruft die App einen Webhook in deinem Home Assistant auf, zum Beispiel um ein Licht rot blinken zu lassen. Ereignisse: unterzucker, wieder_im_ziel.")
+@@ -245,7 +247,7 @@ struct ZSHomeAssistantView: View {
+                         .font(ZSSchrift.body)
+                         .foregroundStyle(ZSFarbe.text)
+                     HStack(spacing: ZSMass.space3) {
+-                        Button("Sichern") { sichern() }
++                        Button("Speichern") { sichern() }
+                             .buttonStyle(ZSRandStil())
+                         Button("Testalarm senden") {
+                             guard sichern() else { return }
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockBericht.swift b/Loop/Loop/Zuckerschock/ZuckerschockBericht.swift
+index ea72a11..cf2643c 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockBericht.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockBericht.swift
+@@ -249,7 +249,7 @@ struct ZSBerichtView: View {
+ 
+     var body: some View {
+         VStack(spacing: 0) {
+-            ZSBlattKopf(titel: "Arztbericht", abbrechen: schliessen)
++            ZSBlattKopf(titel: "Arztbericht", art: .fertig, abbrechen: schliessen)
+             ScrollView {
+                 VStack(alignment: .leading, spacing: ZSMass.space4) {
+                     Picker("Zeitraum", selection: $tage) {
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift b/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift
+index afa9cb3..430529d 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift
+@@ -430,22 +430,48 @@ struct ZSAufhellStil: ButtonStyle {
+ }
+ 
+ /// Kopfzeile eines Blatts: „Abbrechen“ schließt sofort, auch während einer Analyse.
++/// Kopf eines Blatts. Drei Formen:
++/// - Ablauf (Essen eintragen): links „Abbrechen“.
++/// - Einstellung mit Entwurf: links „Abbrechen“, rechts „Speichern“.
++/// - Ansicht oder sofort gespeichert: rechts „Fertig“.
+ struct ZSBlattKopf: View {
++    enum Art { case abbrechen, fertig }
++
+     var titel: String
++    var art: Art = .abbrechen
+     var abbrechen: () -> Void
++    var speichern: (() -> Void)? = nil
++    var speichernAktiv = true
+ 
+     var body: some View {
+         ZStack {
+             Text(titel)
+                 .font(ZSSchrift.title3)
                  .foregroundStyle(ZSFarbe.text)
++                .lineLimit(1)
++                .minimumScaleFactor(0.8)
++                .padding(.horizontal, 96)
                  .accessibilityAddTraits(.isHeader)
              HStack {
 -                Button("Abbrechen", action: abbrechen)
-+                Button(knopf, action: abbrechen)
-                     .font(ZSSchrift.body)
-                     .foregroundStyle(ZSFarbe.orangeText)
-                     .frame(minHeight: ZSMass.tap)
+-                    .font(ZSSchrift.body)
+-                    .foregroundStyle(ZSFarbe.orangeText)
+-                    .frame(minHeight: ZSMass.tap)
++                if art == .abbrechen {
++                    Button("Abbrechen", action: abbrechen)
++                        .font(ZSSchrift.body)
++                        .foregroundStyle(ZSFarbe.orangeText)
++                        .frame(minHeight: ZSMass.tap)
++                }
+                 Spacer()
++                if let speichern {
++                    Button("Speichern", action: speichern)
++                        .font(ZSSchrift.headline)
++                        .foregroundStyle(speichernAktiv ? ZSFarbe.orangeText : ZSFarbe.text3)
++                        .frame(minHeight: ZSMass.tap)
++                        .disabled(!speichernAktiv)
++                } else if art == .fertig {
++                    Button("Fertig", action: abbrechen)
++                        .font(ZSSchrift.headline)
++                        .foregroundStyle(ZSFarbe.orangeText)
++                        .frame(minHeight: ZSMass.tap)
++                }
+             }
+         }
+         .padding(.horizontal, ZSMass.space5)
+@@ -588,10 +614,10 @@ private struct ZSSchaetzungBlatt: View {
+ 
+     var body: some View {
+         VStack(spacing: 0) {
+-            ZSBlattKopf(titel: "Schätzung") {
++            ZSBlattKopf(titel: "Schätzung", abbrechen: {
+                 aufgabe?.cancel()
+                 abbrechen()
+-            }
++            })
+             ScrollView {
+                 VStack(alignment: .leading, spacing: ZSMass.space4) {
+                     Image(uiImage: bild)
+@@ -1000,7 +1026,9 @@ private struct ZSRezeptBearbeitenBlatt: View {
+ 
+     var body: some View {
+         VStack(spacing: 0) {
+-            ZSBlattKopf(titel: rezept.name.isEmpty ? "Neues Rezept" : "Rezept bearbeiten", abbrechen: abbrechen)
++            ZSBlattKopf(titel: rezept.name.isEmpty ? "Neues Rezept" : "Rezept bearbeiten", abbrechen: abbrechen,
++                        speichern: { sichern(rezept) },
++                        speichernAktiv: !rezept.name.trimmingCharacters(in: .whitespaces).isEmpty)
+             ScrollView {
+                 VStack(alignment: .leading, spacing: ZSMass.space4) {
+                     ZSEingabeFeld(titel: "Name") {
+@@ -1047,7 +1075,7 @@ private struct ZSRezeptBearbeitenBlatt: View {
+                     Button {
+                         sichern(rezept)
+                     } label: {
+-                        Text("Rezept sichern").font(ZSSchrift.headline)
++                        Text("Rezept speichern").font(ZSSchrift.headline)
+                     }
+                     .buttonStyle(ZSDruckStil(art: .primaer))
+                     .disabled(rezept.name.trimmingCharacters(in: .whitespaces).isEmpty)
+@@ -1229,7 +1257,13 @@ private struct ZSEssenEinstellungenBlatt: View {
+ 
+     var body: some View {
+         VStack(spacing: 0) {
+-            ZSBlattKopf(titel: "Foto-KH und FPE", abbrechen: schliessen)
++            ZSBlattKopf(titel: "Foto-KH und FPE", abbrechen: schliessen, speichern: {
++                if !schluessel.trimmingCharacters(in: .whitespaces).isEmpty {
++                    ZSSchluessel.setzen(schluessel)
++                }
++                speicher.plan.khJeFPE = faktor.flatMap { $0 > 0 ? $0 : nil }
++                schliessen()
++            })
+             ScrollView {
+                 VStack(alignment: .leading, spacing: ZSMass.space6) {
+                     VStack(alignment: .leading, spacing: ZSMass.space3) {
+@@ -1253,7 +1287,7 @@ private struct ZSEssenEinstellungenBlatt: View {
+                                     .textInputAutocapitalization(.never)
+                                     .autocorrectionDisabled()
+                             }
+-                            Button("Schlüssel sichern") {
++                            Button("Schlüssel speichern") {
+                                 ZSSchluessel.setzen(schluessel)
+                                 schluessel = ""
+                                 hatSchluessel = ZSSchluessel.wert != nil
+@@ -1277,7 +1311,7 @@ private struct ZSEssenEinstellungenBlatt: View {
+                             TextField("leer lassen, wenn nicht festgelegt", value: $faktor, format: .number)
+                                 .keyboardType(.decimalPad)
+                         }
+-                        Button("Wert sichern") {
++                        Button("Wert speichern") {
+                             speicher.plan.khJeFPE = faktor.flatMap { $0 > 0 ? $0 : nil }
+                         }
+                         .font(ZSSchrift.headline)
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
 new file mode 100644
 index 0000000..b280ec9
@@ -957,8 +1096,59 @@ index 0000000..b280ec9
 +        .lineLimit(1)
 +    }
 +}
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHinweise.swift b/Loop/Loop/Zuckerschock/ZuckerschockHinweise.swift
+index 562cde0..7294cd1 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockHinweise.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHinweise.swift
+@@ -339,7 +339,7 @@ struct ZSModiView: View {
+ 
+     var body: some View {
+         VStack(spacing: 0) {
+-            ZSBlattKopf(titel: "Modi", abbrechen: schliessen)
++            ZSBlattKopf(titel: "Modi", art: .fertig, abbrechen: schliessen)
+             ScrollView {
+                 VStack(alignment: .leading, spacing: ZSMass.space4) {
+                     Text("Modi geben dir passende Hinweise. Sie ändern nichts an Loops Dosierung. Ziele und Voreinstellungen stellst du in Loop ein.")
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift b/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
+index adc6ba1..eb4f5d6 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHypo.swift
+@@ -554,7 +554,10 @@ struct ZSTherapieplanView: View {
+ 
+     var body: some View {
+         VStack(spacing: 0) {
+-            ZSBlattKopf(titel: "Therapieplan", abbrechen: schliessen)
++            ZSBlattKopf(titel: "Therapieplan", abbrechen: schliessen, speichern: {
++                speicher.plan = plan
++                schliessen()
++            })
+             ScrollView {
+                 VStack(alignment: .leading, spacing: ZSMass.space6) {
+                     Text("Trag hier die Werte ein, die dein Diabetes-Team mit dir festgelegt hat. Leere Felder zeigt die App ohne Zahl an.")
+@@ -594,7 +597,7 @@ struct ZSTherapieplanView: View {
+                         speicher.plan = plan
+                         schliessen()
+                     } label: {
+-                        Text("Plan sichern").font(ZSSchrift.headline)
++                        Text("Plan speichern").font(ZSSchrift.headline)
+                     }
+                     .buttonStyle(ZSDruckStil(art: .primaer))
+ 
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockKeton.swift b/Loop/Loop/Zuckerschock/ZuckerschockKeton.swift
+index 5a28d10..9e03c36 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockKeton.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockKeton.swift
+@@ -308,7 +308,7 @@ struct ZSKetonView: View {
+ 
+     var body: some View {
+         VStack(spacing: 0) {
+-            ZSBlattKopf(titel: "Keton-Check", abbrechen: schliessen)
++            ZSBlattKopf(titel: "Keton-Check", art: .fertig, abbrechen: schliessen)
+             ScrollView {
+                 VStack(alignment: .leading, spacing: ZSMass.space6) {
+                     if let anlass = keton.anlass {
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockStellen.swift b/Loop/Loop/Zuckerschock/ZuckerschockStellen.swift
-index 5116c61..06f7686 100644
+index 5116c61..4a95035 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockStellen.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockStellen.swift
 @@ -63,8 +63,18 @@ final class ZSStellen: ObservableObject {
@@ -999,7 +1189,7 @@ index 5116c61..06f7686 100644
      var body: some View {
          VStack(spacing: 0) {
 -            ZSBlattKopf(titel: "Stellen-Karte", abbrechen: schliessen)
-+            ZSBlattKopf(titel: "Stellen-Karte", knopf: "Fertig", abbrechen: schliessen)
++            ZSBlattKopf(titel: "Stellen-Karte", art: .fertig, abbrechen: schliessen)
              ScrollView {
                  VStack(alignment: .leading, spacing: ZSMass.space6) {
                      VStack(alignment: .leading, spacing: ZSMass.space1) {
@@ -1101,10 +1291,33 @@ index 5116c61..06f7686 100644
 +    }
  }
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
-index 4d5d9c8..5fc35a6 100644
+index 4d5d9c8..7b63145 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
-@@ -745,6 +745,10 @@ extension ZuckerschockTabController {
+@@ -8,6 +8,7 @@
+ //
+ 
+ import Combine
++import LoopKitUI
+ import SwiftUI
+ import UIKit
+ import WidgetKit
+@@ -453,8 +454,12 @@ final class ZuckerschockTabController: UIViewController {
+                 self.blattZeigen { schliessen in
+                     AnyView(NavigationStack {
+                         AlertManagementView(checker: status.alertPermissionsChecker, alertMuter: status.alertMuter)
+-                            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Fertig", action: schliessen) } }
+-                    })
++                            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig", action: schliessen) } }
++                    }
++                    // Wie Loops Einstellungen: Die Live-Aktivitäts-Seite braucht die Glukose-Einheit,
++                    // sonst stürzt sie beim Öffnen ab.
++                    .environmentObject(status.deviceManager.displayGlucosePreference)
++                    .environment(\.appName, Bundle.main.bundleDisplayName))
+                 }
+             })
+ 
+@@ -745,6 +750,10 @@ extension ZuckerschockTabController {
              blattZeigen { schliessen in AnyView(ZSAngehoerigeView(modell: self.heuteModell, begleiter: self.hypoBegleiter, schliessen: schliessen)) }
          case "stellen":
              blattZeigen { schliessen in AnyView(ZSStellenView(stellen: self.stellen, nachEintrag: {}, schliessen: schliessen)) }
@@ -1115,3 +1328,16 @@ index 4d5d9c8..5fc35a6 100644
          default:
              break
          }
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift b/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
+index 31e80cd..c26130f 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
+@@ -254,7 +254,7 @@ struct ZSVorratView: View {
+         let podTage = podsBis.timeIntervalSinceNow / 86_400
+ 
+         VStack(spacing: 0) {
+-            ZSBlattKopf(titel: "Vorrat", abbrechen: schliessen)
++            ZSBlattKopf(titel: "Vorrat", art: .fertig, abbrechen: schliessen)
+             ScrollView {
+                 VStack(alignment: .leading, spacing: ZSMass.space6) {
+                     VStack(alignment: .leading, spacing: ZSMass.space2) {
