@@ -92,9 +92,11 @@ for eintrag in "${GERAETE[@]}"; do
       aufnehmen "$udid" "$name-dark-large-$blatt" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_BLATT=$blatt
     done
     aufnehmen "$udid" "$name-dark-large-heute-hinweis" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_HINWEIS=sport
+    aufnehmen "$udid" "$name-dark-large-sperrbildschirm" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_BLATT=sperrbildschirm
     xcrun simctl ui "$udid" appearance light
     aufnehmen "$udid" "$name-light-large-essen" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_TAB=essen
     aufnehmen "$udid" "$name-light-large-vorrat" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_BLATT=vorrat
+    aufnehmen "$udid" "$name-light-large-sperrbildschirm" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_BLATT=sperrbildschirm
     xcrun simctl ui "$udid" appearance dark
     xcrun simctl terminate "$udid" "$BUNDLE" || true
     # Home-Bildschirm mit App-Icon
