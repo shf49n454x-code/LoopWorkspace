@@ -1,0 +1,1612 @@
+diff --git a/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift b/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift
+index 3dd4ce6..2dfaceb 100644
+--- a/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift	
++++ b/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift	
+@@ -97,7 +97,8 @@ struct GlucoseLiveActivityConfiguration: Widget {
+     private func zsDarstellung(_ context: ActivityViewContext<GlucoseActivityAttributes>) -> ZSGlukoseDarstellung {
+         ZSGlukoseDarstellung(
+             stand: context.state,
+-            mitKurve: context.attributes.mode == .large,
++            // Ohne Achsen hat die Kurve keinen Bezug: Sperrbildschirm und Insel zeigen nur die Zeile.
++            mitKurve: false,
+             mitPrognose: context.attributes.addPredictiveLine,
+             veraltet: context.isStale
+         )
+@@ -130,8 +131,10 @@ struct GlucoseLiveActivityConfiguration: Widget {
+                     .padding(.leading, 4)
+             }
+             DynamicIslandExpandedRegion(.trailing) {
+-                ZSLoopPunkt(d: d)
+-                    .padding(.trailing, 4)
++                if !d.loopFrisch {
++                    ZSLoopPunkt(d: d)
++                        .padding(.trailing, 4)
++                }
+             }
+             DynamicIslandExpandedRegion(.bottom) {
+                 if d.mitKurve {
+diff --git a/Loop/Loop.xcodeproj/project.pbxproj b/Loop/Loop.xcodeproj/project.pbxproj
+index 7a37333..84ea304 100644
+--- a/Loop/Loop.xcodeproj/project.pbxproj
++++ b/Loop/Loop.xcodeproj/project.pbxproj
+@@ -7,6 +7,7 @@
+ 	objects = {
+ 
+ /* Begin PBXBuildFile section */
++		5A5DB19FD0CF4095D3012D51 /* ZuckerschockZielzeit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CB19FD0CF4095D3012D51 /* ZuckerschockZielzeit.swift */; };
+ 		5A5EDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift */; };
+ 		5A5DDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift */; };
+ 		5A5DCEE2DDE1AF0F65F574D9 /* ZuckerschockBericht.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A5CCEE2DDE1AF0F65F574D9 /* ZuckerschockBericht.swift */; };
+@@ -782,6 +783,7 @@
+ /* End PBXCopyFilesBuildPhase section */
+ 
+ /* Begin PBXFileReference section */
++		5A5CB19FD0CF4095D3012D51 /* ZuckerschockZielzeit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockZielzeit.swift; sourceTree = "<group>"; };
+ 		5A5CDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockGlukoseAktivitaet.swift; sourceTree = "<group>"; };
+ 		5A5CCEE2DDE1AF0F65F574D9 /* ZuckerschockBericht.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockBericht.swift; sourceTree = "<group>"; };
+ 		5A5CE734B88CFFE8B0E834CC /* ZuckerschockStellen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZuckerschockStellen.swift; sourceTree = "<group>"; };
+@@ -1569,6 +1571,7 @@
+ 		5A5C00000000000000000001 /* Zuckerschock */ = {
+ 			isa = PBXGroup;
+ 			children = (
++				5A5CB19FD0CF4095D3012D51 /* ZuckerschockZielzeit.swift */,
+ 				5A5CDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift */,
+ 				5A5CCEE2DDE1AF0F65F574D9 /* ZuckerschockBericht.swift */,
+ 				5A5CE734B88CFFE8B0E834CC /* ZuckerschockStellen.swift */,
+@@ -3457,6 +3460,7 @@
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
++				5A5DB19FD0CF4095D3012D51 /* ZuckerschockZielzeit.swift in Sources */,
+ 				5A5DDA4FA916FC74E0A6D170 /* ZuckerschockGlukoseAktivitaet.swift in Sources */,
+ 				5A5DCEE2DDE1AF0F65F574D9 /* ZuckerschockBericht.swift in Sources */,
+ 				5A5DE734B88CFFE8B0E834CC /* ZuckerschockStellen.swift in Sources */,
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
+index 471471c..edb8498 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
+@@ -100,6 +100,13 @@ struct ZSGlukoseDarstellung {
+         (istTief || alt) ? ZSFarbe.text2 : ZSFarbe.orangeLinie
+     }
+ 
++    /// Loop lief in den letzten 6 Minuten: dann bleibt der Ring weg (ruhiger).
++    var loopFrisch: Bool {
++        guard stand.isCloseLoop, let zuletzt = stand.lastCompleted else { return false }
++        if case .fresh = LoopCompletionFreshness(age: abs(min(0, zuletzt.timeIntervalSinceNow))) { return true }
++        return false
++    }
++
+     var loopFarbe: Color {
+         var frische: LoopCompletionFreshness = .stale
+         if let zuletzt = stand.lastCompleted {
+@@ -124,8 +131,8 @@ struct ZSGlukoseDarstellung {
+             case .currentBg:
+                 return nil
+             case .basal:
+-                let rate = eintrag.rate.formatted(.number.precision(.fractionLength(0...2)).locale(Locale(identifier: "de_DE")))
+-                return Kennzahl(wert: "\(rate) IE/h", label: "Basal")
++                // Ruhiger Sperrbildschirm: Basal steht in der App, nicht hier.
++                return nil
+             case .generic:
+                 switch eintrag.unit {
+                 case "U": return Kennzahl(wert: eintrag.value, label: "IE aktiv")
+@@ -134,8 +141,8 @@ struct ZSGlukoseDarstellung {
+                 }
+                 switch eintrag.label {
+                 case BottomRowConfiguration.eventualBg.name(): return Kennzahl(wert: eintrag.value, label: "Prognose")
+-                case BottomRowConfiguration.deltaBg.name(): return Kennzahl(wert: eintrag.value, label: "Änderung")
+-                case BottomRowConfiguration.updatedAt.name(): return Kennzahl(wert: eintrag.value, label: "Stand")
++                // Änderung steht schon neben dem Wert, die Uhrzeit braucht es auf dem Sperrbildschirm nicht.
++                case BottomRowConfiguration.deltaBg.name(), BottomRowConfiguration.updatedAt.name(): return nil
+                 default: return Kennzahl(wert: eintrag.value + eintrag.unit, label: eintrag.label)
+                 }
+             }
+@@ -160,10 +167,10 @@ struct ZSGlukoseSperrAnsicht: View {
+                     HStack(alignment: .top, spacing: 12) {
+                         ZSGlukoseWertBlock(d: d, gross: true)
+                             .frame(width: 112, alignment: .leading)
+-                        ZSGlukoseKurve(d: d, achsen: true)
+-                            .frame(height: 86)
++                        ZSGlukoseKurve(d: d, achsen: false)
++                            .frame(height: 78)
+                     }
+-                    if !d.kennzahlen.isEmpty {
++                    if !d.kennzahlen.isEmpty || !d.loopFrisch {
+                         Rectangle().fill(ZSFarbe.haarlinie).frame(height: 1)
+                         kennzahlZeile
+                     }
+@@ -207,7 +214,9 @@ struct ZSGlukoseSperrAnsicht: View {
+                 .accessibilityElement(children: .combine)
+             }
+             Spacer(minLength: 8)
+-            ZSLoopPunkt(d: d)
++            if !d.loopFrisch {
++                ZSLoopPunkt(d: d)
++            }
+         }
+     }
+ }
+@@ -220,17 +229,6 @@ struct ZSGlukoseWertBlock: View {
+ 
+     var body: some View {
+         VStack(alignment: .leading, spacing: 1) {
+-            HStack(spacing: 4) {
+-                if !d.istTief {
+-                    Circle()
+-                        .fill(ZSFarbe.orange)
+-                        .frame(width: 6, height: 6)
+-                        .accessibilityHidden(true)
+-                }
+-                Text("Zucker")
+-                    .font(.caption2.weight(.medium))
+-                    .foregroundStyle(ZSFarbe.text2)
+-            }
+             HStack(alignment: .firstTextBaseline, spacing: 3) {
+                 Text(d.wertText)
+                     .font(.system(size: gross ? 40 : 30, weight: .semibold, design: .rounded))
+@@ -252,7 +250,7 @@ struct ZSGlukoseWertBlock: View {
+     }
+ }
+ 
+-/// „Im Ziel · 07:41“ oder, ab 10 Minuten, „vor 12 Min.“ (läuft von selbst weiter).
++/// „Im Ziel“ oder, ab 10 Minuten, „vor 12 Min.“ (läuft von selbst weiter).
+ @available(iOS 16.2, *)
+ struct ZSGlukoseZustandZeile: View {
+     var d: ZSGlukoseDarstellung
+@@ -262,7 +260,7 @@ struct ZSGlukoseZustandZeile: View {
+             if d.alt {
+                 Image(systemName: "clock")
+                     .font(.caption2.weight(.semibold))
+-                (Text("vor ") + Text(d.stand.date, style: .relative))
++                ZSAlterText(datum: d.stand.date)
+                     .font(.caption.weight(.semibold))
+                     .lineLimit(1)
+                     .minimumScaleFactor(0.7)
+@@ -271,26 +269,29 @@ struct ZSGlukoseZustandZeile: View {
+                     .fill(d.zustandFarbe)
+                     .frame(width: 7, height: 7)
+                     .accessibilityHidden(true)
+-                // Der Zustand geht vor; die Uhrzeit nur, wenn Platz ist.
+-                ViewThatFits(in: .horizontal) {
+-                    HStack(spacing: 4) {
+-                        Text(d.zustandWort)
+-                            .font(.caption.weight(.semibold))
+-                        Text("· \(ZSGlukoseDarstellung.uhrzeit(d.stand.date))")
+-                            .font(.caption)
+-                            .foregroundStyle(ZSFarbe.text3)
+-                    }
+-                    .fixedSize()
+-                    Text(d.zustandWort)
+-                        .font(.caption.weight(.semibold))
+-                        .lineLimit(1)
+-                }
++                // Ruhig: nur der Zustand. Die Uhrzeit erscheint erst, wenn der Wert alt ist (siehe oben).
++                Text(d.zustandWort)
++                    .font(.caption.weight(.semibold))
++                    .lineLimit(1)
+             }
+         }
+         .foregroundStyle(d.alt ? ZSFarbe.text2 : d.zustandFarbe)
+     }
+ }
+ 
++/// „vor 23 Min.“, läuft von selbst weiter. Ab iOS 18 ohne Sekunden.
++struct ZSAlterText: View {
++    var datum: Date
++
++    var body: some View {
++        if #available(iOS 18.0, *) {
++            Text(.currentDate, format: .reference(to: datum, allowedFields: [.hour, .minute]))
++        } else {
++            Text("vor ") + Text(datum, style: .relative)
++        }
++    }
++}
++
+ /// Kleiner Ring: Loop geschlossen (voll) oder offen (Lücke), Farbe nach letzter Ausführung.
+ @available(iOS 16.2, *)
+ struct ZSLoopPunkt: View {
+@@ -306,6 +307,7 @@ struct ZSLoopPunkt: View {
+             Text("Loop")
+                 .font(.caption2.weight(.medium))
+                 .foregroundStyle(ZSFarbe.text2)
++                .fixedSize()
+         }
+         .accessibilityElement(children: .ignore)
+         .accessibilityLabel(d.stand.isCloseLoop ? "Loop geschlossen" : "Loop offen")
+@@ -332,7 +334,7 @@ struct ZSGlukoseKurve: View {
+     private var prognose: [Punkt] {
+         guard d.mitPrognose, let start = d.stand.predicatedStartDate else { return [] }
+         let schritt = d.stand.predicatedInterval ?? 5 * 60
+-        let ende = start.addingTimeInterval(3 * 60 * 60)
++        let ende = start.addingTimeInterval(60 * 60)
+         return d.stand.predicatedGlucose.enumerated().compactMap { i, y in
+             let x = start.addingTimeInterval(schritt * Double(i))
+             return x <= ende ? Punkt(x: x, y: y) : nil
+@@ -502,7 +504,7 @@ enum ZSGlukoseBeispiel {
+             isCloseLoop: true, lastCompleted: alt ? jetzt.addingTimeInterval(-21 * 60) : jetzt.addingTimeInterval(-60),
+             bottomRow: zeile, glucoseSamples: proben, predicatedGlucose: prognose,
+             predicatedStartDate: messzeit, predicatedInterval: 300, yAxisMarks: [40, 100, 160, 220])
+-        return ZSGlukoseDarstellung(stand: stand, mitKurve: art != "zeile", mitPrognose: true, veraltet: alt, jetzt: jetzt)
++        return ZSGlukoseDarstellung(stand: stand, mitKurve: false, mitPrognose: true, veraltet: alt, jetzt: jetzt)
+     }
+ }
+ 
+@@ -518,7 +520,7 @@ struct ZSGlukoseAktivitaetVorschau: View {
+                     .font(.system(size: 72, weight: .semibold, design: .rounded))
+                     .foregroundStyle(ZSFarbe.text)
+                     .padding(.top, 8)
+-                ForEach(["normal", "alt", "tief", "zeile"], id: \.self) { art in
++                ForEach(["normal", "hoch", "alt", "tief"], id: \.self) { art in
+                     ZSGlukoseSperrAnsicht(d: ZSGlukoseBeispiel.darstellung(art))
+                         .background(ZSFarbe.flaeche1, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                 }
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteDaten.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteDaten.swift
+index db86ace..518c082 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteDaten.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteDaten.swift
+@@ -212,7 +212,8 @@ final class ZSLoopQuelle: ZSHeuteQuelle {
+ 
+     func laden(_ fertig: @escaping (ZSHeuteStand) -> Void) {
+         let gruppe = DispatchGroup()
+-        let start = Date().addingTimeInterval(-(TimeInterval.hours(3) + TimeInterval.minutes(10)))
++        // 24 Stunden für den Zeitraum-Regler der Kurve und „heute im Ziel“.
++        let start = Date().addingTimeInterval(-(TimeInterval.hours(24) + TimeInterval.minutes(10)))
+ 
+         var messwerte: [StoredGlucoseSample] = []
+         var vorhersage: [PredictedGlucoseValue] = []
+@@ -451,11 +452,24 @@ final class ZSVorschauQuelle: ZSHeuteQuelle {
+         case .hoch: verschiebung = 98
+         case .normal, .alt: verschiebung = 0
+         }
+-        let verlauf = form.enumerated().map { index, wert -> ZSMesspunkt in
++        let zuletzt = form.enumerated().map { index, wert -> ZSMesspunkt in
+             let datum = letzter.addingTimeInterval(-.minutes(Double(form.count - 1 - index) * 5))
+             let anteil = Double(index) / Double(form.count - 1)
+             return ZSMesspunkt(datum: datum, mgdl: wert + verschiebung * anteil * anteil)
+         }
++        // Davor 21 Stunden ruhiger Tagesverlauf mit Mittag, Abendessen und einer Delle in der Nacht.
++        let davorAnzahl = 21 * 12
++        let davor = (0..<davorAnzahl).map { i -> ZSMesspunkt in
++            let datum = zuletzt[0].datum.addingTimeInterval(-.minutes(Double(davorAnzahl - i) * 5))
++            let stunde = Double(Calendar.current.component(.hour, from: datum)) + Double(Calendar.current.component(.minute, from: datum)) / 60
++            var mgdl = 118.0
++            mgdl += 70 * exp(-pow((stunde - 13) / 1.2, 2))
++            mgdl += 85 * exp(-pow((stunde - 19.5) / 1.3, 2))
++            mgdl -= 48 * exp(-pow((stunde - 3.5) / 1.0, 2))
++            mgdl += 4 * sin(Double(i) / 3)
++            return ZSMesspunkt(datum: datum, mgdl: mgdl)
++        }
++        let verlauf = davor + zuletzt
+         let aktuell = verlauf.last!
+         let richtung: Double = szenario == .hoch ? 2.5 : (szenario == .tief ? -1.4 : -0.7)
+         let vorhersage = (0...6).map { schritt in
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
+index dc2ee80..96094a0 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
+@@ -33,6 +33,8 @@ struct ZSAktionen {
+     var angehoerige: () -> Void
+     var stellen: () -> Void
+     var alarme: () -> Void
++    /// Öffnet „Zeit im Ziel“ (Ringe, Kalender, Muster).
++    var zielzeit: () -> Void = {}
+ }
+ 
+ struct ZSHeuteView: View {
+@@ -80,17 +82,21 @@ struct ZSHeuteView: View {
+             }
+ 
+             ZSHeroKarte(stand: stand, jetzt: jetzt, gestapelt: dynamicTypeSize.isAccessibilitySize)
++                .zsAuftritt(0)
+ 
+-            ZSKurvenKarte(stand: stand, jetzt: jetzt)
++            ZSKurvenKarte(stand: stand, jetzt: jetzt, zielzeit: aktionen.zielzeit)
+                 .frame(minHeight: kurveFest ? 260 : 120, maxHeight: kurveFest ? 260 : .infinity)
++                .zsAuftritt(1)
+ 
+             Button(action: aktionen.vorrat) {
+                 ZSGeraeteKarte(pumpe: stand?.pumpe, sensor: stand?.sensor, podsAufLager: vorrat.stand.pods, gestapelt: dynamicTypeSize.isAccessibilitySize)
+             }
+             .buttonStyle(.plain)
+             .accessibilityHint("Öffnet den Vorrat")
++            .zsAuftritt(2)
+ 
+             aktionsLeiste(moeglich: stand?.aktionenMoeglich ?? false)
++                .zsAuftritt(3)
+         }
+         .padding(.horizontal, ZSMass.space5)
+         .padding(.top, ZSMass.space2)
+@@ -468,39 +474,114 @@ struct ZSWertring: View {
+ private struct ZSKurvenKarte: View {
+     var stand: ZSHeuteStand?
+     var jetzt: Date
++    var zielzeit: () -> Void
++
++    /// Gewählter Zeitraum der Kurve in Stunden; bleibt über App-Starts erhalten.
++    @AppStorage("zs.kurve.stunden") private var stunden = 3
++
++    /// Anteil im Ziel seit Mitternacht (erst ab einer Stunde Werte).
++    private var heuteImZiel: Double? {
++        let ab = Calendar.current.startOfDay(for: jetzt)
++        let werte = (stand?.verlauf ?? []).filter { $0.datum >= ab }
++        guard werte.count >= 12 else { return nil }
++        return Double(werte.filter { (70...180).contains($0.mgdl) }.count) / Double(werte.count)
++    }
+ 
+     var body: some View {
+         VStack(alignment: .leading, spacing: ZSMass.space2) {
+-            HStack(alignment: .firstTextBaseline) {
+-                Text("Letzte 3 Stunden")
+-                    .font(ZSSchrift.subhead.weight(.semibold))
+-                    .foregroundStyle(ZSFarbe.text)
+-                    .accessibilityAddTraits(.isHeader)
+-                Spacer(minLength: ZSMass.space2)
+-                Text("Finger auf die Kurve")
+-                    .font(ZSSchrift.caption)
+-                    .foregroundStyle(ZSFarbe.text3)
+-                    .accessibilityHidden(true)
++            // Immer eine Zeile, damit die Kurve auch auf dem SE genug Höhe hat.
++            ViewThatFits(in: .horizontal) {
++                HStack(spacing: ZSMass.space2) {
++                    ZSZeitraumRegler(stunden: $stunden)
++                    Spacer(minLength: ZSMass.space2)
++                    chip(kompakt: false)
++                }
++                HStack(spacing: ZSMass.space2) {
++                    ZSZeitraumRegler(stunden: $stunden)
++                    Spacer(minLength: ZSMass.space1)
++                    chip(kompakt: true)
++                }
++                ZSZeitraumRegler(stunden: $stunden)
+             }
+-            ZSKurve(stand: stand, jetzt: jetzt)
++            ZSKurve(stand: stand, jetzt: jetzt, stunden: Double([3, 6, 12, 24].contains(stunden) ? stunden : 3))
+         }
+         .zsKarte()
+     }
++
++    private func chip(kompakt: Bool) -> some View {
++        Button(action: zielzeit) {
++            ZSZielChip(anteil: heuteImZiel, kompakt: kompakt)
++        }
++        .buttonStyle(.plain)
++    }
++}
++
++/// Segmentregler 3 · 6 · 12 · 24 Std. Der helle Reiter gleitet zur gewählten Stelle.
++private struct ZSZeitraumRegler: View {
++    @Binding var stunden: Int
++    @Namespace private var reiter
++    @Environment(\.accessibilityReduceMotion) private var reduceMotion
++
++    private let auswahl = [3, 6, 12, 24]
++
++    var body: some View {
++        HStack(spacing: 0) {
++            ForEach(auswahl, id: \.self) { wert in
++                let aktiv = wert == stunden
++                Button {
++                    if reduceMotion {
++                        stunden = wert
++                    } else {
++                        withAnimation(.spring(response: 0.32, dampingFraction: 0.8)) { stunden = wert }
++                    }
++                } label: {
++                    Text(wert == 3 ? "3 Std" : "\(wert)")
++                        .font(ZSSchrift.caption.weight(aktiv ? .semibold : .medium))
++                        .monospacedDigit()
++                        .foregroundStyle(aktiv ? ZSFarbe.text : ZSFarbe.text2)
++                        .lineLimit(1)
++                        .fixedSize()
++                        .padding(.horizontal, 10)
++                        .frame(minHeight: 30)
++                        .background {
++                            if aktiv {
++                                Capsule(style: .continuous)
++                                    .fill(ZSFarbe.flaeche3)
++                                    .shadow(color: .black.opacity(0.18), radius: 3, y: 1)
++                                    .matchedGeometryEffect(id: "reiter", in: reiter)
++                            }
++                        }
++                        .contentShape(Capsule())
++                }
++                .buttonStyle(.plain)
++                .accessibilityLabel("\(wert) Stunden")
++                .accessibilityAddTraits(aktiv ? .isSelected : [])
++            }
++        }
++        .padding(3)
++        .background(Capsule(style: .continuous).fill(ZSFarbe.flaeche2))
++        .accessibilityElement(children: .contain)
++        .accessibilityLabel("Zeitraum der Kurve")
++    }
+ }
+ 
+ struct ZSKurve: View {
+     var stand: ZSHeuteStand?
+     var jetzt: Date
++    var stunden: Double = 3
+ 
+     @State private var finger: ZSMesspunkt? = nil
+ 
+-    private var punkte: [ZSMesspunkt] { stand?.verlauf ?? [] }
++    private var punkte: [ZSMesspunkt] {
++        let ab = jetzt.addingTimeInterval(-.hours(stunden))
++        return (stand?.verlauf ?? []).filter { $0.datum >= ab }
++    }
+     private var zukunft: [ZSMesspunkt] { stand?.vorhersage ?? [] }
+     private var einheit: HKUnit { stand?.einheit ?? .milligramsPerDeciliter }
+ 
+     private var zeitraum: ClosedRange<Date> {
+         let ende = max(jetzt, zukunft.last?.datum ?? jetzt)
+-        return jetzt.addingTimeInterval(-.hours(3))...ende
++        return jetzt.addingTimeInterval(-.hours(stunden))...ende
+     }
+ 
+     private var wertebereich: ClosedRange<Double> {
+@@ -518,6 +599,7 @@ struct ZSKurve: View {
+                     zielband(in: flaeche)
+                     if !punkte.isEmpty {
+                         fuellung(in: flaeche)
++                        zielgrenzen(in: flaeche)
+                         linie(punkte, in: flaeche)
+                             .stroke(ZSFarbe.orangeLinie, style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
+                         if let letzter = punkte.last, !zukunft.isEmpty {
+@@ -552,7 +634,7 @@ struct ZSKurve: View {
+             achse
+         }
+         .accessibilityElement(children: .ignore)
+-        .accessibilityLabel("Zuckerkurve der letzten 3 Stunden")
++        .accessibilityLabel("Zuckerkurve der letzten \(Int(stunden)) Stunden")
+         .accessibilityValue(barrierefreiWert)
+     }
+ 
+@@ -566,11 +648,11 @@ struct ZSKurve: View {
+ 
+     private var achse: some View {
+         let start = zeitraum.lowerBound
+-        let stunden = (1...2).map { start.addingTimeInterval(.hours(Double($0))) }
++        let marken = (1...2).map { start.addingTimeInterval(.hours(stunden * Double($0) / 3)) }
+         return HStack {
+             Text(ZSFormat.uhrzeit(start))
+             Spacer()
+-            ForEach(stunden, id: \.self) { datum in
++            ForEach(marken, id: \.self) { datum in
+                 Text(ZSFormat.uhrzeit(datum))
+                 Spacer()
+             }
+@@ -620,14 +702,28 @@ struct ZSKurve: View {
+         .fill(LinearGradient(colors: [ZSFarbe.orange.opacity(0.3), ZSFarbe.orange.opacity(0)], startPoint: .top, endPoint: .bottom))
+     }
+ 
+-    /// Zielband 70–180 als Fläche text bei 5 %, keine Linien.
++    /// Zielzone 70–180: leicht grüne Fläche, damit sie neben der orangen Kurve erkennbar ist.
+     private func zielband(in r: CGRect) -> some View {
+         let oben = y(180, in: r)
+         let unten = y(70, in: r)
+         return Rectangle()
+-            .fill(ZSFarbe.text.opacity(0.05))
++            .fill(ZSFarbe.ziel.opacity(0.10))
+             .frame(width: r.width, height: max(0, unten - oben))
+             .offset(y: oben)
++            .accessibilityHidden(true)
++    }
++
++    /// Feine gestrichelte Grenzen bei 70 und 180, über der Füllung, damit die Zone auch dort sichtbar bleibt.
++    private func zielgrenzen(in r: CGRect) -> some View {
++        Path { pfad in
++            for grenze in [70.0, 180.0] {
++                let hoehe = y(grenze, in: r)
++                pfad.move(to: CGPoint(x: r.minX, y: hoehe))
++                pfad.addLine(to: CGPoint(x: r.maxX, y: hoehe))
++            }
++        }
++        .stroke(ZSFarbe.ziel.opacity(0.45), style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
++        .accessibilityHidden(true)
+     }
+ 
+     /// Die zwei Grenzen rechts, caption in text-3. Ist das Band zu schmal (kleines iPhone), steht nur 180 über dem Band.
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+index 7b63145..8f6183e 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+@@ -8,6 +8,8 @@
+ //
+ 
+ import Combine
++import HealthKit
++import LoopKit
+ import LoopKitUI
+ import SwiftUI
+ import UIKit
+@@ -45,6 +47,56 @@ final class ZSTabAuswahl: ObservableObject {
+ 
+ // MARK: - Bubble-Menü
+ 
++/// Form des Tropfens während der Fahrt: gedehnt, gestaucht, Ring beim Ankommen.
++private struct ZSTropfenForm {
++    var breit: CGFloat = 1
++    var hoch: CGFloat = 1
++    var ring: CGFloat = 0
++}
++
++/// Oranger Tropfen. Bei jedem Tabwechsel: in die Länge ziehen (Fahrt), leicht überschwingen
++/// (Ankommen), dann ruhig. „Bewegung reduzieren“ zeigt nur den Kreis.
++private struct ZSWassertropfen: View {
++    var tab: ZSTab
++    var ruhig: Bool
++
++    var body: some View {
++        if ruhig {
++            Circle().fill(ZSFarbe.orange)
++        } else {
++            Circle()
++                .fill(ZSFarbe.orange)
++                .keyframeAnimator(initialValue: ZSTropfenForm(), trigger: tab) { inhalt, form in
++                    inhalt
++                        .scaleEffect(x: form.breit, y: form.hoch)
++                        .background {
++                            Circle()
++                                .stroke(ZSFarbe.orange, lineWidth: 1.5)
++                                .scaleEffect(1 + 0.45 * form.ring)
++                                .opacity(form.ring > 0 ? Double(0.45 * (1 - form.ring)) : 0)
++                        }
++                } keyframes: { _ in
++                    KeyframeTrack(\.breit) {
++                        CubicKeyframe(1.55, duration: 0.16)
++                        SpringKeyframe(0.9, duration: 0.2, spring: .snappy)
++                        SpringKeyframe(1.0, duration: 0.3, spring: .bouncy)
++                    }
++                    KeyframeTrack(\.hoch) {
++                        CubicKeyframe(0.8, duration: 0.16)
++                        SpringKeyframe(1.08, duration: 0.2, spring: .snappy)
++                        SpringKeyframe(1.0, duration: 0.3, spring: .bouncy)
++                    }
++                    KeyframeTrack(\.ring) {
++                        LinearKeyframe(0, duration: 0.3)
++                        LinearKeyframe(0.01, duration: 0.01)
++                        CubicKeyframe(1, duration: 0.45)
++                        LinearKeyframe(0, duration: 0.01)
++                    }
++                }
++        }
++    }
++}
++
+ /// Der aktive Tab sitzt als oranger Tropfen tief in einer schmalen Leiste.
+ struct ZSBubbleMenue: View {
+     @ObservedObject var auswahl: ZSTabAuswahl
+@@ -60,12 +112,12 @@ struct ZSBubbleMenue: View {
+             ZStack(alignment: .topLeading) {
+                 Color.clear
+ 
+-                // Tropfen hinter dem Icon, wandert nur per transform.
+-                Circle()
+-                    .fill(ZSFarbe.orange)
++                // Tropfen hinter dem Icon: gleitet federnd wie ein Wassertropfen, zieht sich dabei
++                // in die Länge, federt beim Ankommen nach und zieht einen leisen Ring. Nur transform.
++                ZSWassertropfen(tab: auswahl.tab, ruhig: reduceMotion)
+                     .frame(width: ZSMass.tropfen, height: ZSMass.tropfen)
+                     .offset(x: breite * (CGFloat(auswahl.tab.rawValue) + 0.5) - ZSMass.tropfen / 2, y: 3)
+-                    .animation(reduceMotion ? nil : ZSBewegung.iOS(ZSBewegung.dauerKurz), value: auswahl.tab)
++                    .animation(reduceMotion ? nil : .spring(response: 0.46, dampingFraction: 0.66), value: auswahl.tab)
+                     .accessibilityHidden(true)
+ 
+                 HStack(spacing: 0) {
+@@ -461,7 +513,13 @@ final class ZuckerschockTabController: UIViewController {
+                     .environmentObject(status.deviceManager.displayGlucosePreference)
+                     .environment(\.appName, Bundle.main.bundleDisplayName))
+                 }
+-            })
++            },
++            zielzeit: { [weak self] in self?.blattZeigen { schliessen in
++                guard let self else { return AnyView(EmptyView()) }
++                return AnyView(ZSZielzeitView(einheit: self.heuteModell.stand?.einheit ?? .milligramsPerDeciliter,
++                                              laden: { [weak self] fertig in self?.zielzeitLaden(fertig) },
++                                              schliessen: schliessen))
++            } })
+ 
+         kinder[.heute] = gastgeber(ZSHeuteView(modell: heuteModell, vorrat: vorrat, keton: keton, hinweise: hinweise, aktionen: aktionen))
+         kinder[.essen] = gastgeber(ZSEssenView(speicher: speicher, steuerung: essenSteuerung, quelle: essenQuelle, aktionen: aktionen))
+@@ -517,6 +575,41 @@ final class ZuckerschockTabController: UIViewController {
+ 
+     private var abos = Set<AnyCancellable>()
+ 
++    /// Ereignisse für die Tagesansicht: KH aus Apple Health (mit Namen aus Zuckerschock, wenn passend),
++    /// dazu Pod-Wechsel, Keton-Messungen und Starts des Unterzucker-Begleiters.
++    private func tagesEreignisse(kh: [ZSTagesEreignis]) -> [ZSTagesEreignis] {
++        var liste = kh
++        for mahlzeit in speicher.mahlzeiten {
++            let text = "\(mahlzeit.name) · \(ZSFormat.zahl(mahlzeit.kh, stellen: 0)) g KH"
++            if let i = liste.firstIndex(where: { $0.istEssen && abs($0.datum.timeIntervalSince(mahlzeit.datum)) < 5 * 60 }) {
++                liste[i].text = text
++            } else {
++                liste.append(ZSTagesEreignis(datum: mahlzeit.datum, symbol: "fork.knife", text: text, istEssen: true))
++            }
++        }
++        liste += stellen.eintraege.map { ZSTagesEreignis(datum: $0.datum, symbol: "circle.dotted", text: "Pod-Wechsel · \($0.stelle.name)") }
++        liste += keton.werte.map { ZSTagesEreignis(datum: $0.datum, symbol: "drop", text: "Keton \(ZSFormat.zahl($0.mmol, stellen: 1)) mmol/l") }
++        liste += hypoBegleiter.verlauf.map { ZSTagesEreignis(datum: $0.start, symbol: "heart.text.square", text: "Unterzucker-Begleiter gestartet") }
++        return liste
++    }
++
++    /// Zeit im Ziel: Glukose aus Apple Health (92 Tage); in der Vorschau Beispielwerte.
++    private func zielzeitLaden(_ fertig: @escaping (ZSZielzeitDaten?) -> Void) {
++        if let deviceManager = statusTableViewController?.deviceManager {
++            ZSZielzeitDaten.laden(healthStore: deviceManager.healthStore) { [weak self] daten in
++                guard let self, var daten else { fertig(daten); return }
++                daten.ereignisse = self.tagesEreignisse(kh: daten.ereignisse)
++                fertig(daten)
++            }
++        } else {
++            #if targetEnvironment(simulator)
++            fertig(ZSZielzeitDaten.vorschau())
++            #else
++            fertig(nil)
++            #endif
++        }
++    }
++
+     private func berichtLaden(tage: Int, fertig: @escaping (ZSBerichtDaten) -> Void) {
+         if let deviceManager = statusTableViewController?.deviceManager {
+             ZSBericht.laden(tage: tage, deviceManager: deviceManager, begleiter: hypoBegleiter, keton: keton, speicher: speicher, fertig: fertig)
+@@ -720,6 +813,8 @@ enum ZSVorschau {
+             tabs.loadViewIfNeeded()
+             tabs.vorschauTab(tab)
+         }
++        // Zeitraum der Heute-Kurve für Screenshots (sonst 3 Stunden).
++        UserDefaults.standard.set(Int(umgebung["ZS_KURVE"] ?? "3") ?? 3, forKey: "zs.kurve.stunden")
+         if let blatt = umgebung["ZS_BLATT"] {
+             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { tabs.vorschauBlatt(blatt) }
+         }
+@@ -750,6 +845,12 @@ extension ZuckerschockTabController {
+             blattZeigen { schliessen in AnyView(ZSAngehoerigeView(modell: self.heuteModell, begleiter: self.hypoBegleiter, schliessen: schliessen)) }
+         case "stellen":
+             blattZeigen { schliessen in AnyView(ZSStellenView(stellen: self.stellen, nachEintrag: {}, schliessen: schliessen)) }
++        case "zielzeit-tag":
++            let daten = ZSZielzeitDaten.vorschau()
++            let gestern = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
++            blattZeigen { _ in AnyView(ZSTagView(auswertung: ZSTagesAuswertung(daten: daten, tag: gestern), einheit: .milligramsPerDeciliter)) }
++        case "zielzeit":
++            blattZeigen { schliessen in AnyView(ZSZielzeitView(einheit: .milligramsPerDeciliter, laden: { $0(ZSZielzeitDaten.vorschau()) }, schliessen: schliessen)) }
+         case "sperrbildschirm":
+             if #available(iOS 16.2, *) {
+                 blattZeigen { schliessen in AnyView(ZSGlukoseAktivitaetVorschau(schliessen: schliessen)) }
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTheme.swift b/Loop/Loop/Zuckerschock/ZuckerschockTheme.swift
+index 5829323..2deacc5 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockTheme.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockTheme.swift
+@@ -319,6 +319,35 @@ struct ZSBildmarke: View {
+     }
+ }
+ 
++// MARK: - Auftritt
++
++/// Karten erscheinen beim ersten Anzeigen weich: von 18 pt tiefer und 98,5 %, nacheinander um 70 ms versetzt.
++/// Der Endzustand hängt nie an der Animation: „Bewegung reduzieren“ zeigt sofort alles, und spätestens
++/// nach 2,5 Sekunden steht jede Karte fertig da.
++struct ZSAuftritt: ViewModifier {
++    var index: Int
++
++    @Environment(\.accessibilityReduceMotion) private var reduceMotion
++    @State private var da = false
++
++    func body(content: Content) -> some View {
++        let sichtbar = da || reduceMotion
++        content
++            .opacity(sichtbar ? 1 : 0)
++            .offset(y: sichtbar ? 0 : 18)
++            .scaleEffect(sichtbar ? 1 : 0.985)
++            .onAppear {
++                guard !da else { return }
++                withAnimation(.spring(response: 0.6, dampingFraction: 0.82).delay(Double(index) * 0.07)) { da = true }
++                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { if !da { da = true } }
++            }
++    }
++}
++
++extension View {
++    func zsAuftritt(_ index: Int) -> some View { modifier(ZSAuftritt(index: index)) }
++}
++
+ // MARK: - Schieben zum Bestätigen
+ 
+ /// Insulin-Abgabe nie per Antippen: Der Knopf muss ganz nach rechts geschoben werden.
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockZielzeit.swift b/Loop/Loop/Zuckerschock/ZuckerschockZielzeit.swift
+new file mode 100644
+index 0000000..5080e0f
+--- /dev/null
++++ b/Loop/Loop/Zuckerschock/ZuckerschockZielzeit.swift
+@@ -0,0 +1,891 @@
++//
++//  ZuckerschockZielzeit.swift
++//  Loop
++//
++//  Zuckerschock: „Zeit im Ziel“. Ringe (heute, 7 und 14 Tage), Kalender Tag für Tag (13 Wochen)
++//  und das Muster der Werte unter 70 nach Wochentag und Uhrzeit (30 Tage).
++//  Nur Anzeige von Messwerten aus Apple Health, keine Empfehlung, keine Berechnung von Insulin.
++//
++
++import Foundation
++import HealthKit
++import LoopKit
++import SwiftUI
++
++// MARK: - Auswertung
++
++/// Etwas, das an einem Tag passiert ist (Essen, Pod-Wechsel, Keton, Unterzucker-Begleiter).
++struct ZSTagesEreignis: Identifiable {
++    var id = UUID()
++    var datum: Date
++    var symbol: String
++    var text: String
++    var istEssen = false
++}
++
++struct ZSZielzeitDaten {
++    /// Aufsteigend nach Datum, mg/dl.
++    var werte: [ZSMesspunkt]
++    var bis: Date
++    /// KH-Einträge aus Apple Health und Ereignisse aus der App, für die Tagesansicht.
++    var ereignisse: [ZSTagesEreignis] = []
++
++    static let ziel: ClosedRange<Double> = 70...180
++    static let tief: Double = 70
++
++    private static var kalender: Calendar {
++        var k = Calendar(identifier: .gregorian)
++        k.locale = Locale(identifier: "de_DE")
++        k.firstWeekday = 2
++        return k
++    }
++
++    /// Anteil im Ziel ab `von`; erst ab einer Stunde Werte (12 × 5 Minuten).
++    func anteil(von: Date) -> Double? {
++        let auswahl = werte.filter { $0.datum >= von && $0.datum <= bis }
++        guard auswahl.count >= 12 else { return nil }
++        return Double(auswahl.filter { Self.ziel.contains($0.mgdl) }.count) / Double(auswahl.count)
++    }
++
++    var heute: Double? { anteil(von: Self.kalender.startOfDay(for: bis)) }
++    var tage7: Double? { anteil(von: bis.addingTimeInterval(-7 * 86_400)) }
++    var tage14: Double? { anteil(von: bis.addingTimeInterval(-14 * 86_400)) }
++
++    /// 13 Wochen, Montag zuerst; je Tag der Anteil im Ziel (nil ohne genug Werte, Zukunft = nil).
++    struct Tag: Identifiable {
++        var datum: Date
++        var anteil: Double?
++        var zukunft: Bool
++        var id: Date { datum }
++    }
++
++    var wochen: [[Tag]] {
++        let k = Self.kalender
++        let heuteStart = k.startOfDay(for: bis)
++        let wochenStart = k.dateInterval(of: .weekOfYear, for: heuteStart)?.start ?? heuteStart
++        let erster = k.date(byAdding: .day, value: -7 * 12, to: wochenStart) ?? wochenStart
++
++        var jeTag: [Date: (imZiel: Int, alle: Int)] = [:]
++        for wert in werte where wert.datum >= erster {
++            let tag = k.startOfDay(for: wert.datum)
++            var eintrag = jeTag[tag] ?? (0, 0)
++            eintrag.alle += 1
++            if Self.ziel.contains(wert.mgdl) { eintrag.imZiel += 1 }
++            jeTag[tag] = eintrag
++        }
++
++        return (0..<13).map { woche in
++            (0..<7).map { tagNr in
++                let datum = k.date(byAdding: .day, value: woche * 7 + tagNr, to: erster) ?? erster
++                let eintrag = jeTag[datum]
++                let anteil = eintrag.flatMap { $0.alle >= 12 ? Double($0.imZiel) / Double($0.alle) : nil }
++                return Tag(datum: datum, anteil: anteil, zukunft: datum > heuteStart)
++            }
++        }
++    }
++
++    /// [Wochentag Mo…So][Stunde 0…23]: Anzahl der 5-Minuten-Werte unter 70 in den letzten 30 Tagen.
++    var muster: [[Int]] {
++        let k = Self.kalender
++        let ab = bis.addingTimeInterval(-30 * 86_400)
++        var raster = Array(repeating: Array(repeating: 0, count: 24), count: 7)
++        for wert in werte where wert.datum >= ab && wert.mgdl < Self.tief {
++            let teile = k.dateComponents([.weekday, .hour], from: wert.datum)
++            guard let wochentag = teile.weekday, let stunde = teile.hour else { continue }
++            let zeile = (wochentag + 5) % 7 // So=1 → 6, Mo=2 → 0
++            raster[zeile][stunde] += 1
++        }
++        return raster
++    }
++
++    static func laden(healthStore: HKHealthStore, fertig: @escaping (ZSZielzeitDaten?) -> Void) {
++        let bis = Date()
++        let von = bis.addingTimeInterval(-92 * 86_400)
++        let gruppe = DispatchGroup()
++        var werte: [ZSMesspunkt] = []
++        var khEintraege: [ZSTagesEreignis] = []
++
++        gruppe.enter()
++        healthStore.execute(HKSampleQuery(
++            sampleType: HKQuantityType(.bloodGlucose),
++            predicate: HKQuery.predicateForSamples(withStart: von, end: bis),
++            limit: HKObjectQueryNoLimit,
++            sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)]) { _, proben, _ in
++            werte = (proben as? [HKQuantitySample] ?? []).map {
++                ZSMesspunkt(datum: $0.startDate, mgdl: $0.quantity.doubleValue(for: .milligramsPerDeciliter))
++            }
++            gruppe.leave()
++        })
++
++        // KH, die Loop nach Apple Health schreibt; ohne Leserecht bleibt die Liste leer.
++        gruppe.enter()
++        healthStore.execute(HKSampleQuery(
++            sampleType: HKQuantityType(.dietaryCarbohydrates),
++            predicate: HKQuery.predicateForSamples(withStart: von, end: bis),
++            limit: HKObjectQueryNoLimit,
++            sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)]) { _, proben, _ in
++            khEintraege = (proben as? [HKQuantitySample] ?? []).map {
++                let gramm = $0.quantity.doubleValue(for: .gram())
++                return ZSTagesEreignis(datum: $0.startDate, symbol: "fork.knife", text: "\(ZSFormat.zahl(gramm, stellen: 0)) g KH", istEssen: true)
++            }
++            gruppe.leave()
++        })
++
++        gruppe.notify(queue: .main) {
++            fertig(ZSZielzeitDaten(werte: werte, bis: bis, ereignisse: khEintraege))
++        }
++    }
++}
++
++// MARK: - Blatt
++
++struct ZSZielzeitView: View {
++    var einheit: HKUnit
++    var laden: (@escaping (ZSZielzeitDaten?) -> Void) -> Void
++    var schliessen: () -> Void
++
++    @State private var daten: ZSZielzeitDaten?
++    @State private var laedt = true
++    @State private var tag: ZSTagAuswahl?
++
++    var body: some View {
++        VStack(spacing: 0) {
++            ZSBlattKopf(titel: "Zeit im Ziel", art: .fertig, abbrechen: schliessen)
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space4) {
++                    if let daten {
++                        ZSZielRinge(heute: daten.heute, tage7: daten.tage7, tage14: daten.tage14)
++                            .zsKarte()
++                            .zsAuftritt(0)
++                        ZSZielKalender(wochen: daten.wochen) { tag = ZSTagAuswahl(datum: $0) }
++                            .zsKarte()
++                            .zsAuftritt(1)
++                        ZSTiefMuster(raster: daten.muster, grenze: ZSFormat.glukose(ZSZielzeitDaten.tief, einheit) + " " + ZSFormat.einheit(einheit))
++                            .zsKarte()
++                            .zsAuftritt(2)
++                    } else if laedt {
++                        ProgressView()
++                            .tint(ZSFarbe.text2)
++                            .frame(maxWidth: .infinity, minHeight: 200)
++                    } else {
++                        Text("Keine Werte aus Apple Health. Prüfe in den Einstellungen von Health, ob die App Blutzucker lesen darf.")
++                            .font(ZSSchrift.subhead)
++                            .foregroundStyle(ZSFarbe.text2)
++                            .zsKarte()
++                    }
++
++                    Text("Zielbereich \(ZSFormat.glukose(70, einheit))–\(ZSFormat.glukose(180, einheit)) \(ZSFormat.einheit(einheit)). Werte aus Apple Health. Nur Anzeige: Änderungen an der Therapie besprichst du mit deinem Diabetes-Team.")
++                        .font(ZSSchrift.footnote)
++                        .foregroundStyle(ZSFarbe.text3)
++                        .fixedSize(horizontal: false, vertical: true)
++                }
++                .padding(ZSMass.space5)
++            }
++        }
++        .background(ZSFarbe.grund.ignoresSafeArea())
++        .sheet(item: $tag) { auswahl in
++            if let daten {
++                ZSTagView(auswertung: ZSTagesAuswertung(daten: daten, tag: auswahl.datum), einheit: einheit)
++                    .presentationDragIndicator(.visible)
++            }
++        }
++        .onAppear {
++            laden { neu in
++                daten = (neu?.werte.isEmpty ?? true) ? nil : neu
++                laedt = false
++            }
++        }
++    }
++}
++
++// MARK: - Ringe
++
++/// Drei Ringe wie bei der Apple Watch: außen heute, Mitte 7 Tage, innen 14 Tage.
++struct ZSZielRinge: View {
++    var heute: Double?
++    var tage7: Double?
++    var tage14: Double?
++
++    @Environment(\.accessibilityReduceMotion) private var reduceMotion
++    @State private var gezeichnet = false
++
++    private var eintraege: [(titel: String, wert: Double?, deckkraft: Double)] {
++        [("heute", heute, 1), ("7 Tage", tage7, 0.72), ("14 Tage", tage14, 0.48)]
++    }
++
++    var body: some View {
++        VStack(alignment: .leading, spacing: ZSMass.space4) {
++            Text("Im Zielbereich")
++                .font(ZSSchrift.subhead.weight(.semibold))
++                .foregroundStyle(ZSFarbe.text)
++                .accessibilityAddTraits(.isHeader)
++            HStack(spacing: ZSMass.space5) {
++                ZStack {
++                    ForEach(Array(eintraege.enumerated()), id: \.offset) { index, eintrag in
++                        let groesse = 148 - CGFloat(index) * 38
++                        Circle()
++                            .stroke(ZSFarbe.flaeche2, lineWidth: 14)
++                            .frame(width: groesse, height: groesse)
++                        Circle()
++                            .trim(from: 0, to: (gezeichnet || reduceMotion) ? CGFloat(eintrag.wert ?? 0) : 0)
++                            .stroke(ZSFarbe.ziel.opacity(eintrag.deckkraft), style: StrokeStyle(lineWidth: 14, lineCap: .round))
++                            .rotationEffect(.degrees(-90))
++                            .frame(width: groesse, height: groesse)
++                            .animation(reduceMotion ? nil : .spring(response: 1.0, dampingFraction: 0.85).delay(Double(index) * 0.12), value: gezeichnet)
++                    }
++                }
++                .frame(width: 148, height: 148)
++                .accessibilityHidden(true)
++
++                VStack(alignment: .leading, spacing: ZSMass.space3) {
++                    ForEach(Array(eintraege.enumerated()), id: \.offset) { _, eintrag in
++                        HStack(alignment: .firstTextBaseline, spacing: ZSMass.space2) {
++                            Circle()
++                                .fill(ZSFarbe.ziel.opacity(eintrag.deckkraft))
++                                .frame(width: 9, height: 9)
++                            Text(eintrag.wert.map { "\(Int(($0 * 100).rounded())) %" } ?? "–")
++                                .font(.system(.title3, design: .rounded).weight(.semibold))
++                                .monospacedDigit()
++                                .foregroundStyle(ZSFarbe.text)
++                            Text(eintrag.titel)
++                                .font(ZSSchrift.subhead)
++                                .foregroundStyle(ZSFarbe.text2)
++                        }
++                        .accessibilityElement(children: .combine)
++                    }
++                }
++                Spacer(minLength: 0)
++            }
++        }
++        .onAppear { gezeichnet = true }
++    }
++}
++
++// MARK: - Kalender
++
++/// Ein Kästchen je Tag, Wochen als Spalten, Montag oben. Je grüner, desto mehr Zeit im Ziel.
++struct ZSZielKalender: View {
++    var wochen: [[ZSZielzeitDaten.Tag]]
++    var gewaehlt: (Date) -> Void = { _ in }
++
++    private static let stufen: [Double] = [0.16, 0.32, 0.52, 0.76, 1.0]
++
++    static func deckkraft(_ anteil: Double) -> Double {
++        switch anteil {
++        case ..<0.4: return stufen[0]
++        case ..<0.55: return stufen[1]
++        case ..<0.7: return stufen[2]
++        case ..<0.85: return stufen[3]
++        default: return stufen[4]
++        }
++    }
++
++    private var tageMitWert: [ZSZielzeitDaten.Tag] { wochen.flatMap { $0 }.filter { $0.anteil != nil } }
++
++    var body: some View {
++        VStack(alignment: .leading, spacing: ZSMass.space3) {
++            HStack(alignment: .firstTextBaseline) {
++                Text("Tag für Tag")
++                    .font(ZSSchrift.subhead.weight(.semibold))
++                    .foregroundStyle(ZSFarbe.text)
++                    .accessibilityAddTraits(.isHeader)
++                Spacer()
++                Text("13 Wochen")
++                    .font(ZSSchrift.caption)
++                    .foregroundStyle(ZSFarbe.text3)
++            }
++
++            GeometryReader { geo in
++                let abstand: CGFloat = 3
++                let spalteBreite = (geo.size.width - 22 - abstand * 12) / 13
++                let kante = min(22, max(8, spalteBreite))
++                HStack(alignment: .top, spacing: abstand) {
++                    VStack(alignment: .leading, spacing: abstand) {
++                        Color.clear.frame(height: 14)
++                        ForEach(Array(["Mo", "", "Mi", "", "Fr", "", "So"].enumerated()), id: \.offset) { _, name in
++                            Text(name)
++                                .font(.system(size: 9, weight: .medium))
++                                .foregroundStyle(ZSFarbe.text3)
++                                .frame(width: 19, height: kante, alignment: .leading)
++                                .accessibilityHidden(true)
++                        }
++                    }
++                    ForEach(Array(wochen.enumerated()), id: \.offset) { index, woche in
++                        VStack(spacing: abstand) {
++                            Text(monatsMarke(woche: woche, index: index))
++                                .font(.system(size: 9, weight: .medium))
++                                .foregroundStyle(ZSFarbe.text3)
++                                .fixedSize()
++                                .accessibilityHidden(true)
++                                .frame(width: kante, height: 14, alignment: .leading)
++                            ForEach(woche) { tag in
++                                kaestchen(tag, kante: kante)
++                            }
++                        }
++                    }
++                }
++            }
++            .frame(height: 14 + 7 * 22 + 6 * 3)
++
++            VStack(alignment: .leading, spacing: ZSMass.space2) {
++                HStack(spacing: 4) {
++                    Text("weniger")
++                    ForEach(Self.stufen, id: \.self) { stufe in
++                        RoundedRectangle(cornerRadius: 3, style: .continuous)
++                            .fill(ZSFarbe.ziel.opacity(stufe))
++                            .frame(width: 11, height: 11)
++                    }
++                    Text("mehr im Ziel")
++                }
++                Text("\(tageMitWert.filter { ($0.anteil ?? 0) >= 0.7 }.count) von \(tageMitWert.count) Tagen mit mindestens 70 % im Ziel")
++                    .monospacedDigit()
++                Text("Tippe auf einen Tag, um zu sehen, was an dem Tag los war.")
++            }
++            .font(ZSSchrift.caption)
++            .foregroundStyle(ZSFarbe.text3)
++            .accessibilityElement(children: .ignore)
++            .accessibilityLabel("\(tageMitWert.filter { ($0.anteil ?? 0) >= 0.7 }.count) von \(tageMitWert.count) Tagen mit mindestens 70 Prozent Zeit im Ziel")
++        }
++    }
++
++    @ViewBuilder
++    private func kaestchen(_ tag: ZSZielzeitDaten.Tag, kante: CGFloat) -> some View {
++        if let anteil = tag.anteil {
++            Button { gewaehlt(tag.datum) } label: {
++                flaeche(tag, kante: kante)
++            }
++            .buttonStyle(ZSDruckFlaeche())
++            .accessibilityLabel("\(ZSTagesAuswertung.titel(tag.datum)), \(Int((anteil * 100).rounded())) Prozent im Ziel")
++            .accessibilityHint("Zeigt, was an diesem Tag auffiel")
++        } else {
++            flaeche(tag, kante: kante)
++                .accessibilityHidden(true)
++        }
++    }
++
++    private func flaeche(_ tag: ZSZielzeitDaten.Tag, kante: CGFloat) -> some View {
++        let istHeute = Calendar.current.isDateInToday(tag.datum)
++        return RoundedRectangle(cornerRadius: 4, style: .continuous)
++            .fill(tag.zukunft ? Color.clear : (tag.anteil.map { ZSFarbe.ziel.opacity(Self.deckkraft($0)) } ?? ZSFarbe.flaeche2))
++            .overlay {
++                if istHeute {
++                    RoundedRectangle(cornerRadius: 4, style: .continuous)
++                        .strokeBorder(ZSFarbe.text, lineWidth: 1.5)
++                }
++            }
++            .frame(width: kante, height: kante)
++    }
++
++    /// Monatsname über der Woche, in der ein Monat beginnt (und über der ersten Woche).
++    private func monatsMarke(woche: [ZSZielzeitDaten.Tag], index: Int) -> String {
++        let k = Calendar.current
++        let formatter = DateFormatter()
++        formatter.locale = Locale(identifier: "de_DE")
++        formatter.dateFormat = "LLL"
++        if index == 0, let erster = woche.first { return formatter.string(from: erster.datum) }
++        if let monatsErster = woche.first(where: { k.component(.day, from: $0.datum) == 1 }) {
++            return formatter.string(from: monatsErster.datum)
++        }
++        return ""
++    }
++}
++
++// MARK: - Muster
++
++/// Wann lagen Werte unter 70? Sieben Zeilen (Mo–So) mal 12 Blöcke à 2 Stunden, Punktfläche wächst mit der Anzahl.
++struct ZSTiefMuster: View {
++    /// [Wochentag][Stunde 0…23]
++    var raster: [[Int]]
++    var grenze: String
++
++    /// Zu 2-Stunden-Blöcken zusammengefasst, damit die Punkte auf dem iPhone groß genug sind.
++    private var bloecke: [[Int]] {
++        raster.map { zeile in (0..<12).map { zeile[$0 * 2] + zeile[$0 * 2 + 1] } }
++    }
++
++    private var maximum: Int { bloecke.flatMap { $0 }.max() ?? 0 }
++
++    var body: some View {
++        VStack(alignment: .leading, spacing: ZSMass.space3) {
++            HStack(alignment: .firstTextBaseline) {
++                Text("Wann du unter \(grenze) warst")
++                    .font(ZSSchrift.subhead.weight(.semibold))
++                    .foregroundStyle(ZSFarbe.text)
++                    .accessibilityAddTraits(.isHeader)
++                Spacer()
++                Text("30 Tage")
++                    .font(ZSSchrift.caption)
++                    .foregroundStyle(ZSFarbe.text3)
++            }
++
++            if maximum == 0 {
++                Text("Keine Werte unter \(grenze) in den letzten 30 Tagen.")
++                    .font(ZSSchrift.subhead)
++                    .foregroundStyle(ZSFarbe.text2)
++            } else {
++                GeometryReader { geo in
++                    let zelle = (geo.size.width - 26) / 12
++                    VStack(alignment: .leading, spacing: 0) {
++                        ForEach(0..<7, id: \.self) { zeile in
++                            HStack(spacing: 0) {
++                                Text(["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"][zeile])
++                                    .font(.system(size: 10, weight: .medium))
++                                    .foregroundStyle(ZSFarbe.text3)
++                                    .frame(width: 26, alignment: .leading)
++                                ForEach(0..<12, id: \.self) { block in
++                                    punkt(bloecke[zeile][block], zelle: zelle)
++                                        .frame(width: zelle, height: zelle * 0.8)
++                                }
++                            }
++                        }
++                        HStack(spacing: 0) {
++                            Color.clear.frame(width: 26)
++                            ForEach([0, 6, 12, 18], id: \.self) { stunde in
++                                Text("\(stunde) Uhr")
++                                    .font(.system(size: 10, weight: .medium))
++                                    .foregroundStyle(ZSFarbe.text3)
++                                    .frame(width: zelle * 3, alignment: .leading)
++                            }
++                        }
++                        .padding(.top, 4)
++                    }
++                }
++                .aspectRatio(12.0 / 6.6, contentMode: .fit)
++                .accessibilityElement(children: .ignore)
++                .accessibilityLabel(barrierefrei)
++
++                Text("Je größer der Punkt, desto mehr Messwerte lagen zu dieser Zeit unter \(grenze). Nur ein Muster, keine Empfehlung.")
++                    .font(ZSSchrift.caption)
++                    .foregroundStyle(ZSFarbe.text3)
++                    .fixedSize(horizontal: false, vertical: true)
++            }
++        }
++    }
++
++    private func punkt(_ anzahl: Int, zelle: CGFloat) -> some View {
++        let anteil = maximum > 0 ? sqrt(Double(anzahl) / Double(maximum)) : 0
++        return ZStack {
++            Circle()
++                .fill(ZSFarbe.flaeche2)
++                .frame(width: 3, height: 3)
++            if anzahl > 0 {
++                Circle()
++                    .fill(ZSFarbe.tief.opacity(0.35 + 0.55 * anteil))
++                    .frame(width: max(5, zelle * 0.68 * CGFloat(anteil)), height: max(5, zelle * 0.68 * CGFloat(anteil)))
++            }
++        }
++    }
++
++    private var barrierefrei: String {
++        let tage = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
++        var beste: (zeile: Int, block: Int, anzahl: Int) = (0, 0, 0)
++        for zeile in 0..<7 { for block in 0..<12 where bloecke[zeile][block] > beste.anzahl { beste = (zeile, block, bloecke[zeile][block]) } }
++        return "Häufigste Zeit unter \(grenze): \(tage[beste.zeile]) zwischen \(beste.block * 2) und \(beste.block * 2 + 2) Uhr"
++    }
++}
++
++// MARK: - Kleiner Ring für die Kurvenkarte
++
++/// „◔ 74 % heute im Ziel ›“: öffnet das Blatt Zeit im Ziel.
++struct ZSZielChip: View {
++    var anteil: Double?
++    /// Schmal (SE): nur Ring und Prozent.
++    var kompakt = false
++
++    var body: some View {
++        HStack(spacing: 6) {
++            ZStack {
++                Circle().stroke(ZSFarbe.flaeche3, lineWidth: 3)
++                Circle()
++                    .trim(from: 0, to: CGFloat(anteil ?? 0))
++                    .stroke(ZSFarbe.ziel, style: StrokeStyle(lineWidth: 3, lineCap: .round))
++                    .rotationEffect(.degrees(-90))
++            }
++            .frame(width: 16, height: 16)
++            Text(anteil.map { "\(Int(($0 * 100).rounded())) %" + (kompakt ? "" : " im Ziel") } ?? (kompakt ? "Ziel" : "Zeit im Ziel"))
++                .font(ZSSchrift.caption.weight(.semibold))
++                .monospacedDigit()
++                .foregroundStyle(ZSFarbe.text)
++                .lineLimit(1)
++            Image(systemName: "chevron.right")
++                .font(.system(size: 10, weight: .semibold))
++                .foregroundStyle(ZSFarbe.text3)
++        }
++        .padding(.horizontal, 10)
++        .frame(minHeight: 30)
++        .background(Capsule().fill(ZSFarbe.flaeche2))
++        .contentShape(Capsule())
++        .accessibilityElement(children: .ignore)
++        .accessibilityLabel(anteil.map { "Heute \(Int(($0 * 100).rounded())) Prozent im Zielbereich" } ?? "Zeit im Ziel")
++        .accessibilityHint("Öffnet Zeit im Ziel mit Ringen, Kalender und Muster")
++        .accessibilityAddTraits(.isButton)
++    }
++}
++
++// MARK: - Tagesansicht
++
++struct ZSTagAuswahl: Identifiable {
++    var datum: Date
++    var id: Date { datum }
++}
++
++/// Drückt ein Kalenderkästchen sichtbar ein.
++struct ZSDruckFlaeche: ButtonStyle {
++    func makeBody(configuration: Configuration) -> some View {
++        configuration.label
++            .scaleEffect(configuration.isPressed ? 0.88 : 1)
++            .animation(.easeOut(duration: 0.08), value: configuration.isPressed)
++    }
++}
++
++/// Was an einem Tag auffiel: nur Beobachtungen aus Messwerten und Einträgen, nie ein „weil“, nie eine Empfehlung.
++struct ZSTagesAuswertung {
++    var tag: Date
++    var werte: [ZSMesspunkt]
++    var ereignisse: [ZSTagesEreignis]
++
++    init(daten: ZSZielzeitDaten, tag: Date) {
++        let start = Calendar.current.startOfDay(for: tag)
++        let ende = start.addingTimeInterval(86_400)
++        self.tag = start
++        werte = daten.werte.filter { $0.datum >= start && $0.datum < ende }
++        ereignisse = daten.ereignisse.filter { $0.datum >= start && $0.datum < ende }.sorted { $0.datum < $1.datum }
++    }
++
++    static func titel(_ datum: Date) -> String {
++        datum.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "de_DE")))
++    }
++
++    /// Kurz für den Blattkopf: „Do., 29. Okt.“
++    static func kurztitel(_ datum: Date) -> String {
++        datum.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).locale(Locale(identifier: "de_DE")))
++    }
++
++    /// Anteile unter 70, im Ziel, über 180.
++    var anteile: (tief: Double, ziel: Double, hoch: Double) {
++        guard !werte.isEmpty else { return (0, 0, 0) }
++        let n = Double(werte.count)
++        return (Double(werte.filter { $0.mgdl < 70 }.count) / n,
++                Double(werte.filter { (70...180).contains($0.mgdl) }.count) / n,
++                Double(werte.filter { $0.mgdl > 180 }.count) / n)
++    }
++
++    struct Phase: Identifiable {
++        var start: Date
++        var ende: Date
++        var extrem: Double
++        var hoch: Bool
++        var id: Date { start }
++        var dauer: TimeInterval { ende.timeIntervalSince(start) }
++    }
++
++    /// Zusammenhängende Phasen über 180 (ab 30 Min) und unter 70 (ab 15 Min); Lücken bis 15 Min zählen mit.
++    var phasen: [Phase] {
++        func suche(hoch: Bool) -> [Phase] {
++            var ergebnis: [Phase] = []
++            var laufend: Phase?
++            for wert in werte {
++                let drin = hoch ? wert.mgdl > 180 : wert.mgdl < 70
++                if drin {
++                    if var p = laufend, wert.datum.timeIntervalSince(p.ende) <= 15 * 60 {
++                        p.ende = wert.datum
++                        p.extrem = hoch ? max(p.extrem, wert.mgdl) : min(p.extrem, wert.mgdl)
++                        laufend = p
++                    } else {
++                        if let p = laufend { ergebnis.append(p) }
++                        laufend = Phase(start: wert.datum, ende: wert.datum, extrem: wert.mgdl, hoch: hoch)
++                    }
++                } else if let p = laufend, wert.datum.timeIntervalSince(p.ende) > 15 * 60 {
++                    ergebnis.append(p)
++                    laufend = nil
++                }
++            }
++            if let p = laufend { ergebnis.append(p) }
++            return ergebnis.filter { $0.dauer >= (hoch ? 30 : 15) * 60 }
++        }
++        return (suche(hoch: true) + suche(hoch: false)).sorted { $0.start < $1.start }
++    }
++
++    /// Sensorlücken ab einer Stunde.
++    var luecken: [(von: Date, bis: Date)] {
++        zip(werte, werte.dropFirst()).compactMap { a, b in
++            b.datum.timeIntervalSince(a.datum) >= 3600 ? (von: a.datum, bis: b.datum) : nil
++        }
++    }
++
++    /// Das letzte Essen bis 3 Stunden vor (oder 15 Minuten nach) Beginn einer hohen Phase.
++    func essenVor(_ phase: Phase) -> ZSTagesEreignis? {
++        ereignisse.filter { $0.istEssen && $0.datum >= phase.start.addingTimeInterval(-3 * 3600) && $0.datum <= phase.start.addingTimeInterval(15 * 60) }.last
++    }
++}
++
++struct ZSTagView: View {
++    var auswertung: ZSTagesAuswertung
++    var einheit: HKUnit
++
++    @Environment(\.dismiss) private var dismiss
++
++    private func g(_ mgdl: Double) -> String { ZSFormat.glukose(mgdl, einheit) }
++
++    var body: some View {
++        VStack(spacing: 0) {
++            ZSBlattKopf(titel: ZSTagesAuswertung.kurztitel(auswertung.tag), art: .fertig, abbrechen: { dismiss() })
++            ScrollView {
++                VStack(alignment: .leading, spacing: ZSMass.space4) {
++                    verteilung.zsKarte()
++                    VStack(alignment: .leading, spacing: ZSMass.space2) {
++                        Text("Der Tag")
++                            .font(ZSSchrift.subhead.weight(.semibold))
++                            .foregroundStyle(ZSFarbe.text)
++                        ZSTagesKurve(auswertung: auswertung)
++                            .frame(height: 170)
++                    }
++                    .zsKarte()
++                    auffaelligkeiten.zsKarte()
++                    if !sonstige.isEmpty {
++                        ereignisListe.zsKarte()
++                    }
++                    Text("Nur Beobachtungen aus deinen Werten und Einträgen. Was du daraus ableitest, besprichst du mit deinem Diabetes-Team.")
++                        .font(ZSSchrift.footnote)
++                        .foregroundStyle(ZSFarbe.text3)
++                        .fixedSize(horizontal: false, vertical: true)
++                }
++                .padding(ZSMass.space5)
++            }
++        }
++        .background(ZSFarbe.grund.ignoresSafeArea())
++    }
++
++    private var verteilung: some View {
++        let a = auswertung.anteile
++        return VStack(alignment: .leading, spacing: ZSMass.space3) {
++            HStack(alignment: .firstTextBaseline, spacing: ZSMass.space2) {
++                Text("\(Int((a.ziel * 100).rounded())) %")
++                    .font(.system(size: 40, weight: .semibold, design: .rounded))
++                    .monospacedDigit()
++                    .foregroundStyle(ZSFarbe.text)
++                Text("im Ziel")
++                    .font(ZSSchrift.subhead)
++                    .foregroundStyle(ZSFarbe.text2)
++            }
++            GeometryReader { geo in
++                HStack(spacing: 2) {
++                    ForEach([(a.tief, ZSFarbe.tief), (a.ziel, ZSFarbe.ziel), (a.hoch, ZSFarbe.hoch)].indices, id: \.self) { i in
++                        let teil = [(a.tief, ZSFarbe.tief), (a.ziel, ZSFarbe.ziel), (a.hoch, ZSFarbe.hoch)][i]
++                        if teil.0 > 0 {
++                            RoundedRectangle(cornerRadius: 3, style: .continuous)
++                                .fill(teil.1)
++                                .frame(width: max(4, (geo.size.width - 4) * CGFloat(teil.0)))
++                        }
++                    }
++                }
++            }
++            .frame(height: 10)
++            .accessibilityHidden(true)
++            HStack(spacing: ZSMass.space4) {
++                anteil("unter \(g(70))", a.tief, ZSFarbe.tief)
++                anteil("im Ziel", a.ziel, ZSFarbe.ziel)
++                anteil("über \(g(180))", a.hoch, ZSFarbe.hoch)
++            }
++        }
++    }
++
++    private func anteil(_ titel: String, _ wert: Double, _ farbe: Color) -> some View {
++        HStack(spacing: 5) {
++            Circle().fill(farbe).frame(width: 7, height: 7)
++            Text("\(Int((wert * 100).rounded())) %")
++                .font(ZSSchrift.caption.weight(.semibold))
++                .monospacedDigit()
++                .foregroundStyle(ZSFarbe.text)
++            Text(titel)
++                .font(ZSSchrift.caption)
++                .foregroundStyle(ZSFarbe.text3)
++        }
++        .accessibilityElement(children: .combine)
++    }
++
++    private static func uhr(_ d: Date) -> String { ZSFormat.uhrzeit(d) }
++
++    private static func dauer(_ t: TimeInterval) -> String {
++        let minuten = Int((t / 60).rounded())
++        return minuten >= 60 ? "\(minuten / 60) Std\(minuten % 60 > 0 ? " \(minuten % 60) Min" : "")" : "\(minuten) Min"
++    }
++
++    private var auffaelligkeiten: some View {
++        VStack(alignment: .leading, spacing: ZSMass.space3) {
++            Text("Was an diesem Tag auffiel")
++                .font(ZSSchrift.subhead.weight(.semibold))
++                .foregroundStyle(ZSFarbe.text)
++                .accessibilityAddTraits(.isHeader)
++            let phasen = auswertung.phasen
++            let luecken = auswertung.luecken
++            if phasen.isEmpty && luecken.isEmpty {
++                Text("Keine längeren Phasen außerhalb des Ziels.")
++                    .font(ZSSchrift.subhead)
++                    .foregroundStyle(ZSFarbe.text2)
++            }
++            ForEach(phasen) { phase in
++                zeile(symbol: phase.hoch ? "arrow.up.right" : "arrow.down.right",
++                      farbe: phase.hoch ? ZSFarbe.hoch : ZSFarbe.tief,
++                      titel: "\(Self.uhr(phase.start))–\(Self.uhr(phase.ende)) \(phase.hoch ? "über \(g(180))" : "unter \(g(70))")",
++                      text: "\(Self.dauer(phase.dauer)) · \(phase.hoch ? "höchster" : "tiefster") Wert \(g(phase.extrem))",
++                      zusatz: phase.hoch ? auswertung.essenVor(phase).map { "Davor \(Self.uhr($0.datum)): \($0.text)" } : nil)
++            }
++            ForEach(Array(luecken.enumerated()), id: \.offset) { _, luecke in
++                zeile(symbol: "antenna.radiowaves.left.and.right.slash", farbe: ZSFarbe.text3,
++                      titel: "\(Self.uhr(luecke.von))–\(Self.uhr(luecke.bis)) keine Sensorwerte",
++                      text: Self.dauer(luecke.bis.timeIntervalSince(luecke.von)), zusatz: nil)
++            }
++        }
++    }
++
++    /// Ereignisse außer Essen (Pod-Wechsel, Keton, Unterzucker-Begleiter); Essen steht in der Kurve.
++    private var sonstige: [ZSTagesEreignis] { auswertung.ereignisse.filter { !$0.istEssen } }
++
++    private var ereignisListe: some View {
++        VStack(alignment: .leading, spacing: ZSMass.space3) {
++            Text("Einträge")
++                .font(ZSSchrift.subhead.weight(.semibold))
++                .foregroundStyle(ZSFarbe.text)
++                .accessibilityAddTraits(.isHeader)
++            ForEach(sonstige) { e in
++                zeile(symbol: e.symbol, farbe: ZSFarbe.text2, titel: "\(Self.uhr(e.datum)) \(e.text)", text: nil, zusatz: nil)
++            }
++        }
++    }
++
++    private func zeile(symbol: String, farbe: Color, titel: String, text: String?, zusatz: String?) -> some View {
++        HStack(alignment: .top, spacing: ZSMass.space3) {
++            Image(systemName: symbol)
++                .font(.system(size: 14, weight: .semibold))
++                .foregroundStyle(farbe)
++                .frame(width: 22)
++            VStack(alignment: .leading, spacing: 2) {
++                Text(titel)
++                    .font(ZSSchrift.subhead.weight(.semibold))
++                    .foregroundStyle(ZSFarbe.text)
++                if let text {
++                    Text(text)
++                        .font(ZSSchrift.caption)
++                        .foregroundStyle(ZSFarbe.text2)
++                }
++                if let zusatz {
++                    Label(zusatz, systemImage: "fork.knife")
++                        .font(ZSSchrift.caption)
++                        .foregroundStyle(ZSFarbe.text2)
++                }
++            }
++            Spacer(minLength: 0)
++        }
++        .accessibilityElement(children: .combine)
++    }
++}
++
++/// Kurve von 0 bis 24 Uhr mit Zielzone; Essen als Marken oben, Werte unter 70 rot.
++struct ZSTagesKurve: View {
++    var auswertung: ZSTagesAuswertung
++
++    var body: some View {
++        VStack(spacing: 4) {
++            GeometryReader { geo in
++                let r = CGRect(origin: .zero, size: geo.size)
++                let unten = min(50, (auswertung.werte.map(\.mgdl).min() ?? 50) - 5)
++                let oben = max(250, (auswertung.werte.map(\.mgdl).max() ?? 250) + 10)
++                let x: (Date) -> CGFloat = { r.width * CGFloat($0.timeIntervalSince(auswertung.tag) / 86_400) }
++                let y: (Double) -> CGFloat = { r.height * CGFloat(1 - ($0 - unten) / (oben - unten)) }
++                ZStack(alignment: .topLeading) {
++                    Rectangle()
++                        .fill(ZSFarbe.ziel.opacity(0.10))
++                        .frame(width: r.width, height: y(70) - y(180))
++                        .offset(y: y(180))
++                    Path { p in
++                        for grenze in [70.0, 180.0] {
++                            p.move(to: CGPoint(x: 0, y: y(grenze)))
++                            p.addLine(to: CGPoint(x: r.width, y: y(grenze)))
++                        }
++                    }
++                    .stroke(ZSFarbe.ziel.opacity(0.45), style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
++                    Path { p in
++                        var vorher: ZSMesspunkt?
++                        for w in auswertung.werte {
++                            let punkt = CGPoint(x: x(w.datum), y: y(w.mgdl))
++                            if let v = vorher, w.datum.timeIntervalSince(v.datum) < 20 * 60 {
++                                p.addLine(to: punkt)
++                            } else {
++                                p.move(to: punkt)
++                            }
++                            vorher = w
++                        }
++                    }
++                    .stroke(ZSFarbe.orangeLinie, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
++                    ForEach(auswertung.werte.filter { $0.mgdl < 70 }) { w in
++                        Circle().fill(ZSFarbe.tief).frame(width: 4, height: 4).position(x: x(w.datum), y: y(w.mgdl))
++                    }
++                    ForEach(auswertung.ereignisse.filter(\.istEssen)) { e in
++                        Image(systemName: "fork.knife")
++                            .font(.system(size: 9, weight: .bold))
++                            .foregroundStyle(ZSFarbe.text2)
++                            .frame(width: 18, height: 18)
++                            .background(Circle().fill(ZSFarbe.flaeche3))
++                            .position(x: min(max(x(e.datum), 9), r.width - 9), y: 9)
++                    }
++                }
++            }
++            HStack {
++                ForEach([0, 6, 12, 18], id: \.self) { stunde in
++                    Text("\(stunde) Uhr")
++                    Spacer()
++                }
++                Text("24")
++            }
++            .font(.system(size: 10, weight: .medium))
++            .foregroundStyle(ZSFarbe.text3)
++        }
++        .accessibilityElement(children: .ignore)
++        .accessibilityLabel("Zuckerkurve des Tages")
++    }
++}
++
++#if targetEnvironment(simulator)
++extension ZSZielzeitDaten {
++    /// 92 Tage Beispielwerte: Tageswelle, Mahlzeitenspitzen, gelegentlich nachts unter 70.
++    static func vorschau() -> ZSZielzeitDaten {
++        let bis = Date()
++        var werte: [ZSMesspunkt] = []
++        var zufall: UInt64 = 42
++        func naechste() -> Double {
++            zufall = zufall &* 6364136223846793005 &+ 1442695040888963407
++            return Double(zufall >> 33) / Double(1 << 31)
++        }
++        var tagesVersatz = 0.0
++        var letzterTag = -1
++        let anzahl = 92 * 288
++        for i in 0..<anzahl {
++            let datum = bis.addingTimeInterval(-Double(anzahl - 1 - i) * 300)
++            let stunde = Double(Calendar.current.component(.hour, from: datum)) + Double(Calendar.current.component(.minute, from: datum)) / 60
++            let tagNr = Calendar.current.ordinality(of: .day, in: .era, for: datum) ?? 0
++            if tagNr != letzterTag { letzterTag = tagNr; tagesVersatz = (naechste() - 0.35) * 90 }
++            var mgdl = 125 + tagesVersatz
++            mgdl += 55 * exp(-pow((stunde - 8.5) / 1.1, 2))
++            mgdl += 45 * exp(-pow((stunde - 13.5) / 1.3, 2))
++            mgdl += 60 * exp(-pow((stunde - 19.5) / 1.4, 2))
++            mgdl -= 50 * exp(-pow((stunde - 3.5) / 1.2, 2)) * (naechste() < 0.3 ? 1 : 0.4)
++            mgdl += (naechste() - 0.5) * 12
++            werte.append(ZSMesspunkt(datum: datum, mgdl: max(45, mgdl)))
++        }
++        var ereignisse: [ZSTagesEreignis] = []
++        let k = Calendar.current
++        for tag in 0..<92 {
++            guard let start = k.date(byAdding: .day, value: -tag, to: k.startOfDay(for: bis)) else { continue }
++            for (stunde, name) in [(8.0, "Müsli · 45 g KH"), (13.0, "Pasta · 70 g KH"), (19.0, "Pizza · 85 g KH")] {
++                let datum = start.addingTimeInterval(stunde * 3600 - 30 * 60)
++                if datum < bis { ereignisse.append(ZSTagesEreignis(datum: datum, symbol: "fork.knife", text: name, istEssen: true)) }
++            }
++            if tag % 3 == 1 {
++                ereignisse.append(ZSTagesEreignis(datum: start.addingTimeInterval(18.3 * 3600), symbol: "circle.dotted", text: "Pod-Wechsel · Bauch links"))
++            }
++        }
++        return ZSZielzeitDaten(werte: werte, bis: bis, ereignisse: ereignisse)
++    }
++}
++#endif
