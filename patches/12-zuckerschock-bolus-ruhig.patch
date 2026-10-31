@@ -27,7 +27,7 @@ index 7855089..7c5cacd 100644
      }
  
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
-index 6939afd..c35bb68 100644
+index 6939afd..e78d42e 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
 @@ -31,7 +31,7 @@ struct ZSGlukoseDarstellung {
@@ -80,30 +80,114 @@ index 6939afd..c35bb68 100644
  }
  
  // MARK: - Sperrbildschirm
-@@ -240,6 +242,22 @@ struct ZSGlukoseSperrAnsicht: View {
-                 }
-                 .accessibilityElement(children: .combine)
-             }
+@@ -222,36 +224,40 @@ struct ZSGlukoseSperrAnsicht: View {
+         .privacySensitive()
+     }
+ 
++    /// Passt die Zeile nicht, fällt erst das Wort „Loop“ weg, dann wird alles enger; nichts wird abgeschnitten.
+     private var kennzahlZeile: some View {
+-        HStack(alignment: .firstTextBaseline, spacing: 0) {
++        ViewThatFits(in: .horizontal) {
++            zeile(loopText: true, eng: false)
++            zeile(loopText: false, eng: false)
++            zeile(loopText: false, eng: true)
++        }
++    }
++
++    private func zeile(loopText: Bool, eng: Bool) -> some View {
++        let abstand: CGFloat = eng ? 6 : 8
++        let skala: CGFloat = eng ? 0.6 : 0.75
++        return HStack(alignment: .firstTextBaseline, spacing: 0) {
+             ForEach(Array(d.kennzahlen.enumerated()), id: \.offset) { index, k in
+-                if index > 0 { Spacer(minLength: 8) }
+-                VStack(alignment: .leading, spacing: 0) {
+-                    Text(k.wert)
+-                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+-                        .monospacedDigit()
+-                        .foregroundStyle(ZSFarbe.text)
+-                        .lineLimit(1)
+-                        .minimumScaleFactor(0.7)
+-                    Text(k.label)
+-                        .font(.caption2)
+-                        .foregroundStyle(ZSFarbe.text2)
+-                        .lineLimit(1)
+-                }
+-                .accessibilityElement(children: .combine)
++                if index > 0 { Spacer(minLength: abstand) }
++                spalte(wert: k.wert, label: k.label, ausrichtung: .leading, skala: skala)
++            }
 +            // Letzter Bolus mit Uhrzeit; nur Anzeige, was abgegeben wurde.
 +            if let bolus = d.bolusText, let datum = d.bolusDatum {
-+                if !d.kennzahlen.isEmpty { Spacer(minLength: 8) }
-+                VStack(alignment: .leading, spacing: 0) {
-+                    Text(bolus)
-+                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
-+                        .monospacedDigit()
-+                        .foregroundStyle(ZSFarbe.text)
-+                    Text("Bolus \(ZSGlukoseDarstellung.uhrzeit(datum))")
-+                        .font(.caption2)
-+                        .foregroundStyle(ZSFarbe.text2)
-+                }
-+                .lineLimit(1)
-+                .minimumScaleFactor(0.7)
-+                .accessibilityElement(children: .combine)
-+            }
-             Spacer(minLength: 8)
++                if !d.kennzahlen.isEmpty { Spacer(minLength: abstand) }
++                spalte(wert: bolus, label: "Bolus \(ZSGlukoseDarstellung.uhrzeit(datum))", ausrichtung: .leading, skala: skala)
+             }
+-            Spacer(minLength: 8)
++            Spacer(minLength: abstand)
              if !d.loopFrisch {
-                 ZSLoopPunkt(d: d)
-@@ -566,7 +584,8 @@ enum ZSGlukoseBeispiel {
+-                ZSLoopPunkt(d: d)
+-                    .padding(.trailing, 8)
++                ZSLoopPunkt(d: d, mitText: loopText)
++                    .padding(.trailing, abstand)
+             }
+             // Wann Pod und Sensor zu Ende sind, als Uhrzeit; beim Pod die Rest-IE, wenn er sie meldet.
+             if let pod = d.endeText(d.podEnde) ?? d.podIEText {
+-                geraet(wert: pod, label: d.podIEText.map { d.podEnde == nil ? "Pod" : "Pod · \($0)" } ?? "Pod")
++                spalte(wert: pod, label: d.podIEText.map { d.podEnde == nil ? "Pod" : "Pod · \($0)" } ?? "Pod", ausrichtung: .trailing, skala: skala)
+             }
+             if let sensor = d.endeText(d.sensorEnde) {
+-                geraet(wert: sensor, label: "Sensor")
+-                    .padding(.leading, 12)
++                spalte(wert: sensor, label: "Sensor", ausrichtung: .trailing, skala: skala)
++                    .padding(.leading, eng ? 8 : 12)
+             }
+         }
+     }
+@@ -259,8 +265,8 @@ struct ZSGlukoseSperrAnsicht: View {
+ 
+ @available(iOS 16.2, *)
+ extension ZSGlukoseSperrAnsicht {
+-    func geraet(wert: String, label: String) -> some View {
+-        VStack(alignment: .trailing, spacing: 0) {
++    func spalte(wert: String, label: String, ausrichtung: HorizontalAlignment, skala: CGFloat) -> some View {
++        VStack(alignment: ausrichtung, spacing: 0) {
+             Text(wert)
+                 .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                 .monospacedDigit()
+@@ -270,7 +276,7 @@ extension ZSGlukoseSperrAnsicht {
+                 .foregroundStyle(ZSFarbe.text2)
+         }
+         .lineLimit(1)
+-        .minimumScaleFactor(0.75)
++        .minimumScaleFactor(skala)
+         .accessibilityElement(children: .combine)
+     }
+ }
+@@ -350,6 +356,7 @@ struct ZSAlterText: View {
+ @available(iOS 16.2, *)
+ struct ZSLoopPunkt: View {
+     var d: ZSGlukoseDarstellung
++    var mitText = true
+ 
+     var body: some View {
+         HStack(spacing: 4) {
+@@ -358,10 +365,12 @@ struct ZSLoopPunkt: View {
+                 .stroke(d.loopFarbe, lineWidth: 2.5)
+                 .rotationEffect(.degrees(-126))
+                 .frame(width: 12, height: 12)
+-            Text("Loop")
+-                .font(.caption2.weight(.medium))
+-                .foregroundStyle(ZSFarbe.text2)
+-                .fixedSize()
++            if mitText {
++                Text("Loop")
++                    .font(.caption2.weight(.medium))
++                    .foregroundStyle(ZSFarbe.text2)
++                    .fixedSize()
++            }
+         }
+         .accessibilityElement(children: .ignore)
+         .accessibilityLabel(d.stand.isCloseLoop ? "Loop geschlossen" : "Loop offen")
+@@ -566,7 +575,8 @@ enum ZSGlukoseBeispiel {
              predicatedStartDate: messzeit, predicatedInterval: 300, yAxisMarks: [40, 100, 160, 220])
          return ZSGlukoseDarstellung(stand: stand, mitKurve: true, mitPrognose: true, veraltet: alt, jetzt: jetzt,
                                      podIE: art == "hoch" ? nil : 38, podEnde: jetzt.addingTimeInterval(28.5 * 3600),
@@ -194,7 +278,7 @@ index 518c082..22ed297 100644
  }
  #endif
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
-index bd5cda1..74c4e30 100644
+index bd5cda1..60ef8a7 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
 @@ -91,7 +91,9 @@ struct ZSHeuteView: View {
@@ -334,6 +418,49 @@ index bd5cda1..74c4e30 100644
          case .bald: return ZSFarbe.hoch
          case .jetzt: return ZSFarbe.tief
          case .ohne: return ZSFarbe.text3
+@@ -815,17 +838,10 @@ private struct ZSGeraeteSpalte: View {
+ 
+     var body: some View {
+         VStack(alignment: .leading, spacing: ZSMass.space2) {
+-            // Passt der Zusatz nicht neben den Namen, steht er darunter statt abgeschnitten.
+-            ViewThatFits(in: .horizontal) {
+-                HStack(alignment: .firstTextBaseline, spacing: ZSMass.space2) {
+-                    name
+-                    Spacer(minLength: 0)
+-                    detailText
+-                }
+-                VStack(alignment: .leading, spacing: 2) {
+-                    name
+-                    detailText
+-                }
++            // Zusatz immer unter dem Namen, damit beide Balken auf einer Höhe liegen.
++            VStack(alignment: .leading, spacing: 2) {
++                name
++                detailText
+             }
+             GeometryReader { geo in
+                 ZStack(alignment: .leading) {
+@@ -852,14 +868,13 @@ private struct ZSGeraeteSpalte: View {
+             .lineLimit(1)
+     }
+ 
+-    @ViewBuilder
+     private var detailText: some View {
+-        if let detail = geraet.detail {
+-            Text(detail)
+-                .font(ZSSchrift.caption)
+-                .foregroundStyle(geraet.zustand == .bald || geraet.zustand == .jetzt ? farbe : ZSFarbe.text2)
+-                .lineLimit(1)
+-        }
++        // Leere Zeile hält die Höhe, wenn es keinen Zusatz gibt.
++        Text(geraet.detail ?? " ")
++            .font(ZSSchrift.caption)
++            .foregroundStyle(geraet.zustand == .bald || geraet.zustand == .jetzt ? farbe : ZSFarbe.text2)
++            .lineLimit(1)
++            .minimumScaleFactor(0.85)
+     }
+ 
+     private var barrierefreiWert: String {
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
 index a5764ab..ca4376b 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
