@@ -1,0 +1,521 @@
+diff --git a/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift b/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift
+index 7855089..7c5cacd 100644
+--- a/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift	
++++ b/Loop/Loop Widget Extension/Live Activity/GlucoseLiveActivityConfiguration.swift	
+@@ -95,15 +95,18 @@ struct GlucoseLiveActivityConfiguration: Widget {
+     }
+ 
+     private func zsDarstellung(_ context: ActivityViewContext<GlucoseActivityAttributes>) -> ZSGlukoseDarstellung {
+-        ZSGlukoseDarstellung(
++        let widgetStand = ZSWidgetStand.lesen()
++        return ZSGlukoseDarstellung(
+             stand: context.state,
+-            // Dünne Kurve mit Zielzone als Bezug; Pod-Angaben aus dem Stand, den die App für Widgets schreibt.
++            // Dünne Kurve mit Zielzone als Bezug; Pod-Angaben und letzter Bolus aus dem Stand, den die App für Widgets schreibt.
+             mitKurve: true,
+             mitPrognose: context.attributes.addPredictiveLine,
+             veraltet: context.isStale,
+-            podIE: ZSWidgetStand.lesen()?.podRestIE,
+-            podEnde: ZSWidgetStand.lesen()?.podEnde,
+-            sensorEnde: ZSWidgetStand.lesen()?.sensorEnde
++            podIE: widgetStand?.podRestIE,
++            podEnde: widgetStand?.podEnde,
++            sensorEnde: widgetStand?.sensorEnde,
++            bolusIE: widgetStand?.letzterBolusIE,
++            bolusDatum: widgetStand?.letzterBolusDatum
+         )
+     }
+ 
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
+index 6939afd..e78d42e 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockGlukoseAktivitaet.swift
+@@ -31,7 +31,7 @@ struct ZSGlukoseDarstellung {
+     var jetzt: Date
+ 
+     init(stand: GlucoseActivityAttributes.ContentState, mitKurve: Bool, mitPrognose: Bool, veraltet: Bool, jetzt: Date = Date(),
+-         podIE: Double? = nil, podEnde: Date? = nil, sensorEnde: Date? = nil) {
++         podIE: Double? = nil, podEnde: Date? = nil, sensorEnde: Date? = nil, bolusIE: Double? = nil, bolusDatum: Date? = nil) {
+         self.stand = stand
+         self.mitKurve = mitKurve
+         self.mitPrognose = mitPrognose
+@@ -40,17 +40,21 @@ struct ZSGlukoseDarstellung {
+         self.podIE = podIE
+         self.podEnde = podEnde
+         self.sensorEnde = sensorEnde
++        self.bolusIE = bolusIE
++        self.bolusDatum = bolusDatum
+     }
+ 
+-    /// „heute 18:30“, „morgen 16:00“, „Sa. 16:00“ oder „abgelaufen“.
+     func endeText(_ ende: Date?) -> String? {
+-        guard let ende else { return nil }
+-        if ende <= jetzt { return "abgelaufen" }
+-        let k = Calendar.current
+-        let uhr = Self.uhrzeit(ende)
+-        if k.isDateInToday(ende) { return "heute \(uhr)" }
+-        if k.isDateInTomorrow(ende) { return "morgen \(uhr)" }
+-        return "\(ende.formatted(.dateTime.weekday(.abbreviated).locale(Locale(identifier: "de_DE")))) \(uhr)"
++        ende.map { ZSZeitText.ende($0, jetzt: jetzt) }
++    }
++
++    /// Letzter Bolus der letzten 12 Stunden, „4,5 IE“.
++    var bolusIE: Double?
++    var bolusDatum: Date?
++
++    var bolusText: String? {
++        guard let bolusIE, let bolusDatum, jetzt.timeIntervalSince(bolusDatum) <= 12 * 3600 else { return nil }
++        return ZSZeitText.einheiten(bolusIE)
+     }
+ 
+     /// „38 IE“ (nur wenn der Pod den Rest meldet).
+@@ -177,9 +181,7 @@ struct ZSGlukoseDarstellung {
+         }
+     }
+ 
+-    static func uhrzeit(_ datum: Date) -> String {
+-        datum.formatted(.dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits).locale(Locale(identifier: "de_DE")))
+-    }
++    static func uhrzeit(_ datum: Date) -> String { ZSZeitText.uhrzeit(datum) }
+ }
+ 
+ // MARK: - Sperrbildschirm
+@@ -222,36 +224,40 @@ struct ZSGlukoseSperrAnsicht: View {
+         .privacySensitive()
+     }
+ 
++    /// Passt die Zeile nicht, fällt erst das Wort „Loop“ weg, dann wird alles enger; nichts wird abgeschnitten.
+     private var kennzahlZeile: some View {
+-        HStack(alignment: .firstTextBaseline, spacing: 0) {
++        ViewThatFits(in: .horizontal) {
++            zeile(loopText: true, eng: false)
++            zeile(loopText: false, eng: false)
++            zeile(loopText: false, eng: true)
++        }
++    }
++
++    private func zeile(loopText: Bool, eng: Bool) -> some View {
++        let abstand: CGFloat = eng ? 6 : 8
++        let skala: CGFloat = eng ? 0.6 : 0.75
++        return HStack(alignment: .firstTextBaseline, spacing: 0) {
+             ForEach(Array(d.kennzahlen.enumerated()), id: \.offset) { index, k in
+-                if index > 0 { Spacer(minLength: 8) }
+-                VStack(alignment: .leading, spacing: 0) {
+-                    Text(k.wert)
+-                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+-                        .monospacedDigit()
+-                        .foregroundStyle(ZSFarbe.text)
+-                        .lineLimit(1)
+-                        .minimumScaleFactor(0.7)
+-                    Text(k.label)
+-                        .font(.caption2)
+-                        .foregroundStyle(ZSFarbe.text2)
+-                        .lineLimit(1)
+-                }
+-                .accessibilityElement(children: .combine)
++                if index > 0 { Spacer(minLength: abstand) }
++                spalte(wert: k.wert, label: k.label, ausrichtung: .leading, skala: skala)
++            }
++            // Letzter Bolus mit Uhrzeit; nur Anzeige, was abgegeben wurde.
++            if let bolus = d.bolusText, let datum = d.bolusDatum {
++                if !d.kennzahlen.isEmpty { Spacer(minLength: abstand) }
++                spalte(wert: bolus, label: "Bolus \(ZSGlukoseDarstellung.uhrzeit(datum))", ausrichtung: .leading, skala: skala)
+             }
+-            Spacer(minLength: 8)
++            Spacer(minLength: abstand)
+             if !d.loopFrisch {
+-                ZSLoopPunkt(d: d)
+-                    .padding(.trailing, 8)
++                ZSLoopPunkt(d: d, mitText: loopText)
++                    .padding(.trailing, abstand)
+             }
+             // Wann Pod und Sensor zu Ende sind, als Uhrzeit; beim Pod die Rest-IE, wenn er sie meldet.
+             if let pod = d.endeText(d.podEnde) ?? d.podIEText {
+-                geraet(wert: pod, label: d.podIEText.map { d.podEnde == nil ? "Pod" : "Pod · \($0)" } ?? "Pod")
++                spalte(wert: pod, label: d.podIEText.map { d.podEnde == nil ? "Pod" : "Pod · \($0)" } ?? "Pod", ausrichtung: .trailing, skala: skala)
+             }
+             if let sensor = d.endeText(d.sensorEnde) {
+-                geraet(wert: sensor, label: "Sensor")
+-                    .padding(.leading, 12)
++                spalte(wert: sensor, label: "Sensor", ausrichtung: .trailing, skala: skala)
++                    .padding(.leading, eng ? 8 : 12)
+             }
+         }
+     }
+@@ -259,8 +265,8 @@ struct ZSGlukoseSperrAnsicht: View {
+ 
+ @available(iOS 16.2, *)
+ extension ZSGlukoseSperrAnsicht {
+-    func geraet(wert: String, label: String) -> some View {
+-        VStack(alignment: .trailing, spacing: 0) {
++    func spalte(wert: String, label: String, ausrichtung: HorizontalAlignment, skala: CGFloat) -> some View {
++        VStack(alignment: ausrichtung, spacing: 0) {
+             Text(wert)
+                 .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                 .monospacedDigit()
+@@ -270,7 +276,7 @@ extension ZSGlukoseSperrAnsicht {
+                 .foregroundStyle(ZSFarbe.text2)
+         }
+         .lineLimit(1)
+-        .minimumScaleFactor(0.75)
++        .minimumScaleFactor(skala)
+         .accessibilityElement(children: .combine)
+     }
+ }
+@@ -350,6 +356,7 @@ struct ZSAlterText: View {
+ @available(iOS 16.2, *)
+ struct ZSLoopPunkt: View {
+     var d: ZSGlukoseDarstellung
++    var mitText = true
+ 
+     var body: some View {
+         HStack(spacing: 4) {
+@@ -358,10 +365,12 @@ struct ZSLoopPunkt: View {
+                 .stroke(d.loopFarbe, lineWidth: 2.5)
+                 .rotationEffect(.degrees(-126))
+                 .frame(width: 12, height: 12)
+-            Text("Loop")
+-                .font(.caption2.weight(.medium))
+-                .foregroundStyle(ZSFarbe.text2)
+-                .fixedSize()
++            if mitText {
++                Text("Loop")
++                    .font(.caption2.weight(.medium))
++                    .foregroundStyle(ZSFarbe.text2)
++                    .fixedSize()
++            }
+         }
+         .accessibilityElement(children: .ignore)
+         .accessibilityLabel(d.stand.isCloseLoop ? "Loop geschlossen" : "Loop offen")
+@@ -566,7 +575,8 @@ enum ZSGlukoseBeispiel {
+             predicatedStartDate: messzeit, predicatedInterval: 300, yAxisMarks: [40, 100, 160, 220])
+         return ZSGlukoseDarstellung(stand: stand, mitKurve: true, mitPrognose: true, veraltet: alt, jetzt: jetzt,
+                                     podIE: art == "hoch" ? nil : 38, podEnde: jetzt.addingTimeInterval(28.5 * 3600),
+-                                    sensorEnde: jetzt.addingTimeInterval(4.2 * 86_400))
++                                    sensorEnde: jetzt.addingTimeInterval(4.2 * 86_400),
++                                    bolusIE: art == "hoch" ? nil : 4.5, bolusDatum: jetzt.addingTimeInterval(-(2 * 3600 + 600)))
+     }
+ }
+ 
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteDaten.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteDaten.swift
+index 518c082..22ed297 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteDaten.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteDaten.swift
+@@ -104,6 +104,12 @@ struct ZSGeraet: Equatable {
+     var detail: String?
+ }
+ 
++/// Ein abgegebener Bolus, nur zur Anzeige.
++struct ZSBolusEintrag: Equatable {
++    var datum: Date
++    var ie: Double
++}
++
+ struct ZSHeuteStand: Equatable {
+     var einheit: HKUnit
+     var aktuell: ZSMesspunkt?
+@@ -123,6 +129,8 @@ struct ZSHeuteStand: Equatable {
+     var sensor: ZSGeraet?
+     /// Wie in Loops Werkzeugleiste: Bolus und KH erst nach Einrichtung der Pumpe.
+     var aktionenMoeglich: Bool
++    /// Letzter Bolus der letzten 12 Stunden.
++    var letzterBolus: ZSBolusEintrag? = nil
+ }
+ 
+ // MARK: - Quelle
+@@ -219,6 +227,20 @@ final class ZSLoopQuelle: ZSHeuteQuelle {
+         var vorhersage: [PredictedGlucoseValue] = []
+         var insulinAktiv: InsulinValue?
+         var khAktiv: CarbValue?
++        var letzterBolus: ZSBolusEintrag?
++
++        gruppe.enter()
++        deviceManager.doseStore.getNormalizedDoseEntries(start: Date().addingTimeInterval(-.hours(12)), end: nil) { result in
++            if case .success(let dosen) = result,
++               let bolus = dosen.filter({ $0.type == .bolus }).max(by: { $0.startDate < $1.startDate }) {
++                // Abgegebene Menge, solange der Bolus läuft die programmierte.
++                let ie = bolus.deliveredUnits ?? bolus.programmedUnits
++                if ie > 0 {
++                    letzterBolus = ZSBolusEintrag(datum: bolus.startDate, ie: ie)
++                }
++            }
++            gruppe.leave()
++        }
+ 
+         gruppe.enter()
+         deviceManager.glucoseStore.getGlucoseSamples(start: start, end: nil) { result in
+@@ -238,7 +260,9 @@ final class ZSLoopQuelle: ZSHeuteQuelle {
+ 
+         gruppe.notify(queue: .main) { [weak self] in
+             guard let self else { return }
+-            fertig(self.stand(messwerte: messwerte, vorhersage: vorhersage, insulinAktiv: insulinAktiv, khAktiv: khAktiv))
++            var neu = self.stand(messwerte: messwerte, vorhersage: vorhersage, insulinAktiv: insulinAktiv, khAktiv: khAktiv)
++            neu.letzterBolus = letzterBolus
++            fertig(neu)
+         }
+     }
+ 
+@@ -310,7 +334,7 @@ final class ZSLoopQuelle: ZSHeuteQuelle {
+         var teile: [String] = []
+         if let reservoir = deviceManager.doseStore.lastReservoirValue,
+            Date().timeIntervalSince(reservoir.startDate) <= .hours(1) {
+-            teile.append("\(ZSFormat.zahl(reservoir.unitVolume, stellen: 0)) IE übrig")
++            teile.append("\(ZSFormat.zahl(reservoir.unitVolume, stellen: 0)) IE")
+         }
+         let zustand = ZSGeraeteZustand(fortschritt?.progressState)
+         if let hinweis = zustand.hinweis {
+@@ -496,9 +520,10 @@ final class ZSVorschauQuelle: ZSHeuteQuelle {
+             loopStand: szenario == .alt ? letzter : jetzt.addingTimeInterval(-.minutes(1)),
+             in30Min: aktuell.mgdl + richtung * 24,
+             loop: szenario == .alt ? .alt(seit: letzter) : .aktiv,
+-            pumpe: ZSGeraet(name: "Pod", anteil: 0.75, zustand: .normal, detail: "38 IE übrig"),
++            pumpe: ZSGeraet(name: "Pod", anteil: 0.75, zustand: .normal, detail: "38 IE"),
+             sensor: ZSGeraet(name: "G7", anteil: 0.7, zustand: .normal, detail: nil),
+-            aktionenMoeglich: true))
++            aktionenMoeglich: true,
++            letzterBolus: ZSBolusEintrag(datum: jetzt.addingTimeInterval(-(2 * 3600 + 600)), ie: 4.5)))
+     }
+ }
+ #endif
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
+index bd5cda1..60ef8a7 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
+@@ -91,7 +91,9 @@ struct ZSHeuteView: View {
+                 .zsAuftritt(1)
+ 
+             Button(action: aktionen.vorrat) {
+-                ZSGeraeteKarte(pumpe: stand?.pumpe, sensor: stand?.sensor, podsAufLager: vorrat.stand.pods, gestapelt: dynamicTypeSize.isAccessibilitySize)
++                ZSGeraeteKarte(pumpe: stand?.pumpe, sensor: stand?.sensor, podsAufLager: vorrat.stand.pods,
++                               tageJePod: vorrat.stand.tageJePod, tageJeSensor: vorrat.stand.tageJeSensor, jetzt: jetzt,
++                               gestapelt: dynamicTypeSize.isAccessibilitySize)
+             }
+             .buttonStyle(.plain)
+             .accessibilityHint("Öffnet den Vorrat")
+@@ -264,21 +266,13 @@ private struct ZSHeroKarte: View {
+         let einheit = stand?.einheit ?? .milligramsPerDeciliter
+         let alt = ZSFormat.istAlt(stand?.loopStand, jetzt: jetzt)
+ 
++        // Ruhig: keine Pille, die Änderung steht klein unter dem Wert.
++        let bolus = stand?.letzterBolus
+         let seite = VStack(alignment: .leading, spacing: 0) {
+-            if let aktuell = stand?.aktuell, !ZSFormat.istAlt(aktuell.datum, jetzt: jetzt), let aenderung = stand?.aenderung15Min {
+-                Label {
+-                    Text("\(ZSFormat.aenderung(aenderung, einheit)) in 15 Min.")
+-                } icon: {
+-                    Text(stand?.trend?.pfeil ?? "→")
+-                }
+-                .font(ZSSchrift.subhead.weight(.semibold))
+-                .foregroundStyle(ZSFarbe.text)
+-                .padding(.horizontal, ZSMass.space3)
+-                .padding(.vertical, 6)
+-                .background(Capsule().fill(ZSFarbe.flaeche2))
+-                .padding(.bottom, ZSMass.space2)
+-            }
+-            ZSMiniZeile(label: "IE aktiv", wert: stand?.insulinAktiv.map { ZSFormat.zahl($0, stellen: 2) }, einheit: nil)
++            ZSMiniZeile(label: "IE aktiv", wert: stand?.insulinAktiv.map { ZSFormat.zahl($0, stellen: 2) }, einheit: nil, ersteOhneLinie: true)
++            // Nur Anzeige, was abgegeben wurde.
++            ZSMiniZeile(label: bolus.map { "Bolus \(ZSFormat.uhrzeit($0.datum))" } ?? "Bolus",
++                        wert: bolus.map { $0.ie.formatted(.number.precision(.fractionLength(0...2)).locale(Locale(identifier: "de_DE"))) }, einheit: bolus == nil ? nil : "IE")
+             ZSMiniZeile(label: "KH aktiv", wert: stand?.khAktiv.map { ZSFormat.zahl($0, stellen: 0) }, einheit: "g")
+             ZSMiniZeile(label: "in 30 Min.", wert: stand?.in30Min.map { ZSFormat.glukose($0, einheit) }, einheit: nil, letzte: true)
+             if alt, let loopStand = stand?.loopStand {
+@@ -305,7 +299,7 @@ private struct ZSHeroKarte: View {
+                 }
+             }
+         }
+-        .zsKarte(hero: true)
++        .zsKarte()
+     }
+ }
+ 
+@@ -314,10 +308,13 @@ private struct ZSMiniZeile: View {
+     var wert: String?
+     var einheit: String?
+     var letzte = false
++    var ersteOhneLinie = false
+ 
+     var body: some View {
+         VStack(spacing: 0) {
+-            Divider().overlay(ZSFarbe.haarlinie)
++            if !ersteOhneLinie {
++                Divider().overlay(ZSFarbe.haarlinie)
++            }
+             HStack(alignment: .firstTextBaseline) {
+                 Text(label)
+                     .font(ZSSchrift.subhead)
+@@ -397,9 +394,12 @@ struct ZSWertring: View {
+                             // Ziffern rollen, zählen nie hoch
+                             .contentTransition(.numericText(value: aktuell?.mgdl ?? 0))
+                             .animation(reduceMotion ? nil : .default, value: aktuell?.mgdl)
+-                        Text(ZSFormat.einheit(einheit))
++                        Text([ZSFormat.einheit(einheit), alt ? nil : stand?.aenderung15Min.map { ZSFormat.aenderung($0, einheit) }]
++                                .compactMap { $0 }.joined(separator: " · "))
+                             .zsZahl(.einheit)
+                             .foregroundStyle(ZSFarbe.text2)
++                            .lineLimit(1)
++                            .minimumScaleFactor(0.7)
+                     }
+                     .padding(strich * 1.6)
+                 }
+@@ -779,13 +779,35 @@ private struct ZSGeraeteKarte: View {
+     var pumpe: ZSGeraet?
+     var sensor: ZSGeraet?
+     var podsAufLager: Int
++    var tageJePod: Double
++    var tageJeSensor: Double
++    var jetzt: Date
+     var gestapelt: Bool
+ 
+-    /// Pumpe mit Lagerbestand aus dem Vorrat („38 IE übrig · 3 übrig“).
+-    private var pumpeMitLager: ZSGeraet {
++    /// Wie auf dem Sperrbildschirm: wann die Laufzeit endet („bis morgen 23:00“), auf 5 Minuten gerundet.
++    private func bis(_ geraet: ZSGeraet, tage: Double) -> String? {
++        guard geraet.zustand != .ohne, let anteil = geraet.anteil else { return nil }
++        let ende = jetzt.addingTimeInterval(max(0, 1 - anteil) * tage * 86_400)
++        let gerundet = Date(timeIntervalSinceReferenceDate: (ende.timeIntervalSinceReferenceDate / 300).rounded() * 300)
++        let text = ZSZeitText.ende(gerundet, jetzt: jetzt)
++        return text == "abgelaufen" ? text : "bis \(text)"
++    }
++
++    /// Pod: Rest-IE und Ende; Lager nur, wenn es knapp wird (Rest steht im Vorrat).
++    private var pumpeAnzeige: ZSGeraet {
+         var geraet = pumpe ?? ZSGeraet(name: "Pumpe", anteil: nil, zustand: .ohne, detail: "nicht verbunden")
+         if geraet.zustand != .ohne {
+-            geraet.detail = [geraet.detail, "\(podsAufLager) auf Lager"].compactMap { $0 }.joined(separator: " · ")
++            geraet.detail = [geraet.detail, bis(geraet, tage: tageJePod), podsAufLager <= 1 ? "\(podsAufLager) auf Lager" : nil]
++                .compactMap { $0 }.joined(separator: " · ")
++        }
++        return geraet
++    }
++
++    private var sensorAnzeige: ZSGeraet {
++        var geraet = sensor ?? ZSGeraet(name: "Sensor", anteil: nil, zustand: .ohne, detail: "nicht verbunden")
++        if geraet.zustand != .ohne {
++            let teile = [geraet.detail, bis(geraet, tage: tageJeSensor)].compactMap { $0 }
++            geraet.detail = teile.isEmpty ? nil : teile.joined(separator: " · ")
+         }
+         return geraet
+     }
+@@ -793,8 +815,8 @@ private struct ZSGeraeteKarte: View {
+     var body: some View {
+         let layout = gestapelt ? AnyLayout(VStackLayout(spacing: ZSMass.space3)) : AnyLayout(HStackLayout(alignment: .top, spacing: ZSMass.space4))
+         layout {
+-            ZSGeraeteSpalte(geraet: pumpeMitLager)
+-            ZSGeraeteSpalte(geraet: sensor ?? ZSGeraet(name: "Sensor", anteil: nil, zustand: .ohne, detail: "nicht verbunden"))
++            ZSGeraeteSpalte(geraet: pumpeAnzeige)
++            ZSGeraeteSpalte(geraet: sensorAnzeige)
+         }
+         .padding(.vertical, -ZSMass.space1)
+         .zsKarte()
+@@ -806,7 +828,8 @@ private struct ZSGeraeteSpalte: View {
+ 
+     private var farbe: Color {
+         switch geraet.zustand {
+-        case .normal: return ZSFarbe.orange
++        // Ruhig: im Normalfall neutral, Farbe nur, wenn ein Wechsel ansteht.
++        case .normal: return ZSFarbe.text2
+         case .bald: return ZSFarbe.hoch
+         case .jetzt: return ZSFarbe.tief
+         case .ohne: return ZSFarbe.text3
+@@ -815,17 +838,10 @@ private struct ZSGeraeteSpalte: View {
+ 
+     var body: some View {
+         VStack(alignment: .leading, spacing: ZSMass.space2) {
+-            // Passt der Zusatz nicht neben den Namen, steht er darunter statt abgeschnitten.
+-            ViewThatFits(in: .horizontal) {
+-                HStack(alignment: .firstTextBaseline, spacing: ZSMass.space2) {
+-                    name
+-                    Spacer(minLength: 0)
+-                    detailText
+-                }
+-                VStack(alignment: .leading, spacing: 2) {
+-                    name
+-                    detailText
+-                }
++            // Zusatz immer unter dem Namen, damit beide Balken auf einer Höhe liegen.
++            VStack(alignment: .leading, spacing: 2) {
++                name
++                detailText
+             }
+             GeometryReader { geo in
+                 ZStack(alignment: .leading) {
+@@ -852,14 +868,13 @@ private struct ZSGeraeteSpalte: View {
+             .lineLimit(1)
+     }
+ 
+-    @ViewBuilder
+     private var detailText: some View {
+-        if let detail = geraet.detail {
+-            Text(detail)
+-                .font(ZSSchrift.caption)
+-                .foregroundStyle(geraet.zustand == .bald || geraet.zustand == .jetzt ? farbe : ZSFarbe.text2)
+-                .lineLimit(1)
+-        }
++        // Leere Zeile hält die Höhe, wenn es keinen Zusatz gibt.
++        Text(geraet.detail ?? " ")
++            .font(ZSSchrift.caption)
++            .foregroundStyle(geraet.zustand == .bald || geraet.zustand == .jetzt ? farbe : ZSFarbe.text2)
++            .lineLimit(1)
++            .minimumScaleFactor(0.85)
+     }
+ 
+     private var barrierefreiWert: String {
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+index a5764ab..ca4376b 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+@@ -698,7 +698,9 @@ final class ZuckerschockTabController: UIViewController {
+             },
+             sensorEnde: vorratQuelle.sensorRest.map { jetzt.addingTimeInterval($0) }.map {
+                 Date(timeIntervalSinceReferenceDate: ($0.timeIntervalSinceReferenceDate / 300).rounded() * 300)
+-            })
++            },
++            letzterBolusIE: heute?.letzterBolus?.ie,
++            letzterBolusDatum: heute?.letzterBolus?.datum)
+         guard stand != ZSWidgetStand.lesen().map({ alt in var a = alt; a.erstellt = jetzt; return a }) else { return }
+         stand.schreiben()
+         WidgetCenter.shared.reloadTimelines(ofKind: ZSWidgetStand.kindSperr)
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockWidgetGemeinsam.swift b/Loop/Loop/Zuckerschock/ZuckerschockWidgetGemeinsam.swift
+index 5d07339..0e2e196 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockWidgetGemeinsam.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockWidgetGemeinsam.swift
+@@ -36,6 +36,9 @@ struct ZSWidgetStand: Codable, Equatable {
+     var podEnde: Date? = nil
+     /// Ende der Sensor-Laufzeit laut Sensor-Fortschritt.
+     var sensorEnde: Date? = nil
++    /// Letzter abgegebener Bolus (nur Anzeige, aus Loops Dosis-Speicher; höchstens 12 Std alt).
++    var letzterBolusIE: Double? = nil
++    var letzterBolusDatum: Date? = nil
+ 
+     static let schluessel = "Zuckerschock.WidgetStand"
+     static let kindSperr = "ZuckerschockSperrbildschirm"
+@@ -75,6 +78,28 @@ struct ZSWidgetStand: Codable, Equatable {
+         letzteMahlzeit: "Spaghetti Bolognese · 72 g", vorratText: "3 Pods · bis So, 8. Nov.", loopAktiv: true, wertVerbergen: false)
+ }
+ 
++/// Uhrzeiten für Laufzeit-Ende und Bolus, gleich in App, Widget und Sperrbildschirm.
++enum ZSZeitText {
++    static func uhrzeit(_ datum: Date) -> String {
++        datum.formatted(.dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits).locale(Locale(identifier: "de_DE")))
++    }
++
++    /// „heute 18:30“, „morgen 16:00“, „Sa. 16:00“ oder „abgelaufen“.
++    static func ende(_ ende: Date, jetzt: Date) -> String {
++        if ende <= jetzt { return "abgelaufen" }
++        let k = Calendar.current
++        let uhr = uhrzeit(ende)
++        if k.isDateInToday(ende) { return "heute \(uhr)" }
++        if k.isDateInTomorrow(ende) { return "morgen \(uhr)" }
++        return "\(ende.formatted(.dateTime.weekday(.abbreviated).locale(Locale(identifier: "de_DE")))) \(uhr)"
++    }
++
++    /// „4,5 IE“
++    static func einheiten(_ ie: Double) -> String {
++        "\(ie.formatted(.number.precision(.fractionLength(0...2)).locale(Locale(identifier: "de_DE")))) IE"
++    }
++}
++
+ /// Öffnet die Kamera der Foto-KH (Kontrollzentrum, Action-Button, Widget).
+ enum ZSDeeplink {
+     static let fotoKH = URL(string: "zuckerschock://foto-kh")!
