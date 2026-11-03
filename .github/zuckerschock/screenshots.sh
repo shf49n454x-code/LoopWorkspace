@@ -78,7 +78,7 @@ for eintrag in "${GERAETE[@]}"; do
     aufnehmen "$udid" "$name-dark-large-heute-hoch" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_SZENARIO=hoch
     aufnehmen "$udid" "$name-dark-large-essen" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_TAB=essen
     aufnehmen "$udid" "$name-dark-large-therapie" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_TAB=therapie
-    for blatt in rezept rueckblick standard manuell einstellungen; do
+    for blatt in rezept rueckblick standard manuell einstellungen erfassen; do
       aufnehmen "$udid" "$name-dark-large-essen-$blatt" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_TAB=essen SIMCTL_CHILD_ZS_ESSEN_BLATT=$blatt
     done
     aufnehmen "$udid" "$name-dark-large-vorrat" SIMCTL_CHILD_ZS_VORSCHAU=1 SIMCTL_CHILD_ZS_BLATT=vorrat
