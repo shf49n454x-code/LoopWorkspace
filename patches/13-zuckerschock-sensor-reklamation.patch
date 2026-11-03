@@ -1,0 +1,344 @@
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
+index 60ef8a7..14fd930 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockHeuteView.swift
+@@ -35,7 +35,7 @@ struct ZSAktionen {
+     var alarme: () -> Void
+     /// Öffnet „Zeit im Ziel“ (Ringe, Kalender, Muster).
+     var zielzeit: () -> Void = {}
+-    /// Öffnet „Pod reklamieren“.
++    /// Öffnet „Pod oder Sensor reklamieren“.
+     var reklamation: () -> Void = {}
+ }
+ 
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockReklamation.swift b/Loop/Loop/Zuckerschock/ZuckerschockReklamation.swift
+index 18b383e..7bdfe22 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockReklamation.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockReklamation.swift
+@@ -2,7 +2,7 @@
+ //  ZuckerschockReklamation.swift
+ //  Loop
+ //
+-//  Zuckerschock: Pod reklamieren. Fehlerart wählen, Etikett fotografieren (LOT und SN werden auf dem iPhone
++//  Zuckerschock: Pod oder Sensor reklamieren. Fehlerart wählen, Etikett fotografieren (LOT und SN werden auf dem iPhone
+ //  gelesen), dann öffnet sich die Mail-App fertig ausgefüllt. Die App sendet nie selbst.
+ //  Persönliche Angaben bleiben auf dem iPhone (Datei mit Dateischutz).
+ //
+@@ -16,11 +16,31 @@ import Vision
+ 
+ struct ZSReklamationsDaten: Codable, Equatable {
+     var name = ""
++    /// Kundennummer bei Insulet (Pods).
+     var kundennummer = ""
+     var anschrift = ""
+     var telefon = ""
+     /// Aus den deutschen Omnipod-Bedienungsanleitungen; änderbar.
+     var empfaenger = "omnipod-DE@insulet.com"
++    /// Kundennummer bei Dexcom (Sensoren).
++    var kundennummerSensor = ""
++    /// Dexcom-Kundenservice Deutschland; änderbar.
++    var empfaengerSensor = "de.info@dexcom.com"
++
++    init() {}
++
++    /// Ältere Dateien ohne Sensor-Felder lesen sich mit den Standardwerten.
++    init(from decoder: Decoder) throws {
++        let c = try decoder.container(keyedBy: CodingKeys.self)
++        let leer = ZSReklamationsDaten()
++        name = try c.decodeIfPresent(String.self, forKey: .name) ?? leer.name
++        kundennummer = try c.decodeIfPresent(String.self, forKey: .kundennummer) ?? leer.kundennummer
++        anschrift = try c.decodeIfPresent(String.self, forKey: .anschrift) ?? leer.anschrift
++        telefon = try c.decodeIfPresent(String.self, forKey: .telefon) ?? leer.telefon
++        empfaenger = try c.decodeIfPresent(String.self, forKey: .empfaenger) ?? leer.empfaenger
++        kundennummerSensor = try c.decodeIfPresent(String.self, forKey: .kundennummerSensor) ?? leer.kundennummerSensor
++        empfaengerSensor = try c.decodeIfPresent(String.self, forKey: .empfaengerSensor) ?? leer.empfaengerSensor
++    }
+ }
+ 
+ final class ZSReklamationsSpeicher: ObservableObject {
+@@ -43,21 +63,33 @@ final class ZSReklamationsSpeicher: ObservableObject {
+     }
+ }
+ 
+-enum ZSPodFehler: String, CaseIterable, Identifiable {
+-    case alarm = "Pod-Alarm (Dauerton, Pod-Fehler)"
+-    case aktivierung = "Aktivierung fehlgeschlagen"
+-    case verschluss = "Verschluss (Okklusion)"
+-    case kanuele = "Kanüle nicht richtig gesetzt"
+-    case pflaster = "Pflaster hält nicht"
+-    case sonstiges = "Sonstiges"
++/// Was reklamiert wird: Pod (Insulet) oder Sensor (Dexcom).
++enum ZSReklamationsArt: String, CaseIterable, Identifiable {
++    case pod, sensor
+ 
+     var id: String { rawValue }
++
++    var kurz: String { self == .pod ? "Pod" : "Sensor" }
++    var produkt: String { self == .pod ? "Omnipod-Pod" : "Dexcom-G7-Sensor" }
++    var firma: String { self == .pod ? "Insulet" : "Dexcom" }
++    var startWort: String { self == .pod ? "Aktiviert" : "Gesetzt" }
++
++    var fehler: [String] {
++        switch self {
++        case .pod:
++            return ["Pod-Alarm (Dauerton, Pod-Fehler)", "Aktivierung fehlgeschlagen", "Verschluss (Okklusion)",
++                    "Kanüle nicht richtig gesetzt", "Pflaster hält nicht", "Sonstiges"]
++        case .sensor:
++            return ["Sensorfehler (Sensor ausgefallen)", "Aufwärmphase endet nicht", "Signalverlust über längere Zeit",
++                    "Werte stark ungenau", "Sensor vorzeitig abgefallen", "Applikator hat nicht ausgelöst", "Sonstiges"]
++        }
++    }
+ }
+ 
+ // MARK: - Etikett lesen (auf dem Gerät)
+ 
+ enum ZSEtikett {
+-    /// Liest LOT und SN aus einem Foto der Pod-Verpackung. Vision läuft auf dem iPhone, nichts wird verschickt.
++    /// Liest LOT und SN aus einem Foto der Pod- oder Sensor-Verpackung. Vision läuft auf dem iPhone, nichts wird verschickt.
+     static func lesen(_ bild: UIImage, fertig: @escaping (_ lot: String?, _ sn: String?) -> Void) {
+         guard let cg = bild.cgImage else { fertig(nil, nil); return }
+         let anfrage = VNRecognizeTextRequest { anfrage, _ in
+@@ -144,9 +176,12 @@ struct ZSReklamationView: View {
+     @ObservedObject var speicher: ZSReklamationsSpeicher
+     /// Wann der Pod aktiviert wurde (letzter erkannter Wechsel), falls bekannt.
+     var podAktiviert: Date?
++    /// Wann der Sensor gesetzt wurde (letzter erkannter Wechsel), falls bekannt.
++    var sensorGesetzt: Date? = nil
+     var schliessen: () -> Void
+ 
+-    @State private var fehler: ZSPodFehler = .alarm
++    @State private var art: ZSReklamationsArt
++    @State private var fehler: String
+     @State private var zeitpunkt = Date()
+     @State private var bemerkung = ""
+     @State private var lot = ""
+@@ -156,14 +191,29 @@ struct ZSReklamationView: View {
+     @State private var etikettHinweis: String?
+     @State private var mailOffen = false
+ 
++    init(speicher: ZSReklamationsSpeicher, art: ZSReklamationsArt = .pod, podAktiviert: Date?, sensorGesetzt: Date? = nil,
++         schliessen: @escaping () -> Void) {
++        self.speicher = speicher
++        self.podAktiviert = podAktiviert
++        self.sensorGesetzt = sensorGesetzt
++        self.schliessen = schliessen
++        _art = State(initialValue: art)
++        _fehler = State(initialValue: art.fehler[0])
++    }
++
++    private var start: Date? { art == .pod ? podAktiviert : sensorGesetzt }
++    private var kundennummer: String { art == .pod ? speicher.daten.kundennummer : speicher.daten.kundennummerSensor }
++    private var empfaenger: String { art == .pod ? speicher.daten.empfaenger : speicher.daten.empfaengerSensor }
++
+     private static func datum(_ d: Date) -> String {
+         d.formatted(.dateTime.day().month(.twoDigits).year().hour().minute().locale(Locale(identifier: "de_DE")))
+     }
+ 
+     var betreff: String {
+-        var teile = ["Pod-Reklamation, Bitte um Ersatz"]
++        var teile = ["\(art.kurz)-Reklamation, Bitte um Ersatz"]
++        if art == .sensor, !sn.isEmpty { teile.append("SN \(sn)") }
+         if !lot.isEmpty { teile.append("LOT \(lot)") }
+-        if !speicher.daten.kundennummer.isEmpty { teile.append("Kundennr. \(speicher.daten.kundennummer)") }
++        if !kundennummer.isEmpty { teile.append("Kundennr. \(kundennummer)") }
+         return teile.joined(separator: " · ")
+     }
+ 
+@@ -172,22 +222,22 @@ struct ZSReklamationView: View {
+         var zeilen: [String] = []
+         zeilen.append("Sehr geehrte Damen und Herren,")
+         zeilen.append("")
+-        zeilen.append("am \(Self.datum(zeitpunkt)) Uhr ist mein Omnipod-Pod ausgefallen: \(fehler.rawValue).")
++        zeilen.append("am \(Self.datum(zeitpunkt)) Uhr ist mein \(art.produkt) ausgefallen: \(fehler).")
+         if !bemerkung.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+             zeilen.append(bemerkung.trimmingCharacters(in: .whitespacesAndNewlines))
+         }
+         zeilen.append("")
+-        zeilen.append("Angaben zum Pod:")
++        zeilen.append("Angaben zum \(art.kurz):")
+         zeilen.append("- LOT: \(lot.isEmpty ? "–" : lot)")
+         zeilen.append("- SN: \(sn.isEmpty ? "–" : sn)")
+-        if let podAktiviert { zeilen.append("- Aktiviert am: \(Self.datum(podAktiviert)) Uhr") }
++        if let start { zeilen.append("- \(art.startWort) am: \(Self.datum(start)) Uhr") }
+         zeilen.append("- Ausfall am: \(Self.datum(zeitpunkt)) Uhr")
+         zeilen.append("")
+-        zeilen.append("Ich bitte um kostenlosen Ersatz für diesen Pod. Den Pod bewahre ich auf und schicke ihn auf Wunsch gern zurück.")
++        zeilen.append("Ich bitte um kostenlosen Ersatz für diesen \(art.kurz). Den \(art.kurz) bewahre ich auf und schicke ihn auf Wunsch gern zurück.")
+         zeilen.append("")
+         zeilen.append("Meine Angaben:")
+         if !d.name.isEmpty { zeilen.append("Name: \(d.name)") }
+-        if !d.kundennummer.isEmpty { zeilen.append("Kundennummer: \(d.kundennummer)") }
++        if !kundennummer.isEmpty { zeilen.append("Kundennummer: \(kundennummer)") }
+         if !d.anschrift.isEmpty { zeilen.append("Anschrift: \(d.anschrift)") }
+         if !d.telefon.isEmpty { zeilen.append("Telefon: \(d.telefon)") }
+         zeilen.append("")
+@@ -198,10 +248,22 @@ struct ZSReklamationView: View {
+ 
+     var body: some View {
+         VStack(spacing: 0) {
+-            ZSBlattKopf(titel: "Pod reklamieren", abbrechen: schliessen)
++            ZSBlattKopf(titel: "\(art.kurz) reklamieren", abbrechen: schliessen)
+             ScrollView {
+                 VStack(alignment: .leading, spacing: ZSMass.space6) {
+-                    Text("Wähle, was passiert ist, und fotografiere das Etikett der Pod-Verpackung. Danach öffnet sich die Mail-App fertig ausgefüllt. Senden tust du selbst.")
++                    Picker("Was reklamieren", selection: $art) {
++                        ForEach(ZSReklamationsArt.allCases) { Text($0.kurz).tag($0) }
++                    }
++                    .pickerStyle(.segmented)
++                    .onChange(of: art) { neu in
++                        // Andere Packung, andere Fehlerarten: Felder neu beginnen.
++                        fehler = neu.fehler[0]
++                        lot = ""
++                        sn = ""
++                        etikettHinweis = nil
++                    }
++
++                    Text("Wähle, was passiert ist, und fotografiere das Etikett der \(art.kurz)-Verpackung. Danach öffnet sich die Mail-App fertig ausgefüllt. Senden tust du selbst.")
+                         .font(ZSSchrift.subhead)
+                         .foregroundStyle(ZSFarbe.text2)
+                         .fixedSize(horizontal: false, vertical: true)
+@@ -210,7 +272,7 @@ struct ZSReklamationView: View {
+                         ZSAbschnittTitel(text: "Was ist passiert?")
+                         ZSEingabeFeld(titel: "Fehler") {
+                             Picker("Fehler", selection: $fehler) {
+-                                ForEach(ZSPodFehler.allCases) { Text($0.rawValue).tag($0) }
++                                ForEach(art.fehler, id: \.self) { Text($0).tag($0) }
+                             }
+                             .pickerStyle(.menu)
+                             .tint(ZSFarbe.text)
+@@ -228,7 +290,7 @@ struct ZSReklamationView: View {
+                     }
+ 
+                     VStack(alignment: .leading, spacing: ZSMass.space3) {
+-                        ZSAbschnittTitel(text: "Pod")
++                        ZSAbschnittTitel(text: art.kurz)
+                         Button {
+                             kameraOffen = true
+                         } label: {
+@@ -252,8 +314,8 @@ struct ZSReklamationView: View {
+                                 .textInputAutocapitalization(.characters)
+                                 .autocorrectionDisabled()
+                         }
+-                        if let podAktiviert {
+-                            Text("Aktiviert am \(Self.datum(podAktiviert)) Uhr (letzter erkannter Pod-Wechsel).")
++                        if let start {
++                            Text("\(art.startWort) am \(Self.datum(start)) Uhr (letzter erkannter \(art.kurz)-Wechsel).")
+                                 .font(ZSSchrift.footnote)
+                                 .foregroundStyle(ZSFarbe.text3)
+                         }
+@@ -268,8 +330,8 @@ struct ZSReklamationView: View {
+                             TextField("Vor- und Nachname", text: $speicher.daten.name)
+                                 .textContentType(.name)
+                         }
+-                        ZSEingabeFeld(titel: "Kundennummer bei Insulet") {
+-                            TextField("z. B. von der Lieferung", text: $speicher.daten.kundennummer)
++                        ZSEingabeFeld(titel: "Kundennummer bei \(art.firma)") {
++                            TextField("z. B. von der Lieferung", text: art == .pod ? $speicher.daten.kundennummer : $speicher.daten.kundennummerSensor)
+                                 .autocorrectionDisabled()
+                         }
+                         ZSEingabeFeld(titel: "Anschrift für den Ersatz") {
+@@ -282,8 +344,8 @@ struct ZSReklamationView: View {
+                                 .keyboardType(.phonePad)
+                                 .textContentType(.telephoneNumber)
+                         }
+-                        ZSEingabeFeld(titel: "Empfänger") {
+-                            TextField("E-Mail des Kundenservice", text: $speicher.daten.empfaenger)
++                        ZSEingabeFeld(titel: "Empfänger bei \(art.firma)") {
++                            TextField("E-Mail des Kundenservice", text: art == .pod ? $speicher.daten.empfaenger : $speicher.daten.empfaengerSensor)
+                                 .keyboardType(.emailAddress)
+                                 .textInputAutocapitalization(.never)
+                                 .autocorrectionDisabled()
+@@ -299,6 +361,15 @@ struct ZSReklamationView: View {
+                         .font(ZSSchrift.footnote)
+                         .foregroundStyle(ZSFarbe.text3)
+                         .fixedSize(horizontal: false, vertical: true)
++
++                    if art == .sensor, let formular = URL(string: "https://www.dexcom.com/de-de/contact-us") {
++                        // Dexcom nimmt Ersatzanfragen auch über das eigene Formular an; Telefon 0800 724 6447.
++                        Link(destination: formular) {
++                            Label("Alternativ: Dexcom-Formular im Browser", systemImage: "safari")
++                                .font(ZSSchrift.subhead.weight(.semibold))
++                        }
++                        .foregroundStyle(ZSFarbe.text2)
++                    }
+                 }
+                 .padding(ZSMass.space5)
+             }
+@@ -324,7 +395,7 @@ struct ZSReklamationView: View {
+             .ignoresSafeArea()
+         }
+         .sheet(isPresented: $mailOffen) {
+-            ZSMailBlatt(empfaenger: speicher.daten.empfaenger, betreff: betreff, text: mailText) { mailOffen = false }
++            ZSMailBlatt(empfaenger: empfaenger, betreff: betreff, text: mailText) { mailOffen = false }
+                 .ignoresSafeArea()
+         }
+     }
+@@ -337,7 +408,7 @@ struct ZSReklamationView: View {
+         // Ohne eingerichtete Mail-App: Standard-Mail-Programm über mailto öffnen.
+         var teile = URLComponents()
+         teile.scheme = "mailto"
+-        teile.path = speicher.daten.empfaenger
++        teile.path = empfaenger
+         teile.queryItems = [URLQueryItem(name: "subject", value: betreff), URLQueryItem(name: "body", value: mailText)]
+         if let url = teile.url { UIApplication.shared.open(url) }
+     }
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+index ca4376b..3775e5e 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockTabs.swift
+@@ -231,7 +231,7 @@ private struct ZSTherapieView: View {
+                         Divider().overlay(ZSFarbe.haarlinie).padding(.leading, 57)
+                         ZSListenZeile(titel: "Vorrat", untertitel: "Pods, Sensoren, Insulin, Rezept", symbol: "shippingbox", aktion: aktionen.vorrat)
+                         Divider().overlay(ZSFarbe.haarlinie).padding(.leading, 57)
+-                        ZSListenZeile(titel: "Pod reklamieren", untertitel: "Fehlerhaften Pod melden, Ersatz anfordern", symbol: "exclamationmark.bubble", aktion: aktionen.reklamation)
++                        ZSListenZeile(titel: "Pod oder Sensor reklamieren", untertitel: "Fehler melden, Ersatz anfordern", symbol: "exclamationmark.bubble", aktion: aktionen.reklamation)
+                         Divider().overlay(ZSFarbe.haarlinie).padding(.leading, 57)
+                         ZSListenZeile(titel: "Therapieplan", untertitel: "Unterzucker-Plan, FPE, Spritz-Ess-Abstand", symbol: "list.clipboard", aktion: aktionen.therapieplan)
+                         Divider().overlay(ZSFarbe.haarlinie).padding(.leading, 57)
+@@ -524,7 +524,8 @@ final class ZuckerschockTabController: UIViewController {
+             } },
+             reklamation: { [weak self] in self?.blattZeigen { schliessen in
+                 guard let self else { return AnyView(EmptyView()) }
+-                return AnyView(ZSReklamationView(speicher: .shared, podAktiviert: self.vorrat.stand.letzterPodWechsel, schliessen: schliessen))
++                return AnyView(ZSReklamationView(speicher: .shared, podAktiviert: self.vorrat.stand.letzterPodWechsel,
++                                                 sensorGesetzt: self.vorrat.stand.letzterSensorWechsel, schliessen: schliessen))
+             } })
+ 
+         kinder[.heute] = gastgeber(ZSHeuteView(modell: heuteModell, vorrat: vorrat, keton: keton, hinweise: hinweise, aktionen: aktionen))
+@@ -862,8 +863,11 @@ extension ZuckerschockTabController {
+             blattZeigen { schliessen in AnyView(ZSAngehoerigeView(modell: self.heuteModell, begleiter: self.hypoBegleiter, schliessen: schliessen)) }
+         case "stellen":
+             blattZeigen { schliessen in AnyView(ZSStellenView(stellen: self.stellen, nachEintrag: {}, schliessen: schliessen)) }
+-        case "reklamation":
+-            blattZeigen { schliessen in AnyView(ZSReklamationView(speicher: ZSReklamationsSpeicher(ordner: FileManager.default.temporaryDirectory.appendingPathComponent("ZSVorschau-\(UUID().uuidString)")), podAktiviert: Date().addingTimeInterval(-30 * 3600), schliessen: schliessen)) }
++        case "reklamation", "reklamation-sensor":
++            let vorschauSpeicher = ZSReklamationsSpeicher(ordner: FileManager.default.temporaryDirectory.appendingPathComponent("ZSVorschau-\(UUID().uuidString)"))
++            blattZeigen { schliessen in AnyView(ZSReklamationView(speicher: vorschauSpeicher, art: name == "reklamation" ? .pod : .sensor,
++                                                                  podAktiviert: Date().addingTimeInterval(-30 * 3600),
++                                                                  sensorGesetzt: Date().addingTimeInterval(-4 * 86_400), schliessen: schliessen)) }
+         case "zielzeit-tag":
+             let daten = ZSZielzeitDaten.vorschau()
+             let gestern = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
+diff --git a/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift b/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
+index 1c9635e..b6e375d 100644
+--- a/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
++++ b/Loop/Loop/Zuckerschock/ZuckerschockVorrat.swift
+@@ -317,7 +317,7 @@ struct ZSVorratView: View {
+                     Button {
+                         reklamationOffen = true
+                     } label: {
+-                        Label("Pod fehlerhaft? Reklamieren", systemImage: "exclamationmark.bubble")
++                        Label("Pod oder Sensor reklamieren", systemImage: "exclamationmark.bubble")
+                             .font(ZSSchrift.headline)
+                     }
+                     .buttonStyle(ZSDruckStil(art: .sekundaer))
+@@ -344,7 +344,8 @@ struct ZSVorratView: View {
+         .background(ZSFarbe.grund.ignoresSafeArea())
+         .onAppear { quelle.tagesmenge { tagesmenge = $0 } }
+         .sheet(isPresented: $reklamationOffen) {
+-            ZSReklamationView(speicher: .shared, podAktiviert: vorrat.stand.letzterPodWechsel) { reklamationOffen = false }
++            ZSReklamationView(speicher: .shared, podAktiviert: vorrat.stand.letzterPodWechsel,
++                              sensorGesetzt: vorrat.stand.letzterSensorWechsel) { reklamationOffen = false }
+         }
+     }
+ 
