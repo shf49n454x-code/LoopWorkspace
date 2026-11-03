@@ -1,5 +1,5 @@
 diff --git a/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift b/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift
-index 430529d..b050b2b 100644
+index 430529d..cddf13c 100644
 --- a/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift
 +++ b/Loop/Loop/Zuckerschock/ZuckerschockEssenView.swift
 @@ -8,6 +8,7 @@
@@ -144,7 +144,7 @@ index 430529d..b050b2b 100644
                  guard !Task.isCancelled else { return }
                  await MainActor.run {
                      ergebnis = neu
-@@ -736,12 +767,244 @@ private struct ZSSchaetzungBlatt: View {
+@@ -736,12 +767,245 @@ private struct ZSSchaetzungBlatt: View {
          }
          .buttonStyle(ZSDruckStil(art: .primaer))
  
@@ -240,17 +240,33 @@ index 430529d..b050b2b 100644
 +                VStack(alignment: .leading, spacing: ZSMass.space6) {
 +                    VStack(alignment: .leading, spacing: ZSMass.space3) {
 +                        ZSAbschnittTitel(text: "Fotos")
-+                        ScrollView(.horizontal, showsIndicators: false) {
-+                            HStack(spacing: ZSMass.space2) {
-+                                ForEach(Array(bilder.enumerated()), id: \.offset) { index, bild in
-+                                    vorschau(bild, index: index)
-+                                }
-+                                if frei > 0 {
-+                                    kachel(titel: "Kamera", symbol: "camera") { kameraOffen = true }
-+                                    kachel(titel: laedt ? "Lädt …" : "Aus Fotos", symbol: "photo.on.rectangle") { auswahlOffen = true }
-+                                        .disabled(laedt)
++                        if !bilder.isEmpty {
++                            ScrollView(.horizontal, showsIndicators: false) {
++                                HStack(spacing: ZSMass.space2) {
++                                    ForEach(Array(bilder.enumerated()), id: \.offset) { index, bild in
++                                        vorschau(bild, index: index)
++                                    }
 +                                }
 +                            }
++                        }
++                        // Hinzufügen immer als volle Knöpfe, damit nichts am Rand abgeschnitten wird.
++                        if frei > 0 {
++                            HStack(spacing: ZSMass.space3) {
++                                Button { kameraOffen = true } label: {
++                                    Label("Kamera", systemImage: "camera")
++                                }
++                                .buttonStyle(ZSDruckStil(art: .sekundaer))
++                                Button { auswahlOffen = true } label: {
++                                    Label(laedt ? "Lädt …" : "Aus Fotos", systemImage: "photo.on.rectangle")
++                                }
++                                .buttonStyle(ZSDruckStil(art: .sekundaer))
++                                .disabled(laedt)
++                            }
++                            .font(ZSSchrift.headline)
++                        } else {
++                            Text("Mehr als \(ZSFotoKH.maxFotos) Fotos gehen nicht. Entferne eins, um ein anderes hinzuzufügen.")
++                                .font(ZSSchrift.footnote)
++                                .foregroundStyle(ZSFarbe.text2)
 +                        }
 +                        Text("Tipp: Verpackung mit Nährwerttabelle mitfotografieren. Dann rechnet Claude mit den echten Werten statt zu schätzen.")
 +                            .font(ZSSchrift.footnote)
@@ -329,21 +345,6 @@ index 430529d..b050b2b 100644
 +            }
 +    }
 +
-+    private func kachel(titel: String, symbol: String, aktion: @escaping () -> Void) -> some View {
-+        Button(action: aktion) {
-+            VStack(spacing: ZSMass.space1) {
-+                Image(systemName: symbol)
-+                    .font(.title3)
-+                Text(titel)
-+                    .font(ZSSchrift.caption.weight(.semibold))
-+            }
-+            .foregroundStyle(ZSFarbe.text2)
-+            .frame(width: 96, height: 96)
-+            .background(RoundedRectangle(cornerRadius: ZSMass.radiusM, style: .continuous).strokeBorder(ZSFarbe.randSteuer, style: StrokeStyle(lineWidth: 1, dash: [4, 4])))
-+        }
-+        .buttonStyle(.plain)
-+    }
-+
 +    private func hinzufuegen(_ neu: [UIImage]) {
 +        bilder.append(contentsOf: neu.prefix(frei).map(ZSFotoKH.verkleinert))
 +    }
@@ -389,7 +390,7 @@ index 430529d..b050b2b 100644
  // MARK: - Bestätigen (Standardmahlzeit)
  
  private struct ZSBestaetigenBlatt: View {
-@@ -810,7 +1073,7 @@ private struct ZSManuellBlatt: View {
+@@ -810,7 +1074,7 @@ private struct ZSManuellBlatt: View {
  
      var body: some View {
          VStack(spacing: 0) {
